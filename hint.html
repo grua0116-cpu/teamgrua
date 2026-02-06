@@ -21,7 +21,7 @@
 
       <div class="row">
         <a class="btn" id="goUnlock" href="#">입력하기</a>
-        <a class="btn" id="goBack" href="./index.html">취소</a>
+        <a class="btn" href="./index.html">취소</a>
       </div>
     </div>
   </div>
@@ -33,24 +33,23 @@
     document.getElementById("title").textContent = `Hint — ${slot}`;
     document.getElementById("goUnlock").href = `./unlock.html?slot=${encodeURIComponent(slot)}`;
 
-    // Firestore hint가 없을 때의 로컬 힌트(원하면 여기만 채워도 됨)
+    // Firestore에 hint 필드가 없을 때만 쓰는 로컬 힌트(원하면 채워)
     const localHints = {
-      "01": "예시 힌트: ROSE + 01",
-      "02": "예시 힌트: ...",
+      "01": "예시: 정답은 '1'",
     };
 
     async function main(){
       const box = document.getElementById("hintBox");
-
       const data = await fetchSlot(slot);
+
       if (!data){
-        box.textContent = "슬롯 문서가 없습니다. (01~16 문서 생성 확인)";
+        box.textContent = "해당 슬롯 문서가 없습니다. (01~16 문서 ID 확인)";
         box.className = "msg bad";
         return;
       }
 
       if (data.claimed === true){
-        box.textContent = "이미 해금된 조각입니다. 보드에서 확인하세요.";
+        box.textContent = "이미 해금된 조각입니다.";
         box.className = "msg ok";
         return;
       }
@@ -60,8 +59,7 @@
       box.className = "msg";
     }
 
-    main().catch(e=>{
-      console.error(e);
+    main().catch(()=>{
       const box = document.getElementById("hintBox");
       box.textContent = "힌트 불러오기 실패: Firestore/규칙 확인";
       box.className = "msg bad";
