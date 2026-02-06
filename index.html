@@ -23,13 +23,9 @@
 
       <div class="stage-wrap">
         <div class="stage">
-          <!-- Layer 1: ONE full image -->
-          <div class="puzzle-image" aria-label="puzzle"></div>
-
-          <!-- Layer 2: 16 masks -->
+          <div class="puzzle-image"></div>
           <div class="masks" id="masks"></div>
 
-          <!-- Layer 3: campus map overlay -->
           <div class="campus">
             <svg class="paths" viewBox="0 0 100 100" preserveAspectRatio="none">
               <line class="path" x1="15" y1="18" x2="50" y2="18"></line>
@@ -60,19 +56,7 @@
     const statusEl = document.getElementById("status");
     const toastEl = document.getElementById("toast");
 
-    // ✅ 1→1 고정 배치: 좌상단부터 01,02,03,04 ... 우하단 16
-    // (이 배열 순서 = 마스크 칸 순서)
-  // ✅ 뒤집힌 화면에서 01이 맨 아래로 가는 문제를 역으로 보정
-const TILE_SLOTS = [
-  "13","14","15","16",
-  "09","10","11","12",
-  "05","06","07","08",
-  "01","02","03","04"
-];
-
-    ];
-
-    // 학교 맵(건물)도 01~16을 그대로 씀
+    // 학교 맵(건물) 01~16
     const CAMPUS = [
       { slot:"01", name:"정문",       desc:"입학처",        x:15, y:18 },
       { slot:"02", name:"본관",       desc:"행정동",        x:50, y:18 },
@@ -104,29 +88,48 @@ const TILE_SLOTS = [
       toastEl.textContent = `${opened}번 조각이 공개되었습니다.`;
     }
 
-    // ✅ 마스크 16칸 생성: 칸 순서대로 TILE_SLOTS를 data-slot에 박아넣는다.
+    // ✅ 마스크를 "좌표"로 강제 배치: 01=좌상단, 16=우하단 (절대 안 어긋남)
     function buildMasks(){
       masksEl.innerHTML = "";
-      for (let i = 0; i < 16; i++){
-        const slot = TILE_SLOTS[i];
+
+      for (let n = 1; n <= 16; n++){
+        const slot = String(n).padStart(2, "0");
+
+        const index = n - 1;
+        const row = Math.floor(index / 4); // 0..3
+        const col = index % 4;             // 0..3
+
         const mask = document.createElement("div");
         mask.className = "mask";
         mask.dataset.slot = slot;
+        mask.style.top  = (row * 25) + "%";
+        mask.style.left = (col * 25) + "%";
+
         masksEl.appendChild(mask);
       }
     }
 
-    function applyClaims(map){
+    // ✅ claimed가 true면: opening 애니메이션 → open으로 제거
+    function applyClaimsWithAnim(map){
       document.querySelectorAll(".mask").forEach(mask => {
         const slot = mask.dataset.slot;
         const claimed = !!map?.[slot]?.claimed;
-        if (claimed) mask.classList.add("open");
-        else mask.classList.remove("open");
+
+        if (claimed){
+          // 이미 열려있으면 바로 제거
+          // (페이지 재방문/새로고침 시 깔끔)
+          mask.classList.add("opening");
+          // 애니메이션 끝난 뒤 완전 제거
+          setTimeout(() => {
+            mask.classList.add("open");
+          }, 450);
+        }
       });
     }
 
     function buildCampus(map){
       buildingsEl.innerHTML = "";
+
       for (const b of CAMPUS){
         const claimed = !!map?.[b.slot]?.claimed;
 
@@ -157,8 +160,10 @@ const TILE_SLOTS = [
       buildMasks();
 
       try{
-        const map = await fetchAllSlots(); // { "01":{claimed...}, ... }
-        applyClaims(map);
+        const map = await fetchAllSlots(); // {"01":{claimed...}, ...}
+
+        // 애니메이션 적용
+        applyClaimsWithAnim(map);
         buildCampus(map);
 
         const opened = Object.values(map).filter(s => s.claimed).length;
