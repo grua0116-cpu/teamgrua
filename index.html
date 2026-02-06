@@ -5,11 +5,135 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>teamgrua · season1</title>
 
-  <!-- ✅ 프로젝트 페이지 기준 상대경로 + 캐시 무력화 -->
-  <link rel="stylesheet" href="./styles.css?v=3" />
-</head>
-<body>
+  <!-- ✅ CSS를 외부 파일로 안 불러오고 여기서 끝냄 (경로 꼬임 방지) -->
+  <style>
+    :root{
+      --bg:#05080b;
+      --panel:#0b1014;
+      --card:#070b0e;
+      --text:#e9f3f1;
+      --muted:rgba(233,243,241,.7);
+      --line:rgba(255,255,255,.1);
+      --accent:#22ffd4;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(34,255,212,.08), transparent 45%),
+                  radial-gradient(900px 600px at 80% 20%, rgba(34,255,212,.06), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; opacity:.9;}
+    .topbar{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:14px 16px;border-bottom:1px solid var(--line);
+      background: rgba(6,10,13,.72);
+      backdrop-filter: blur(10px);
+      position: sticky; top:0; z-index:10;
+    }
+    .brand{display:flex;align-items:center;gap:10px}
+    .dot{
+      width:10px;height:10px;background:var(--accent);border-radius:50%;
+      box-shadow:0 0 12px rgba(34,255,212,.7);
+    }
+    .brand-title{font-weight:900;letter-spacing:.04em}
+    .brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .wrap{width:min(900px, calc(100% - 32px));margin:20px auto 40px;}
+    .panel{
+      background: rgba(11,16,20,.78);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    }
+    .panel-title{font-weight:900;letter-spacing:.1em}
+    .panel-sub{margin-top:6px;font-size:13px;color:var(--muted)}
+    .grid{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+    }
+    @media(max-width:600px){
+      .grid{grid-template-columns:repeat(2,1fr)}
+    }
+    .tile{
+      background: rgba(7,11,14,.82);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+      cursor:pointer;
+      box-shadow: 0 10px 22px rgba(0,0,0,.25);
+      transition: transform .12s ease, border-color .12s ease;
+      position:relative;
+    }
+    .tile:hover{transform:translateY(-1px); border-color: rgba(34,255,212,.35);}
+    .tile.locked{opacity:.7; cursor:default;}
+    .tile.locked:hover{transform:none; border-color: var(--line);}
+    .tile-id{font-weight:900;letter-spacing:.08em}
+    .tile-sub{margin-top:6px;font-size:13px;color:var(--muted)}
+    .badge{
+      font-size:11px;padding:4px 8px;border-radius:999px;
+      border:1px solid var(--line);
+      float:right; margin-top:-2px;
+    }
+    .badge.open{color:var(--accent); border-color: rgba(34,255,212,.55)}
+    .foot{
+      margin-top:12px;font-size:12px;color:var(--muted);
+      display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    }
+    .btn{
+      padding:8px 12px;border-radius:12px;
+      background:transparent;border:1px solid var(--line);
+      color:var(--text);cursor:pointer;font-weight:800;
+    }
+    .btn.primary{border-color: rgba(34,255,212,.65); box-shadow:0 0 0 2px rgba(34,255,212,.12) inset;}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
 
+    /* MODAL */
+    .modal.hidden{display:none}
+    .modal{position:fixed; inset:0; z-index:9999;}
+    .backdrop{position:absolute; inset:0; background:rgba(0,0,0,.62);}
+    .modal-card{
+      position:relative;
+      width:min(380px, calc(100% - 32px));
+      margin:18vh auto;
+      background: rgba(11,16,20,.95);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.55);
+    }
+    .modal-title{font-weight:900; letter-spacing:.1em}
+    .modal-sub{margin-top:6px;font-size:13px;color:var(--muted)}
+    .modal-card input{
+      width:100%; margin-top:12px; padding:10px;
+      background:#000; border:1px solid var(--line); color:var(--text);
+      border-radius:10px; outline:none;
+    }
+    .modal-card input:focus{border-color: rgba(34,255,212,.55); box-shadow:0 0 0 3px rgba(34,255,212,.12);}
+    .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;}
+    .modal-msg{margin-top:8px;font-size:13px;color:var(--muted);min-height:18px}
+
+    /* ERROR OVERLAY */
+    .err{
+      white-space:pre-wrap;
+      background:#120509;
+      border:1px solid rgba(255,255,255,.12);
+      color:#ffd7df;
+      padding:12px;
+      border-radius:12px;
+      margin-top:12px;
+      font-size:12px;
+      display:none;
+    }
+    .err.show{display:block;}
+  </style>
+</head>
+
+<body>
 <header class="topbar">
   <div class="brand">
     <span class="dot"></span>
@@ -18,13 +142,14 @@
       <div class="brand-sub">season1 / fragments</div>
     </div>
   </div>
-  <button id="refreshBtn" class="btn ghost">REFRESH</button>
+  <button id="refreshBtn" class="btn">REFRESH</button>
 </header>
 
 <main class="wrap">
   <section class="panel">
     <div class="panel-title">FRAGMENTS</div>
     <div class="panel-sub">Click a fragment → enter code → lock it.</div>
+    <div id="errBox" class="err"></div>
   </section>
 
   <section id="grid" class="grid"></section>
@@ -35,26 +160,163 @@
   </div>
 </main>
 
-<!-- LOCK MODAL -->
+<!-- MODAL -->
 <div id="lockModal" class="modal hidden">
-  <div class="backdrop"></div>
-
+  <div class="backdrop" id="backdrop"></div>
   <div class="modal-card">
     <div class="modal-title">LOCK FRAGMENT</div>
     <div id="modalSub" class="modal-sub">암호를 입력하면 이 조각을 잠급니다.</div>
-
     <input id="lockInput" placeholder="Enter code" />
-
     <div class="modal-actions">
-      <button id="cancelBtn" class="btn ghost">CANCEL</button>
+      <button id="cancelBtn" class="btn">CANCEL</button>
       <button id="lockBtn" class="btn primary">LOCK</button>
     </div>
-
     <div id="modalMsg" class="modal-msg"></div>
   </div>
 </div>
 
-<!-- ✅ JS도 반드시 상대경로 -->
-<script type="module" src="./app.js?v=3"></script>
+<!-- ✅ JS도 외부 파일 없이 여기서 끝냄 -->
+<script type="module">
+  // 에러를 화면에 표시(흰 화면 방지)
+  const errBox = document.getElementById("errBox");
+  function showErr(msg){
+    errBox.textContent = msg;
+    errBox.classList.add("show");
+  }
+  window.addEventListener("error", (e)=> showErr("JS ERROR:\\n" + (e.message || e.error)));
+  window.addEventListener("unhandledrejection", (e)=> showErr("PROMISE ERROR:\\n" + (e.reason?.message || e.reason)));
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+
+  // ✅ 네가 준 Firebase 설정 (그대로)
+  const firebaseConfig = {
+    apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
+    authDomain: "teamgrua-f465c.firebaseapp.com",
+    projectId: "teamgrua-f465c",
+    storageBucket: "teamgrua-f465c.firebasestorage.app",
+    messagingSenderId: "1019914743201",
+    appId: "1:1019914743201:web:171550946aafb90ab96fe0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const grid = document.getElementById("grid");
+  const status = document.getElementById("status");
+  const refreshBtn = document.getElementById("refreshBtn");
+
+  const modal = document.getElementById("lockModal");
+  const backdrop = document.getElementById("backdrop");
+  const lockInput = document.getElementById("lockInput");
+  const modalMsg = document.getElementById("modalMsg");
+  const modalSub = document.getElementById("modalSub");
+  const cancelBtn = document.getElementById("cancelBtn");
+  const lockBtn = document.getElementById("lockBtn");
+
+  let currentRef = null;
+  let currentId = null;
+
+  function openModal(id, ref, claimed){
+    currentId = id;
+    currentRef = ref;
+    modal.classList.remove("hidden");
+    lockInput.value = "";
+    modalMsg.textContent = "";
+
+    if(claimed){
+      modalSub.textContent = "이미 잠긴 조각입니다.";
+      lockInput.disabled = true;
+      lockBtn.disabled = true;
+    } else {
+      modalSub.textContent = "암호를 입력하면 이 조각을 잠급니다.";
+      lockInput.disabled = false;
+      lockBtn.disabled = false;
+      setTimeout(()=>lockInput.focus(), 0);
+    }
+  }
+  function closeModal(){ modal.classList.add("hidden"); }
+
+  cancelBtn.addEventListener("click", closeModal);
+  backdrop.addEventListener("click", closeModal);
+  lockInput.addEventListener("keydown", (e)=> { if(e.key==="Enter") lockBtn.click(); });
+
+  lockBtn.addEventListener("click", async ()=>{
+    try{
+      const code = lockInput.value.trim();
+      if(!code) { modalMsg.textContent="암호를 입력해줘."; return; }
+
+      const snap = await getDoc(currentRef);
+      if(!snap.exists()) { modalMsg.textContent="문서 없음"; return; }
+
+      const data = snap.data();
+      if(data.claimed){
+        modalMsg.textContent="이미 누가 잠갔어.";
+        return;
+      }
+
+      const answer = String(data.answer ?? "").trim().toLowerCase();
+      const input = code.trim().toLowerCase();
+
+      if(!answer || input !== answer){
+        modalMsg.textContent="틀림";
+        return;
+      }
+
+      await updateDoc(currentRef, { claimed:true });
+      modalMsg.textContent="LOCKED";
+      await load();
+      setTimeout(closeModal, 350);
+    } catch(e){
+      showErr("LOCK ERROR:\\n" + (e?.message || e));
+      modalMsg.textContent="에러";
+    }
+  });
+
+  function tileHTML(id, claimed){
+    return `
+      <div class="tile-id">FRAGMENT ${id} <span class="badge ${claimed?'':'open'}">${claimed?'LOCKED':'OPEN'}</span></div>
+      <div class="tile-sub">${claimed ? 'This fragment is locked.' : 'Click to lock with a code.'}</div>
+    `;
+  }
+
+  async function load(){
+    status.textContent = "Loading...";
+    grid.innerHTML = "";
+
+    for(let i=1;i<=16;i++){
+      const id = String(i).padStart(2,"0");
+      const ref = doc(db, `game/season1/slots/${id}`);
+
+      let claimed = false;
+      try{
+        const snap = await getDoc(ref);
+        claimed = snap.exists() ? !!snap.data().claimed : false;
+      } catch(e){
+        showErr("LOAD ERROR:\\n" + (e?.message || e));
+      }
+
+      const tile = document.createElement("div");
+      tile.className = "tile" + (claimed ? " locked" : "");
+      tile.innerHTML = tileHTML(id, claimed);
+      tile.addEventListener("click", async ()=>{
+        try{
+          const snap = await getDoc(ref);
+          const nowClaimed = snap.exists() ? !!snap.data().claimed : false;
+          openModal(id, ref, nowClaimed);
+        } catch(e){
+          showErr("CLICK ERROR:\\n" + (e?.message || e));
+        }
+      });
+
+      grid.appendChild(tile);
+    }
+
+    status.textContent = "Ready.";
+  }
+
+  refreshBtn.addEventListener("click", load);
+  load();
+</script>
 </body>
 </html>
