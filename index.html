@@ -3,61 +3,58 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>teamgrua — season1</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <title>teamgrua · season1</title>
+
+  <!-- ✅ 프로젝트 페이지 기준 상대경로 + 캐시 무력화 -->
+  <link rel="stylesheet" href="./styles.css?v=3" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="dot"></div>
-      <div>
-        <div class="brand-title">teamgrua</div>
-        <div class="brand-sub">season1 / fragments</div>
-      </div>
-    </div>
-    <button id="refreshBtn" class="btn ghost" type="button">REFRESH</button>
-  </header>
 
-  <main class="wrap">
-    <section class="panel">
-      <div class="panel-title">FRAGMENTS</div>
-      <div class="panel-sub">Click a fragment → enter code → lock it.</div>
-    </section>
-
-    <section id="grid" class="grid" aria-label="Fragments grid">
-      <!-- app.js가 01~16 생성 -->
-    </section>
-
-    <section class="footnote">
-      <span class="hint">Accent</span> is controlled by <code>--accent</code>.
-      <span id="status" class="status">Ready.</span>
-    </section>
-  </main>
-
-  <!-- LOCK MODAL -->
-  <div id="lockModal" class="modal hidden" aria-hidden="true">
-    <div class="modal-backdrop" data-close="1"></div>
-
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <div class="modal-head">
-        <div>
-          <div id="modalTitle" class="modal-title">LOCK FRAGMENT</div>
-          <div id="modalSub" class="modal-sub">암호를 입력하면 이 조각을 잠급니다.</div>
-        </div>
-        <button id="modalX" class="iconbtn" type="button" aria-label="Close">✕</button>
-      </div>
-
-      <input id="lockInput" class="modal-input" type="text" autocomplete="off" placeholder="Enter code" />
-
-      <div class="modal-actions">
-        <button id="modalCancel" class="btn ghost" type="button">CANCEL</button>
-        <button id="modalConfirm" class="btn primary" type="button">LOCK</button>
-      </div>
-
-      <div id="modalMsg" class="modal-msg" aria-live="polite"></div>
+<header class="topbar">
+  <div class="brand">
+    <span class="dot"></span>
+    <div>
+      <div class="brand-title">teamgrua</div>
+      <div class="brand-sub">season1 / fragments</div>
     </div>
   </div>
+  <button id="refreshBtn" class="btn ghost">REFRESH</button>
+</header>
 
-  <script type="module" src="./app.js"></script>
+<main class="wrap">
+  <section class="panel">
+    <div class="panel-title">FRAGMENTS</div>
+    <div class="panel-sub">Click a fragment → enter code → lock it.</div>
+  </section>
+
+  <section id="grid" class="grid"></section>
+
+  <div class="foot">
+    Accent is controlled by <code>--accent</code>.
+    <span id="status">Ready.</span>
+  </div>
+</main>
+
+<!-- LOCK MODAL -->
+<div id="lockModal" class="modal hidden">
+  <div class="backdrop"></div>
+
+  <div class="modal-card">
+    <div class="modal-title">LOCK FRAGMENT</div>
+    <div id="modalSub" class="modal-sub">암호를 입력하면 이 조각을 잠급니다.</div>
+
+    <input id="lockInput" placeholder="Enter code" />
+
+    <div class="modal-actions">
+      <button id="cancelBtn" class="btn ghost">CANCEL</button>
+      <button id="lockBtn" class="btn primary">LOCK</button>
+    </div>
+
+    <div id="modalMsg" class="modal-msg"></div>
+  </div>
+</div>
+
+<!-- ✅ JS도 반드시 상대경로 -->
+<script type="module" src="./app.js?v=3"></script>
 </body>
 </html>
