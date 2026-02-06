@@ -3,240 +3,561 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>teamgrua · season1</title>
-
+  <title>Season1 Node Map Test</title>
   <style>
     :root{
-      --bg:#05080b; --panel:#0b1014; --card:#070b0e;
-      --text:#e9f3f1; --muted:rgba(233,243,241,.7);
-      --line:rgba(255,255,255,.1); --accent:#22ffd4;
+      --bg0:#0e1412;
+      --bg1:#101a16;
+      --panel:#0f1915cc;
+      --text:#e7f1ec;
+      --muted:#9fb5ad;
+      --accent:#47d3a6;
+      --danger:#ff6b6b;
+      --ok:#7CFFB2;
+      --brick1:#8a3c2f;
+      --brick2:#6f2f25;
+      --brick3:#a0503f;
+      --mortar:#2a1814;
+      --shadow: rgba(0,0,0,.45);
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
-    .top{position:sticky;top:0;z-index:10;background:#060a0d;border-bottom:1px solid var(--line);padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
-    .brand{display:flex;gap:10px;align-items:center}
-    .dot{width:10px;height:10px;background:var(--accent);border-radius:50%;box-shadow:0 0 12px rgba(34,255,212,.7)}
-    .t1{font-weight:900;letter-spacing:.04em}
-    .t2{font-size:12px;color:var(--muted);margin-top:2px}
-    .wrap{width:min(920px,calc(100% - 28px));margin:18px auto 40px}
-    .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
-    .sub{margin-top:6px;font-size:13px;color:var(--muted)}
-    .grid{margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-    @media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
-    .tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:.12s;position:relative}
-    .tile:hover{border-color:rgba(34,255,212,.35);transform:translateY(-1px)}
-    .tile.locked{opacity:.7;cursor:default}
-    .tile.locked:hover{transform:none;border-color:var(--line)}
-    .id{font-weight:900;letter-spacing:.08em}
-    .desc{margin-top:6px;font-size:13px;color:var(--muted)}
-    .badge{float:right;font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid var(--line)}
-    .badge.open{color:var(--accent);border-color:rgba(34,255,212,.55)}
-    .btn{padding:8px 12px;border-radius:12px;background:transparent;border:1px solid var(--line);color:var(--text);cursor:pointer;font-weight:900}
-    .btn.primary{border-color:rgba(34,255,212,.65);box-shadow:0 0 0 2px rgba(34,255,212,.12) inset}
-    .btn:disabled{opacity:.5;cursor:not-allowed}
-    .foot{margin-top:12px;font-size:12px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .err{display:none;margin-top:10px;white-space:pre-wrap;background:#120509;border:1px solid rgba(255,255,255,.12);color:#ffd7df;padding:10px;border-radius:12px;font-size:12px}
-    .err.show{display:block}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(1200px 600px at 20% 10%, #163022 0%, transparent 55%),
+                  radial-gradient(900px 500px at 80% 0%, #1a2a24 0%, transparent 60%),
+                  linear-gradient(180deg,var(--bg0),var(--bg1));
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .wrap{
+      width:min(980px, 100%);
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+    }
+    .top{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+      padding:14px 16px;
+      box-shadow: 0 10px 30px var(--shadow);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+    }
+    .title{
+      font-weight:800;
+      letter-spacing:.2px;
+      margin:0 0 6px 0;
+      font-size:18px;
+    }
+    .sub{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .pill{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid rgba(255,255,255,.10);
+      padding:8px 10px;
+      border-radius:999px;
+      background: rgba(0,0,0,.18);
+      white-space:nowrap;
+      align-self:center;
+    }
 
-    /* modal */
-    .modal.hidden{display:none}
-    .modal{position:fixed;inset:0;z-index:9999}
-    .back{position:absolute;inset:0;background:rgba(0,0,0,.62)}
-    .card{position:relative;z-index:1;width:min(380px,calc(100% - 28px));margin:18vh auto;background:rgba(11,16,20,.95);border:1px solid var(--line);border-radius:14px;padding:14px}
-    .mttl{font-weight:900;letter-spacing:.1em}
-    .msub{margin-top:6px;font-size:13px;color:var(--muted)}
-    input{width:100%;margin-top:12px;padding:10px;background:#000;border:1px solid var(--line);color:var(--text);border-radius:10px;outline:none}
-    input:focus{border-color:rgba(34,255,212,.55);box-shadow:0 0 0 3px rgba(34,255,212,.12)}
-    .row{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
-    .msg{margin-top:8px;min-height:18px;font-size:13px;color:var(--muted)}
+    .map{
+      position:relative;
+      width:100%;
+      aspect-ratio: 16 / 9;
+      border-radius:18px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow: 0 14px 36px var(--shadow);
+      background:
+        radial-gradient(800px 400px at 30% 20%, rgba(71,211,166,.16) 0%, transparent 60%),
+        radial-gradient(700px 420px at 75% 70%, rgba(71,211,166,.10) 0%, transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    }
+
+    /* faint grid texture */
+    .map::before{
+      content:"";
+      position:absolute; inset:0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 56px 56px;
+      opacity:.18;
+      pointer-events:none;
+    }
+
+    .edge{
+      position:absolute;
+      height:2px;
+      background: rgba(231,241,236,.18);
+      transform-origin:left center;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,.25));
+      pointer-events:none;
+    }
+
+    .node{
+      position:absolute;
+      transform: translate(-50%,-50%);
+      width:42px;
+      height:42px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.28);
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+      box-shadow: 0 10px 22px rgba(0,0,0,.35);
+    }
+    .node:hover{
+      transform: translate(-50%,-50%) scale(1.05);
+      border-color: rgba(71,211,166,.55);
+      box-shadow: 0 14px 28px rgba(0,0,0,.42);
+    }
+    .node:active{
+      transform: translate(-50%,-50%) scale(.98);
+    }
+    .node .label{
+      font-size:12px;
+      color: rgba(231,241,236,.85);
+      letter-spacing:.4px;
+    }
+    .node.unset .label{ color: rgba(159,181,173,.9); }
+
+    /* Completed => turn node into BRICK TILE */
+    .node.claimed{
+      width:58px;
+      height:58px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      cursor:default;
+      background:
+        linear-gradient(0deg, rgba(0,0,0,.25), rgba(0,0,0,.25)),
+        /* brick pattern */
+        linear-gradient(90deg, var(--mortar) 2px, transparent 2px) 0 0 / 20px 20px,
+        linear-gradient(var(--mortar) 2px, transparent 2px) 0 0 / 20px 20px,
+        linear-gradient(90deg, transparent 10px, rgba(0,0,0,.10) 10px, transparent 11px) 0 0 / 20px 20px,
+        linear-gradient(180deg, var(--brick3), var(--brick1));
+      box-shadow: 0 16px 36px rgba(0,0,0,.55);
+    }
+    .node.claimed:hover{ transform: translate(-50%,-50%); border-color: rgba(255,255,255,.14); }
+    .node.claimed .label{
+      font-size:13px;
+      font-weight:800;
+      color: rgba(255,255,255,.92);
+      text-shadow: 0 2px 6px rgba(0,0,0,.55);
+    }
+
+    .node.locked{
+      outline: 2px solid rgba(124,255,178,.22);
+    }
+
+    .statusbar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      background: rgba(0,0,0,.20);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+      padding:10px 12px;
+    }
+    .status{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.35;
+      white-space:pre-wrap;
+    }
+    .btn{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border-radius:12px;
+      padding:9px 11px;
+      cursor:pointer;
+      font-size:12px;
+    }
+    .btn:hover{ border-color: rgba(71,211,166,.45); }
+    .btn:active{ transform: translateY(1px); }
+
+    /* Modal */
+    .modal-backdrop{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.62);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:50;
+    }
+    .modal{
+      width:min(420px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      box-shadow: 0 18px 48px rgba(0,0,0,.65);
+      padding:14px;
+    }
+    .modal h3{
+      margin:6px 6px 4px 6px;
+      font-size:15px;
+    }
+    .modal p{
+      margin:0 6px 10px 6px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+    .row{ display:flex; gap:10px; padding:6px; }
+    input{
+      flex:1;
+      padding:11px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      outline:none;
+    }
+    input:focus{ border-color: rgba(71,211,166,.55); }
+    .actions{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      padding:6px;
+    }
+    .btn.primary{
+      border-color: rgba(71,211,166,.55);
+      background: rgba(71,211,166,.12);
+    }
+    .hint{
+      padding:0 6px 8px 6px;
+      font-size:12px;
+      color: var(--muted);
+      min-height:16px;
+    }
+    .hint.ok{ color: var(--ok); }
+    .hint.bad{ color: var(--danger); }
   </style>
 </head>
-
 <body>
-  <header class="top">
-    <div class="brand">
-      <span class="dot"></span>
+  <div class="wrap">
+    <div class="top">
       <div>
-        <div class="t1">teamgrua</div>
-        <div class="t2">season1 / fragments</div>
+        <h1 class="title">Season 1 · Node Map (Test)</h1>
+        <p class="sub">
+          노드를 클릭 → 암호 입력 → 정답이면 <b>claimed=true</b>로 잠기고, 그 노드가 <b>벽돌 타일</b>로 완성됩니다.<br/>
+          지금은 <b>01만</b> 실제 검증/업데이트가 동작합니다.
+        </p>
       </div>
+      <div class="pill" id="pill">Firestore: game/season1/slots/01~16</div>
     </div>
-    <button id="refresh" class="btn">REFRESH</button>
-  </header>
 
-  <main class="wrap">
-    <section class="panel">
-      <div class="t1" style="letter-spacing:.12em">FRAGMENTS</div>
-      <div class="sub">Click → enter code → lock (claimed=true).</div>
-      <div id="err" class="err"></div>
-    </section>
+    <div class="map" id="map"></div>
 
-    <section id="grid" class="grid"></section>
-
-    <div class="foot">
-      Accent: <code>--accent</code>
-      <span id="status">Ready.</span>
-    </div>
-  </main>
-
-  <div id="modal" class="modal hidden">
-    <div id="back" class="back"></div>
-    <div class="card">
-      <div class="mttl">LOCK FRAGMENT</div>
-      <div id="msub" class="msub">암호를 입력하면 이 조각을 잠급니다.</div>
-      <input id="code" placeholder="Enter code" />
-      <div class="row">
-        <button id="cancel" class="btn">CANCEL</button>
-        <button id="lock" class="btn primary">LOCK</button>
+    <div class="statusbar">
+      <div class="status" id="status">준비됨.</div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn" id="btnReload">새로고침(상태 재로딩)</button>
       </div>
-      <div id="msg" class="msg"></div>
     </div>
   </div>
 
-  <script type="module">
-    const err = document.getElementById("err");
-    const status = document.getElementById("status");
-    function showErr(text){ err.textContent = text; err.classList.add("show"); }
+  <!-- Modal -->
+  <div class="modal-backdrop" id="backdrop">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+      <h3 id="mtitle">암호 입력</h3>
+      <p id="mdesc">슬롯 <b id="slotIdText">01</b> 을(를) 해금합니다.</p>
+      <div class="row">
+        <input id="answerInput" type="password" placeholder="암호" autocomplete="off" />
+      </div>
+      <div class="hint" id="hint"></div>
+      <div class="actions">
+        <button class="btn" id="btnCancel">취소</button>
+        <button class="btn primary" id="btnSubmit">확인</button>
+      </div>
+    </div>
+  </div>
 
-    window.addEventListener("error", (e)=> showErr("JS ERROR\\n" + (e.message || e.error)));
-    window.addEventListener("unhandledrejection", (e)=> showErr("PROMISE ERROR\\n" + (e.reason?.message || e.reason)));
+ <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
+    authDomain: "teamgrua-f465c.firebaseapp.com",
+    projectId: "teamgrua-f465c",
+    storageBucket: "teamgrua-f465c.firebasestorage.app",
+    messagingSenderId: "1019914743201",
+    appId: "1:1019914743201:web:171550946aafb90ab96fe0"
+  };
 
-    // ✅ 너 firebaseConfig (그대로)
-    const firebaseConfig = {
-      apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
-      authDomain: "teamgrua-f465c.firebaseapp.com",
-      projectId: "teamgrua-f465c",
-      storageBucket: "teamgrua-f465c.firebasestorage.app",
-      messagingSenderId: "1019914743201",
-      appId: "1:1019914743201:web:171550946aafb90ab96fe0"
-    };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  console.log("🔥 Firebase 연결 성공");
+</script>
 
-    const grid = document.getElementById("grid");
-    const refreshBtn = document.getElementById("refresh");
+    // 2) 고정 경로
+    const SEASON_DOC = docPath("game", "season1");
+    const SLOTS_COL  = colPath("game", "season1", "slots");
 
-    // modal
-    const modal = document.getElementById("modal");
-    const back = document.getElementById("back");
-    const cancel = document.getElementById("cancel");
-    const lockBtn = document.getElementById("lock");
-    const code = document.getElementById("code");
-    const msub = document.getElementById("msub");
-    const msg = document.getElementById("msg");
+    // 3) 노드 배치(16개) - 화면에서만 위치를 정함
+    const NODES = [
+      {id:"01", x:12, y:78},
+      {id:"02", x:22, y:60},
+      {id:"03", x:18, y:36},
+      {id:"04", x:30, y:22},
 
-    let currentRef = null;
-    let currentId = null;
+      {id:"05", x:38, y:70},
+      {id:"06", x:44, y:48},
+      {id:"07", x:40, y:26},
+      {id:"08", x:52, y:18},
 
-    function openModal(id, ref, claimed){
-      currentId = id;
-      currentRef = ref;
-      modal.classList.remove("hidden");
-      code.value = "";
-      msg.textContent = "";
+      {id:"09", x:58, y:72},
+      {id:"10",x:66, y:56},
+      {id:"11",x:62, y:34},
+      {id:"12",x:74, y:22},
 
-      if (claimed === true) {
-        msub.textContent = "이미 잠긴 조각입니다.";
-        code.disabled = true;
-        lockBtn.disabled = true;
-      } else {
-        msub.textContent = `FRAGMENT ${id} 를 잠그려면 암호를 입력하세요.`;
-        code.disabled = false;
-        lockBtn.disabled = false;
-        setTimeout(()=>code.focus(),0);
+      {id:"13",x:78, y:76},
+      {id:"14",x:86, y:58},
+      {id:"15",x:82, y:36},
+      {id:"16",x:90, y:20},
+    ];
+
+    // (선택) 간단한 연결선 (예시로 몇 개만)
+    const EDGES = [
+      ["01","02"],["02","03"],["03","04"],
+      ["02","06"],["06","10"],["10","14"],
+      ["06","07"],["07","08"],["08","12"],["12","16"],
+      ["10","11"],["11","15"],
+      ["09","10"],["13","14"]
+    ];
+
+    // 내부 상태
+    let app, db;
+    let slotState = {}; // { "01": {claimed:boolean, answerExists:boolean} ... }
+    let activeSlotId = null;
+
+    // 엘리먼트
+    const mapEl = document.getElementById("map");
+    const statusEl = document.getElementById("status");
+    const btnReload = document.getElementById("btnReload");
+
+    const backdrop = document.getElementById("backdrop");
+    const slotIdText = document.getElementById("slotIdText");
+    const answerInput = document.getElementById("answerInput");
+    const hintEl = document.getElementById("hint");
+    const btnCancel = document.getElementById("btnCancel");
+    const btnSubmit = document.getElementById("btnSubmit");
+
+    // util: Firestore path helpers (collection/doc 구분 실수 방지)
+    function docPath(...segs){ return segs.join("/"); }
+    function colPath(...segs){ return segs.join("/"); }
+
+    function setStatus(msg){ statusEl.textContent = msg; }
+    function openModal(slotId){
+      activeSlotId = slotId;
+      slotIdText.textContent = slotId;
+      hintEl.textContent = "";
+      hintEl.className = "hint";
+      answerInput.value = "";
+      backdrop.style.display = "flex";
+      setTimeout(()=>answerInput.focus(), 0);
+    }
+    function closeModal(){
+      backdrop.style.display = "none";
+      activeSlotId = null;
+    }
+    function nodePos(id){
+      return NODES.find(n=>n.id===id);
+    }
+
+    function render(){
+      mapEl.innerHTML = "";
+
+      // edges 먼저
+      for (const [a,b] of EDGES){
+        const pa = nodePos(a), pb = nodePos(b);
+        if(!pa || !pb) continue;
+        const dx = pb.x - pa.x;
+        const dy = pb.y - pa.y;
+        const len = Math.hypot(dx, dy);
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+        const edge = document.createElement("div");
+        edge.className = "edge";
+        edge.style.left = pa.x + "%";
+        edge.style.top  = pa.y + "%";
+        edge.style.width = `calc(${len}% * 1)`; // percent 기반이므로 대충 느낌만
+        // percent 길이 왜곡 방지하려면 SVG가 정석인데, 테스트용이라 “느낌”만 냄
+        edge.style.transform = `rotate(${angle}deg)`;
+        mapEl.appendChild(edge);
       }
-    }
-    function closeModal(){ modal.classList.add("hidden"); }
 
-    cancel.addEventListener("click", closeModal);
-    back.addEventListener("click", closeModal);
-    code.addEventListener("keydown", (e)=> { if(e.key==="Enter") lockBtn.click(); });
+      // nodes
+      for(const n of NODES){
+        const st = slotState[n.id] ?? { claimed:false, exists:false };
 
-    async function readClaimed(ref){
-      const snap = await getDoc(ref);
-      if(!snap.exists()) return false;
-      const raw = snap.data().claimed;
-      // 🔒 boolean/문자열 모두 안전 처리
-      return (raw === true || raw === "true");
-    }
+        const node = document.createElement("div");
+        node.className = "node";
 
-    function tileHTML(id, claimed){
-      return `
-        <div class="id">FRAGMENT ${id}
-          <span class="badge ${claimed?'':'open'}">${claimed?'LOCKED':'OPEN'}</span>
-        </div>
-        <div class="desc">${claimed ? "This fragment is locked." : "Click to lock with a code."}</div>
-      `;
-    }
+        // “01만 동작” 조건: 01 외에는 unset 처리
+        const isConfigured = (n.id === "01");
 
-    async function load(){
-      status.textContent = "Loading...";
-      grid.innerHTML = "";
-
-      for(let i=1;i<=16;i++){
-        const id = String(i).padStart(2,"0");
-        const ref = doc(db, `game/season1/slots/${id}`);
-
-        let claimed = false;
-        try{
-          claimed = await readClaimed(ref);
-        }catch(e){
-          showErr("LOAD ERROR\\n" + (e?.message || e));
+        if(st.claimed){
+          node.classList.add("claimed", "locked");
+        }else{
+          if(!isConfigured) node.classList.add("unset");
         }
 
-        const tile = document.createElement("div");
-        tile.className = "tile" + (claimed ? " locked" : "");
-        tile.innerHTML = tileHTML(id, claimed);
+        node.style.left = n.x + "%";
+        node.style.top  = n.y + "%";
 
-        tile.addEventListener("click", async ()=>{
-          try{
-            const nowClaimed = await readClaimed(ref);
-            openModal(id, ref, nowClaimed);
-          }catch(e){
-            showErr("CLICK ERROR\\n" + (e?.message || e));
+        const label = document.createElement("div");
+        label.className = "label";
+        label.textContent = st.claimed ? n.id : (isConfigured ? "?" : "…");
+        node.appendChild(label);
+
+        // 클릭 로직
+        node.addEventListener("click", ()=>{
+          if(st.claimed){
+            setStatus(`슬롯 ${n.id} 는 이미 완성(claimed=true) 상태입니다.`);
+            return;
           }
+          if(!isConfigured){
+            setStatus(`슬롯 ${n.id} 는 아직 테스트 대상이 아닙니다. (지금은 01만 동작)`);
+            return;
+          }
+          openModal(n.id);
         });
 
-        grid.appendChild(tile);
+        mapEl.appendChild(node);
       }
-
-      status.textContent = "Ready.";
     }
 
-    lockBtn.addEventListener("click", async ()=>{
+    async function loadStates(){
+      setStatus("Firestore 상태 로딩 중...");
+      slotState = {};
       try{
-        const input = code.value.trim();
-        if(!input){ msg.textContent = "암호를 입력해줘."; return; }
-        if(!currentRef){ msg.textContent = "ref 없음"; return; }
+        // 지금은 테스트라서: 01만 읽어도 충분하지만, 형태는 16칸 기준으로 둠
+        const ref01 = doc(db, docPath(SLOTS_COL, "01"));
+        const snap = await getDoc(ref01);
 
-        // 최신 상태/정답 확인
-        const snap = await getDoc(currentRef);
-        if(!snap.exists()){ msg.textContent = "문서 없음"; return; }
+        if(snap.exists()){
+          const data = snap.data();
+          slotState["01"] = {
+            exists:true,
+            claimed: !!data.claimed
+          };
+        }else{
+          slotState["01"] = { exists:false, claimed:false };
+        }
 
-        const data = snap.data();
-        const already = (data.claimed === true || data.claimed === "true");
-        if(already){ msg.textContent = "이미 누가 잠갔어."; return; }
-
-        const ans = String(data.answer ?? "").trim().toLowerCase();
-        const inp = input.toLowerCase();
-        if(!ans || inp !== ans){ msg.textContent = "틀림"; return; }
-
-        await updateDoc(currentRef, { claimed: true });
-        msg.textContent = "LOCKED";
-        await load();
-        setTimeout(closeModal, 300);
+        setStatus(`로딩 완료. (01 claimed=${slotState["01"]?.claimed ? "true" : "false"})`);
       }catch(e){
-        showErr("LOCK ERROR\\n" + (e?.message || e));
-        msg.textContent = "에러";
+        console.error(e);
+        setStatus("로드 실패: " + (e?.message ?? String(e)));
+      }
+      render();
+    }
+
+    async function claimSlot01(userAnswer){
+      const slotId = "01";
+      const slotRef = doc(db, docPath(SLOTS_COL, slotId));
+
+      // 트랜잭션: answer 확인 + claimed=false일 때만 claimed=true로
+      return await runTransaction(db, async (tx) => {
+        const snap = await tx.get(slotRef);
+        if(!snap.exists()){
+          throw new Error("slot/01 문서가 없습니다. Firestore에 먼저 만들어주세요.");
+        }
+        const data = snap.data();
+        const correct = (String(data.answer ?? "") === String(userAnswer ?? ""));
+        if(!correct){
+          return { ok:false, reason:"wrong" };
+        }
+        if(data.claimed === true){
+          return { ok:true, already:true };
+        }
+        tx.update(slotRef, { claimed:true });
+        return { ok:true, already:false };
+      });
+    }
+
+    // 이벤트
+    btnReload.addEventListener("click", loadStates);
+    btnCancel.addEventListener("click", closeModal);
+    backdrop.addEventListener("click", (e)=>{ if(e.target === backdrop) closeModal(); });
+    document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") closeModal(); });
+
+    btnSubmit.addEventListener("click", async ()=>{
+      if(activeSlotId !== "01") return;
+
+      const val = answerInput.value.trim();
+      if(!val){
+        hintEl.textContent = "암호를 입력해줘.";
+        hintEl.className = "hint bad";
+        return;
+      }
+
+      btnSubmit.disabled = true;
+      btnCancel.disabled = true;
+      hintEl.textContent = "확인 중...";
+      hintEl.className = "hint";
+
+      try{
+        const res = await claimSlot01(val);
+        if(!res.ok){
+          hintEl.textContent = "틀렸어. 다시 입력해봐.";
+          hintEl.className = "hint bad";
+          return;
+        }
+        if(res.already){
+          hintEl.textContent = "이미 완성된 슬롯이야.";
+          hintEl.className = "hint ok";
+        }else{
+          hintEl.textContent = "성공! 벽돌 타일이 완성됐어.";
+          hintEl.className = "hint ok";
+        }
+        // UI 갱신
+        await loadStates();
+        setTimeout(closeModal, 450);
+      }catch(e){
+        console.error(e);
+        hintEl.textContent = e?.message ?? String(e);
+        hintEl.className = "hint bad";
+      }finally{
+        btnSubmit.disabled = false;
+        btnCancel.disabled = false;
       }
     });
 
-    refreshBtn.addEventListener("click", load);
-    load();
+    // 시작
+    try{
+      app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      setStatus("Firebase 초기화 완료. 상태 로딩 시작...");
+      await loadStates();
+    }catch(e){
+      console.error(e);
+      setStatus("Firebase 초기화 실패: " + (e?.message ?? String(e)));
+    }
   </script>
 </body>
 </html>
