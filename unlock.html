@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Unlock</title>
+</head>
+<body>
+
+  <h1>암호 입력 페이지</h1>
+
+  <input id="code" placeholder="암호 입력">
+  <button onclick="check()">확인</button>
+
+  <p id="msg"></p>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const slot = params.get("slot");
+
+    function check() {
+      const input = document.getElementById("code").value;
+
+      if (input === "OPEN") {
+        document.getElementById("msg").innerText =
+          slot + "번 퍼즐 해금 성공!";
+        setTimeout(() => {
+          location.href = "./index.html";
+        }, 1000);
+      } else {
+        document.getElementById("msg").innerText =
+          "암호가 틀렸습니다";
+      }
+    }
+  </script>
+
+</body>
+</html>
