@@ -107,10 +107,12 @@ body{
 }
 
 .mask{
-  background:rgba(0,0,0,.68);
-  border:1px solid rgba(255,255,255,.06);
-  transition:opacity .2s ease;
+  background:#000;
 }
+.mask.open{
+  display:none;   /* 🔑 이게 핵심 */
+}
+
 .mask.open{
   opacity:0;
   pointer-events:none;
