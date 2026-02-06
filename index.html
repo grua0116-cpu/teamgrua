@@ -33,7 +33,6 @@
           <div class="campus">
             <!-- paths (campus roads) -->
             <svg class="paths" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <!-- 대충 “캠퍼스 길” 느낌 (원하면 나중에 너 스타일로 변경 가능) -->
               <line class="path" x1="15" y1="18" x2="50" y2="18"></line>
               <line class="path" x1="50" y1="18" x2="85" y2="18"></line>
 
@@ -66,9 +65,6 @@
     const statusEl = document.getElementById("status");
     const toastEl = document.getElementById("toast");
 
-    // ===== 캠퍼스 건물 배치 (0~100 좌표) =====
-    // slot(01~16) ↔ 건물 1:1 매칭
-    // x,y는 “건물 카드의 중심” 위치 (퍼즐 위에 얹힘)
     const CAMPUS = [
       { slot:"01", name:"정문",       desc:"입학처",        x:15, y:18 },
       { slot:"02", name:"본관",       desc:"행정동",        x:50, y:18 },
@@ -100,7 +96,6 @@
       toastEl.textContent = `${opened}번 조각이 공개되었습니다.`;
     }
 
-    // ===== Layer 2: 16 masks 생성 =====
     function buildMasks(){
       masksEl.innerHTML = "";
       for (let i=1; i<=16; i++){
@@ -112,7 +107,6 @@
       }
     }
 
-    // ===== Layer 3: 캠퍼스 건물 생성 =====
     function buildCampus(map){
       buildingsEl.innerHTML = "";
       for (const b of CAMPUS){
@@ -122,7 +116,6 @@
         el.className = "building " + (claimed ? "open" : "locked");
         el.style.left = b.x + "%";
         el.style.top  = b.y + "%";
-        el.dataset.slot = b.slot;
 
         el.innerHTML = `
           <div class="tag">
@@ -141,7 +134,6 @@
       }
     }
 
-    // ===== claimed=true면 마스크를 “사라지게” =====
     function applyClaims(map){
       document.querySelectorAll(".mask").forEach(mask => {
         const slot = mask.dataset.slot;
@@ -157,7 +149,6 @@
 
       try{
         const map = await fetchAllSlots();
-
         applyClaims(map);
         buildCampus(map);
 
