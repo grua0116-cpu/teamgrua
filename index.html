@@ -3,12 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GRUA Puzzle – Season 1</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <title>GRUA Puzzle · Season 1</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
-  <!-- ====== 학교 맵 UI 유지용 프레임 (원래 있던 헤더/네비 느낌으로 구성) ====== -->
   <header class="topbar">
     <div class="brand">
       <div class="logo">GRUA</div>
@@ -17,69 +15,52 @@
         <div class="subtitle">claimed=true 슬롯만 퍼즐이 열립니다</div>
       </div>
     </div>
-
-    <div class="status" id="status">
+    <div class="status ok" id="status">
       <span class="dot" aria-hidden="true"></span>
-      <span class="text">Firestore 연결 준비중…</span>
+      <span class="text">Firestore 연결됨 · 실시간 동기화 대기중</span>
     </div>
   </header>
 
   <main class="layout">
-    <!-- 좌측: 학교 맵 영역(유지) -->
     <section class="panel mapPanel">
       <div class="panelTitle">학교 맵</div>
-
-      <!-- 여기에 기존 “학교 맵 UI” 마크업이 있으면 그대로 붙여넣어도 됨 -->
       <div class="schoolMapStub">
         <div class="stubCard">
           <div class="stubTitle">MAP UI Placeholder</div>
           <div class="stubText">
-            기존 “학교 맵 UI”를 여기 영역에 그대로 유지/복붙하세요.<br/>
+            기존 “학교 맵 UI”를 여기 영역에 그대로 유지/붙여넣세요.<br />
             퍼즐은 오른쪽 패널에서 열립니다.
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 우측: 퍼즐 -->
     <section class="panel puzzlePanel">
       <div class="panelTitle">
         퍼즐 보드 <span class="hint">(images/puzzle.png · 4x4)</span>
       </div>
 
       <div class="puzzleWrap">
-        <!-- 퍼즐 프레임(16개 타일 absolute) -->
-        <div class="puzzleBoard" id="puzzleBoard" aria-label="Puzzle board">
-          <!-- JS가 16칸 생성 -->
-        </div>
+        <div class="puzzleBoard" id="puzzleBoard"></div>
       </div>
 
       <div class="legend">
-        <div class="legendItem">
-          <span class="chip open"></span> 열린 칸 (claimed=true)
-        </div>
-        <div class="legendItem">
-          <span class="chip closed"></span> 닫힌 칸
-        </div>
+        <div class="legendItem"><span class="chip open"></span> 열린 칸 (claimed=true)</div>
+        <div class="legendItem"><span class="chip closed"></span> 닫힌 칸</div>
       </div>
     </section>
   </main>
 
   <footer class="footer">
-    <div class="footLeft">Firestore 경로: <code>game/season1/slots/01~16</code></div>
-    <div class="footRight">배포: GitHub Pages</div>
+    <div class="footLeft">Firestore: <code>game/season1/slots/01~16</code></div>
+    <div class="footRight">GitHub Pages</div>
   </footer>
 
-  <!-- ====== Firebase (CDN) ====== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      onSnapshot
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-    // ✅ 여기만 본인 firebaseConfig로 교체
+    // ✅ 너는 여기만 본인 값으로 교체
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -89,38 +70,30 @@
       appId: "YOUR_APP_ID"
     };
 
-    // ====== DOM ======
     const boardEl = document.getElementById("puzzleBoard");
     const statusEl = document.getElementById("status");
 
-    // ====== Constants ======
     const ROWS = 4;
     const COLS = 4;
-    const TILE_W = 25; // %
-    const TILE_H = 25; // %
+    const TILE_W = 25;
+    const TILE_H = 25;
     const DOC_IDS = Array.from({ length: 16 }, (_, i) => String(i + 1).padStart(2, "0"));
 
-    // "01 → 좌상단" 정확 매핑(행 우선):
-    // 01 02 03 04
-    // 05 06 07 08
-    // 09 10 11 12
-    // 13 14 15 16
+    // 01 좌상단, 16 우하단 (행우선)
     function idToRowCol(id) {
-      const n = parseInt(id, 10);   // 1~16
-      const idx = n - 1;            // 0~15
-      const row = Math.floor(idx / COLS);
-      const col = idx % COLS;
-      return { row, col };
+      const idx = parseInt(id, 10) - 1;
+      return { row: Math.floor(idx / COLS), col: idx % COLS };
+    }
+    function posPercent(step) {
+      return (step * 100) / (COLS - 1); // 0, 33.33, 66.66, 100
     }
 
-    // background-position 퍼센트 계산:
-    // background-size: 400% 400%일 때, 4분할은 위치가 0 / 33.333 / 66.666 / 100
-    function posPercent(stepIndex) {
-      if (COLS === 1) return 0;
-      return (stepIndex * 100) / (COLS - 1);
+    function setStatus(ok, text) {
+      statusEl.classList.toggle("ok", !!ok);
+      statusEl.classList.toggle("bad", !ok);
+      statusEl.querySelector(".text").textContent = text;
     }
 
-    // ====== UI Build: 16 tiles absolute ======
     function buildTiles() {
       boardEl.innerHTML = "";
       for (const id of DOC_IDS) {
@@ -130,35 +103,29 @@
         tile.className = "tile closed";
         tile.dataset.id = id;
 
-        // absolute 좌표(top/left %) — grid 미사용
         tile.style.top = `${row * TILE_H}%`;
         tile.style.left = `${col * TILE_W}%`;
         tile.style.width = `${TILE_W}%`;
         tile.style.height = `${TILE_H}%`;
-
-        // 퍼즐 조각 배경 위치
         tile.style.backgroundPosition = `${posPercent(col)}% ${posPercent(row)}%`;
 
-        // 라벨(디버그/운영 중 숨겨도 됨)
+        // 타일별 딜레이(자동) — 더 “열림 연출” 같아짐
+        tile.style.setProperty("--delay", (parseInt(id, 10) * 28) % 240);
+
         const badge = document.createElement("div");
         badge.className = "badge";
         badge.textContent = id;
         tile.appendChild(badge);
 
-        // 닫힘 오버레이(락)
         const lock = document.createElement("div");
         lock.className = "lock";
-        lock.innerHTML = `
-          <div class="lockIcon" aria-hidden="true">🔒</div>
-          <div class="lockText">LOCKED</div>
-        `;
+        lock.innerHTML = `<div class="lockIcon">🔒</div><div class="lockText">LOCKED</div>`;
         tile.appendChild(lock);
 
         boardEl.appendChild(tile);
       }
     }
 
-    // ====== Apply Firestore state ======
     function setTileClaimed(id, claimed) {
       const tile = boardEl.querySelector(`.tile[data-id="${id}"]`);
       if (!tile) return;
@@ -172,52 +139,46 @@
       }
     }
 
-    function setStatus(ok, text) {
-      statusEl.classList.toggle("ok", !!ok);
-      statusEl.classList.toggle("bad", !ok);
-      statusEl.querySelector(".text").textContent = text;
+    // ✅ 여기부터 “고장 안 나는 방식” 핵심:
+    // 컬렉션을 한 번에 읽지 말고, 문서 16개를 각각 구독한다.
+    function subscribeAllDocs(db) {
+      let okCount = 0;
+
+      for (const id of DOC_IDS) {
+        const ref = doc(db, "game", "season1", "slots", id);
+
+        onSnapshot(
+          ref,
+          (snap) => {
+            // 문서가 없어도 안전하게 처리
+            const data = snap.exists() ? (snap.data() || {}) : {};
+            setTileClaimed(id, !!data.claimed);
+
+            // 상태 문구는 대충만(너 수정할 필요 없게)
+            okCount++;
+            setStatus(true, `동기화 중… (${Math.min(okCount, 16)}/16)`);
+            if (okCount >= 16) setStatus(true, `동기화 완료 · ${new Date().toLocaleTimeString()}`);
+          },
+          () => {
+            // 특정 문서만 실패해도 나머지는 계속 동작
+            setTileClaimed(id, false);
+            setStatus(false, "일부 문서 읽기 실패 (Rules/권한 확인)");
+          }
+        );
+      }
     }
 
-    // ====== Init ======
+    // Init
     buildTiles();
 
-    let db;
     try {
       const app = initializeApp(firebaseConfig);
-      db = getFirestore(app);
-      setStatus(true, "Firestore 연결됨 · 실시간 동기화 대기중");
+      const db = getFirestore(app);
+      setStatus(true, "Firestore 연결됨 · 실시간 동기화 시작");
+      subscribeAllDocs(db);
     } catch (e) {
       console.error(e);
       setStatus(false, "Firebase 초기화 실패 (firebaseConfig 확인)");
-    }
-
-    // 실시간 구독: game/season1/slots (collection)
-    // 문서: 01~16, 필드: claimed(boolean), answer(string)
-    if (db) {
-      const slotsCol = collection(db, "game", "season1", "slots");
-
-      onSnapshot(
-        slotsCol,
-        (snap) => {
-          // 기본: 전부 닫음(문서 없거나 claimed=false 포함 대비)
-          for (const id of DOC_IDS) setTileClaimed(id, false);
-
-          // 문서 있는 것만 반영
-          snap.forEach((doc) => {
-            const id = doc.id; // "01"~"16"
-            if (!DOC_IDS.includes(id)) return;
-
-            const data = doc.data() || {};
-            setTileClaimed(id, !!data.claimed);
-          });
-
-          setStatus(true, `동기화 완료 · 업데이트 ${new Date().toLocaleTimeString()}`);
-        },
-        (err) => {
-          console.error(err);
-          setStatus(false, "Firestore 읽기 실패 (Rules/권한/경로 확인)");
-        }
-      );
     }
   </script>
 </body>
