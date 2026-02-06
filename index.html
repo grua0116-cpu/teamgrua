@@ -3,180 +3,222 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Season 1</title>
-  <link rel="stylesheet" href="./assets/styles.css" />
+  <title>GRUA Puzzle – Season 1</title>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
+
 <body>
-  <div class="container">
-    <div class="card">
-      <div class="header">
-        <div>
-          <div class="title">Season 1 Puzzle</div>
-          <div class="sub">
-            학교 맵(건물)을 클릭 → 힌트 → 입력 → 성공 시 퍼즐 이미지가 <b>한 칸(1/16)</b>씩 공개됩니다.
-          </div>
-        </div>
-        <a class="btn" href="./index.html">새로고침</a>
+  <!-- ====== 학교 맵 UI 유지용 프레임 (원래 있던 헤더/네비 느낌으로 구성) ====== -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">GRUA</div>
+      <div class="meta">
+        <div class="title">CAMPUS MAP · Season 1</div>
+        <div class="subtitle">claimed=true 슬롯만 퍼즐이 열립니다</div>
       </div>
-
-      <div id="toast" class="toast"></div>
-
-      <div class="stage-wrap">
-        <div class="stage">
-          <div class="puzzle-image"></div>
-          <div class="masks" id="masks"></div>
-
-          <div class="campus">
-            <svg class="paths" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <line class="path" x1="15" y1="18" x2="50" y2="18"></line>
-              <line class="path" x1="50" y1="18" x2="85" y2="18"></line>
-              <line class="path" x1="15" y1="18" x2="15" y2="52"></line>
-              <line class="path" x1="50" y1="18" x2="50" y2="52"></line>
-              <line class="path" x1="85" y1="18" x2="85" y2="52"></line>
-              <line class="path" x1="15" y1="52" x2="50" y2="52"></line>
-              <line class="path" x1="50" y1="52" x2="85" y2="52"></line>
-              <line class="path" x1="25" y1="85" x2="75" y2="85"></line>
-              <line class="path" x1="50" y1="52" x2="50" y2="85"></line>
-            </svg>
-
-            <div id="buildings"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="msg" id="status">불러오는 중…</div>
     </div>
-  </div>
 
-  <script type="module">
-    import { fetchAllSlots } from "./assets/app.js";
+    <div class="status" id="status">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="text">Firestore 연결 준비중…</span>
+    </div>
+  </header>
 
-    const masksEl = document.getElementById("masks");
-    const buildingsEl = document.getElementById("buildings");
-    const statusEl = document.getElementById("status");
-    const toastEl = document.getElementById("toast");
+  <main class="layout">
+    <!-- 좌측: 학교 맵 영역(유지) -->
+    <section class="panel mapPanel">
+      <div class="panelTitle">학교 맵</div>
 
-    // 학교 맵(건물) 01~16
-    const CAMPUS = [
-      { slot:"01", name:"정문",       desc:"입학처",        x:15, y:18 },
-      { slot:"02", name:"본관",       desc:"행정동",        x:50, y:18 },
-      { slot:"03", name:"도서관",     desc:"열람실",        x:85, y:18 },
-
-      { slot:"04", name:"강의동 A",   desc:"1층 로비",      x:15, y:38 },
-      { slot:"05", name:"강의동 B",   desc:"강의실",        x:50, y:38 },
-      { slot:"06", name:"연구관",     desc:"랩동",          x:85, y:38 },
-
-      { slot:"07", name:"학생회관",   desc:"라운지",        x:15, y:58 },
-      { slot:"08", name:"중앙광장",   desc:"분수대",        x:50, y:52 },
-      { slot:"09", name:"공연장",     desc:"오디토리움",    x:85, y:58 },
-
-      { slot:"10", name:"음악관",     desc:"스튜디오",      x:22, y:78 },
-      { slot:"11", name:"미술관",     desc:"전시실",        x:38, y:72 },
-      { slot:"12", name:"체육관",     desc:"아레나",        x:62, y:72 },
-      { slot:"13", name:"기숙사",     desc:"레지던스",      x:78, y:78 },
-
-      { slot:"14", name:"카페테리아", desc:"식당",          x:25, y:90 },
-      { slot:"15", name:"동아리방",   desc:"클럽",          x:50, y:90 },
-      { slot:"16", name:"비밀정원",   desc:"엔딩",          x:75, y:90 },
-    ];
-
-    function showToastFromQuery(){
-      const qs = new URLSearchParams(location.search);
-      const opened = qs.get("opened");
-      if (!opened) return;
-      toastEl.style.display = "block";
-      toastEl.textContent = `${opened}번 조각이 공개되었습니다.`;
-    }
-
-    // ✅ 마스크를 "좌표"로 강제 배치: 01=좌상단, 16=우하단 (절대 안 어긋남)
-    function buildMasks(){
-      masksEl.innerHTML = "";
-
-      for (let n = 1; n <= 16; n++){
-        const slot = String(n).padStart(2, "0");
-
-        const index = n - 1;
-        const row = Math.floor(index / 4); // 0..3
-        const col = index % 4;             // 0..3
-
-        const mask = document.createElement("div");
-        mask.className = "mask";
-        mask.dataset.slot = slot;
-        mask.style.top  = (row * 25) + "%";
-        mask.style.left = (col * 25) + "%";
-
-        masksEl.appendChild(mask);
-      }
-    }
-
-    // ✅ claimed가 true면: opening 애니메이션 → open으로 제거
-    function applyClaimsWithAnim(map){
-      document.querySelectorAll(".mask").forEach(mask => {
-        const slot = mask.dataset.slot;
-        const claimed = !!map?.[slot]?.claimed;
-
-        if (claimed){
-          // 이미 열려있으면 바로 제거
-          // (페이지 재방문/새로고침 시 깔끔)
-          mask.classList.add("opening");
-          // 애니메이션 끝난 뒤 완전 제거
-          setTimeout(() => {
-            mask.classList.add("open");
-          }, 450);
-        }
-      });
-    }
-
-    function buildCampus(map){
-      buildingsEl.innerHTML = "";
-
-      for (const b of CAMPUS){
-        const claimed = !!map?.[b.slot]?.claimed;
-
-        const el = document.createElement("div");
-        el.className = "building " + (claimed ? "open" : "locked");
-        el.style.left = b.x + "%";
-        el.style.top  = b.y + "%";
-
-        el.innerHTML = `
-          <div class="tag">
-            <div class="code">${b.slot}</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.55)">${claimed ? "OPEN" : "LOCK"}</div>
+      <!-- 여기에 기존 “학교 맵 UI” 마크업이 있으면 그대로 붙여넣어도 됨 -->
+      <div class="schoolMapStub">
+        <div class="stubCard">
+          <div class="stubTitle">MAP UI Placeholder</div>
+          <div class="stubText">
+            기존 “학교 맵 UI”를 여기 영역에 그대로 유지/복붙하세요.<br/>
+            퍼즐은 오른쪽 패널에서 열립니다.
           </div>
-          <div class="name">${b.name}</div>
-          <div class="desc">${b.desc}</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 우측: 퍼즐 -->
+    <section class="panel puzzlePanel">
+      <div class="panelTitle">
+        퍼즐 보드 <span class="hint">(images/puzzle.png · 4x4)</span>
+      </div>
+
+      <div class="puzzleWrap">
+        <!-- 퍼즐 프레임(16개 타일 absolute) -->
+        <div class="puzzleBoard" id="puzzleBoard" aria-label="Puzzle board">
+          <!-- JS가 16칸 생성 -->
+        </div>
+      </div>
+
+      <div class="legend">
+        <div class="legendItem">
+          <span class="chip open"></span> 열린 칸 (claimed=true)
+        </div>
+        <div class="legendItem">
+          <span class="chip closed"></span> 닫힌 칸
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footLeft">Firestore 경로: <code>game/season1/slots/01~16</code></div>
+    <div class="footRight">배포: GitHub Pages</div>
+  </footer>
+
+  <!-- ====== Firebase (CDN) ====== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    // ✅ 여기만 본인 firebaseConfig로 교체
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // ====== DOM ======
+    const boardEl = document.getElementById("puzzleBoard");
+    const statusEl = document.getElementById("status");
+
+    // ====== Constants ======
+    const ROWS = 4;
+    const COLS = 4;
+    const TILE_W = 25; // %
+    const TILE_H = 25; // %
+    const DOC_IDS = Array.from({ length: 16 }, (_, i) => String(i + 1).padStart(2, "0"));
+
+    // "01 → 좌상단" 정확 매핑(행 우선):
+    // 01 02 03 04
+    // 05 06 07 08
+    // 09 10 11 12
+    // 13 14 15 16
+    function idToRowCol(id) {
+      const n = parseInt(id, 10);   // 1~16
+      const idx = n - 1;            // 0~15
+      const row = Math.floor(idx / COLS);
+      const col = idx % COLS;
+      return { row, col };
+    }
+
+    // background-position 퍼센트 계산:
+    // background-size: 400% 400%일 때, 4분할은 위치가 0 / 33.333 / 66.666 / 100
+    function posPercent(stepIndex) {
+      if (COLS === 1) return 0;
+      return (stepIndex * 100) / (COLS - 1);
+    }
+
+    // ====== UI Build: 16 tiles absolute ======
+    function buildTiles() {
+      boardEl.innerHTML = "";
+      for (const id of DOC_IDS) {
+        const { row, col } = idToRowCol(id);
+
+        const tile = document.createElement("div");
+        tile.className = "tile closed";
+        tile.dataset.id = id;
+
+        // absolute 좌표(top/left %) — grid 미사용
+        tile.style.top = `${row * TILE_H}%`;
+        tile.style.left = `${col * TILE_W}%`;
+        tile.style.width = `${TILE_W}%`;
+        tile.style.height = `${TILE_H}%`;
+
+        // 퍼즐 조각 배경 위치
+        tile.style.backgroundPosition = `${posPercent(col)}% ${posPercent(row)}%`;
+
+        // 라벨(디버그/운영 중 숨겨도 됨)
+        const badge = document.createElement("div");
+        badge.className = "badge";
+        badge.textContent = id;
+        tile.appendChild(badge);
+
+        // 닫힘 오버레이(락)
+        const lock = document.createElement("div");
+        lock.className = "lock";
+        lock.innerHTML = `
+          <div class="lockIcon" aria-hidden="true">🔒</div>
+          <div class="lockText">LOCKED</div>
         `;
+        tile.appendChild(lock);
 
-        el.addEventListener("click", () => {
-          location.href = `./hint.html?slot=${encodeURIComponent(b.slot)}`;
-        });
-
-        buildingsEl.appendChild(el);
+        boardEl.appendChild(tile);
       }
     }
 
-    async function main(){
-      showToastFromQuery();
-      buildMasks();
+    // ====== Apply Firestore state ======
+    function setTileClaimed(id, claimed) {
+      const tile = boardEl.querySelector(`.tile[data-id="${id}"]`);
+      if (!tile) return;
 
-      try{
-        const map = await fetchAllSlots(); // {"01":{claimed...}, ...}
-
-        // 애니메이션 적용
-        applyClaimsWithAnim(map);
-        buildCampus(map);
-
-        const opened = Object.values(map).filter(s => s.claimed).length;
-        statusEl.textContent = `진행: ${opened} / 16`;
-        statusEl.className = "msg " + (opened ? "ok" : "");
-      }catch(e){
-        console.error(e);
-        statusEl.textContent = "불러오기 실패: firebaseConfig / Firestore 경로/규칙 확인";
-        statusEl.className = "msg bad";
+      if (claimed) {
+        tile.classList.remove("closed");
+        tile.classList.add("open");
+      } else {
+        tile.classList.remove("open");
+        tile.classList.add("closed");
       }
     }
 
-    main();
+    function setStatus(ok, text) {
+      statusEl.classList.toggle("ok", !!ok);
+      statusEl.classList.toggle("bad", !ok);
+      statusEl.querySelector(".text").textContent = text;
+    }
+
+    // ====== Init ======
+    buildTiles();
+
+    let db;
+    try {
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      setStatus(true, "Firestore 연결됨 · 실시간 동기화 대기중");
+    } catch (e) {
+      console.error(e);
+      setStatus(false, "Firebase 초기화 실패 (firebaseConfig 확인)");
+    }
+
+    // 실시간 구독: game/season1/slots (collection)
+    // 문서: 01~16, 필드: claimed(boolean), answer(string)
+    if (db) {
+      const slotsCol = collection(db, "game", "season1", "slots");
+
+      onSnapshot(
+        slotsCol,
+        (snap) => {
+          // 기본: 전부 닫음(문서 없거나 claimed=false 포함 대비)
+          for (const id of DOC_IDS) setTileClaimed(id, false);
+
+          // 문서 있는 것만 반영
+          snap.forEach((doc) => {
+            const id = doc.id; // "01"~"16"
+            if (!DOC_IDS.includes(id)) return;
+
+            const data = doc.data() || {};
+            setTileClaimed(id, !!data.claimed);
+          });
+
+          setStatus(true, `동기화 완료 · 업데이트 ${new Date().toLocaleTimeString()}`);
+        },
+        (err) => {
+          console.error(err);
+          setStatus(false, "Firestore 읽기 실패 (Rules/권한/경로 확인)");
+        }
+      );
+    }
   </script>
 </body>
 </html>
