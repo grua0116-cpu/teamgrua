@@ -22,7 +22,7 @@
       <div id="toast" class="toast"></div>
 
       <div class="stage-wrap">
-        <div class="stage" id="stage">
+        <div class="stage">
           <!-- Layer 1: ONE full image -->
           <div class="puzzle-image" aria-label="puzzle"></div>
 
@@ -31,23 +31,18 @@
 
           <!-- Layer 3: campus map overlay -->
           <div class="campus">
-            <!-- paths (campus roads) -->
             <svg class="paths" viewBox="0 0 100 100" preserveAspectRatio="none">
               <line class="path" x1="15" y1="18" x2="50" y2="18"></line>
               <line class="path" x1="50" y1="18" x2="85" y2="18"></line>
-
               <line class="path" x1="15" y1="18" x2="15" y2="52"></line>
               <line class="path" x1="50" y1="18" x2="50" y2="52"></line>
               <line class="path" x1="85" y1="18" x2="85" y2="52"></line>
-
               <line class="path" x1="15" y1="52" x2="50" y2="52"></line>
               <line class="path" x1="50" y1="52" x2="85" y2="52"></line>
-
               <line class="path" x1="25" y1="85" x2="75" y2="85"></line>
               <line class="path" x1="50" y1="52" x2="50" y2="85"></line>
             </svg>
 
-            <!-- buildings injected by JS -->
             <div id="buildings"></div>
           </div>
         </div>
@@ -58,13 +53,23 @@
   </div>
 
   <script type="module">
-    import { fetchAllSlots, pad2 } from "./assets/app.js";
+    import { fetchAllSlots } from "./assets/app.js";
 
     const masksEl = document.getElementById("masks");
     const buildingsEl = document.getElementById("buildings");
     const statusEl = document.getElementById("status");
     const toastEl = document.getElementById("toast");
 
+    // ✅ 1→1 고정 배치: 좌상단부터 01,02,03,04 ... 우하단 16
+    // (이 배열 순서 = 마스크 칸 순서)
+    const TILE_SLOTS = [
+      "01","02","03","04",
+      "05","06","07","08",
+      "09","10","11","12",
+      "13","14","15","16"
+    ];
+
+    // 학교 맵(건물)도 01~16을 그대로 씀
     const CAMPUS = [
       { slot:"01", name:"정문",       desc:"입학처",        x:15, y:18 },
       { slot:"02", name:"본관",       desc:"행정동",        x:50, y:18 },
@@ -96,15 +101,25 @@
       toastEl.textContent = `${opened}번 조각이 공개되었습니다.`;
     }
 
+    // ✅ 마스크 16칸 생성: 칸 순서대로 TILE_SLOTS를 data-slot에 박아넣는다.
     function buildMasks(){
       masksEl.innerHTML = "";
-      for (let i=1; i<=16; i++){
-        const slot = pad2(i);
+      for (let i = 0; i < 16; i++){
+        const slot = TILE_SLOTS[i];
         const mask = document.createElement("div");
         mask.className = "mask";
         mask.dataset.slot = slot;
         masksEl.appendChild(mask);
       }
+    }
+
+    function applyClaims(map){
+      document.querySelectorAll(".mask").forEach(mask => {
+        const slot = mask.dataset.slot;
+        const claimed = !!map?.[slot]?.claimed;
+        if (claimed) mask.classList.add("open");
+        else mask.classList.remove("open");
+      });
     }
 
     function buildCampus(map){
@@ -134,21 +149,12 @@
       }
     }
 
-    function applyClaims(map){
-      document.querySelectorAll(".mask").forEach(mask => {
-        const slot = mask.dataset.slot;
-        const claimed = !!map?.[slot]?.claimed;
-        if (claimed) mask.classList.add("open");
-        else mask.classList.remove("open");
-      });
-    }
-
     async function main(){
       showToastFromQuery();
       buildMasks();
 
       try{
-        const map = await fetchAllSlots();
+        const map = await fetchAllSlots(); // { "01":{claimed...}, ... }
         applyClaims(map);
         buildCampus(map);
 
