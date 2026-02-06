@@ -2,16 +2,26 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>힌트</title>
-  <link rel="stylesheet" href="./assets/styles.css">
+  <title>Hint</title>
 </head>
 <body>
 
   <h1>힌트 페이지</h1>
 
-  <p>여기까지 오면 페이지 분리 성공</p>
+  <p id="hint">힌트 로딩 중...</p>
 
-  <a href="./index.html">메인으로 돌아가기</a>
+  <a id="go" href="#">입력 페이지로</a>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const slot = params.get("slot");
+
+    document.getElementById("hint").innerText =
+      "이건 " + slot + "번 힌트입니다.";
+
+    document.getElementById("go").href =
+      "./unlock.html?slot=" + slot;
+  </script>
 
 </body>
 </html>
