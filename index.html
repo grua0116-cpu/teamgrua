@@ -3,18 +3,240 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TEAMGRUA CHECK</title>
+  <title>teamgrua · season1</title>
+
   <style>
-    body{margin:0; font-family:system-ui; background:#05080b; color:#22ffd4; display:flex; align-items:center; justify-content:center; height:100vh;}
-    .box{border:1px solid rgba(34,255,212,.4); padding:18px 20px; border-radius:14px;}
-    .big{font-size:28px; font-weight:900; letter-spacing:.06em;}
-    .small{margin-top:10px; opacity:.8; font-size:13px; color:#e9f3f1;}
+    :root{
+      --bg:#05080b; --panel:#0b1014; --card:#070b0e;
+      --text:#e9f3f1; --muted:rgba(233,243,241,.7);
+      --line:rgba(255,255,255,.1); --accent:#22ffd4;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+    .top{position:sticky;top:0;z-index:10;background:#060a0d;border-bottom:1px solid var(--line);padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+    .brand{display:flex;gap:10px;align-items:center}
+    .dot{width:10px;height:10px;background:var(--accent);border-radius:50%;box-shadow:0 0 12px rgba(34,255,212,.7)}
+    .t1{font-weight:900;letter-spacing:.04em}
+    .t2{font-size:12px;color:var(--muted);margin-top:2px}
+    .wrap{width:min(920px,calc(100% - 28px));margin:18px auto 40px}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+    .sub{margin-top:6px;font-size:13px;color:var(--muted)}
+    .grid{margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    @media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
+    .tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:.12s;position:relative}
+    .tile:hover{border-color:rgba(34,255,212,.35);transform:translateY(-1px)}
+    .tile.locked{opacity:.7;cursor:default}
+    .tile.locked:hover{transform:none;border-color:var(--line)}
+    .id{font-weight:900;letter-spacing:.08em}
+    .desc{margin-top:6px;font-size:13px;color:var(--muted)}
+    .badge{float:right;font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid var(--line)}
+    .badge.open{color:var(--accent);border-color:rgba(34,255,212,.55)}
+    .btn{padding:8px 12px;border-radius:12px;background:transparent;border:1px solid var(--line);color:var(--text);cursor:pointer;font-weight:900}
+    .btn.primary{border-color:rgba(34,255,212,.65);box-shadow:0 0 0 2px rgba(34,255,212,.12) inset}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .foot{margin-top:12px;font-size:12px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .err{display:none;margin-top:10px;white-space:pre-wrap;background:#120509;border:1px solid rgba(255,255,255,.12);color:#ffd7df;padding:10px;border-radius:12px;font-size:12px}
+    .err.show{display:block}
+
+    /* modal */
+    .modal.hidden{display:none}
+    .modal{position:fixed;inset:0;z-index:9999}
+    .back{position:absolute;inset:0;background:rgba(0,0,0,.62)}
+    .card{position:relative;z-index:1;width:min(380px,calc(100% - 28px));margin:18vh auto;background:rgba(11,16,20,.95);border:1px solid var(--line);border-radius:14px;padding:14px}
+    .mttl{font-weight:900;letter-spacing:.1em}
+    .msub{margin-top:6px;font-size:13px;color:var(--muted)}
+    input{width:100%;margin-top:12px;padding:10px;background:#000;border:1px solid var(--line);color:var(--text);border-radius:10px;outline:none}
+    input:focus{border-color:rgba(34,255,212,.55);box-shadow:0 0 0 3px rgba(34,255,212,.12)}
+    .row{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+    .msg{margin-top:8px;min-height:18px;font-size:13px;color:var(--muted)}
   </style>
 </head>
+
 <body>
-  <div class="box">
-    <div class="big">VERSION__CHECK__777</div>
-    <div class="small">If you can see this, GitHub Pages is serving the NEW index.html.</div>
+  <header class="top">
+    <div class="brand">
+      <span class="dot"></span>
+      <div>
+        <div class="t1">teamgrua</div>
+        <div class="t2">season1 / fragments</div>
+      </div>
+    </div>
+    <button id="refresh" class="btn">REFRESH</button>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <div class="t1" style="letter-spacing:.12em">FRAGMENTS</div>
+      <div class="sub">Click → enter code → lock (claimed=true).</div>
+      <div id="err" class="err"></div>
+    </section>
+
+    <section id="grid" class="grid"></section>
+
+    <div class="foot">
+      Accent: <code>--accent</code>
+      <span id="status">Ready.</span>
+    </div>
+  </main>
+
+  <div id="modal" class="modal hidden">
+    <div id="back" class="back"></div>
+    <div class="card">
+      <div class="mttl">LOCK FRAGMENT</div>
+      <div id="msub" class="msub">암호를 입력하면 이 조각을 잠급니다.</div>
+      <input id="code" placeholder="Enter code" />
+      <div class="row">
+        <button id="cancel" class="btn">CANCEL</button>
+        <button id="lock" class="btn primary">LOCK</button>
+      </div>
+      <div id="msg" class="msg"></div>
+    </div>
   </div>
+
+  <script type="module">
+    const err = document.getElementById("err");
+    const status = document.getElementById("status");
+    function showErr(text){ err.textContent = text; err.classList.add("show"); }
+
+    window.addEventListener("error", (e)=> showErr("JS ERROR\\n" + (e.message || e.error)));
+    window.addEventListener("unhandledrejection", (e)=> showErr("PROMISE ERROR\\n" + (e.reason?.message || e.reason)));
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+
+    // ✅ 너 firebaseConfig (그대로)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
+      authDomain: "teamgrua-f465c.firebaseapp.com",
+      projectId: "teamgrua-f465c",
+      storageBucket: "teamgrua-f465c.firebasestorage.app",
+      messagingSenderId: "1019914743201",
+      appId: "1:1019914743201:web:171550946aafb90ab96fe0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const grid = document.getElementById("grid");
+    const refreshBtn = document.getElementById("refresh");
+
+    // modal
+    const modal = document.getElementById("modal");
+    const back = document.getElementById("back");
+    const cancel = document.getElementById("cancel");
+    const lockBtn = document.getElementById("lock");
+    const code = document.getElementById("code");
+    const msub = document.getElementById("msub");
+    const msg = document.getElementById("msg");
+
+    let currentRef = null;
+    let currentId = null;
+
+    function openModal(id, ref, claimed){
+      currentId = id;
+      currentRef = ref;
+      modal.classList.remove("hidden");
+      code.value = "";
+      msg.textContent = "";
+
+      if (claimed === true) {
+        msub.textContent = "이미 잠긴 조각입니다.";
+        code.disabled = true;
+        lockBtn.disabled = true;
+      } else {
+        msub.textContent = `FRAGMENT ${id} 를 잠그려면 암호를 입력하세요.`;
+        code.disabled = false;
+        lockBtn.disabled = false;
+        setTimeout(()=>code.focus(),0);
+      }
+    }
+    function closeModal(){ modal.classList.add("hidden"); }
+
+    cancel.addEventListener("click", closeModal);
+    back.addEventListener("click", closeModal);
+    code.addEventListener("keydown", (e)=> { if(e.key==="Enter") lockBtn.click(); });
+
+    async function readClaimed(ref){
+      const snap = await getDoc(ref);
+      if(!snap.exists()) return false;
+      const raw = snap.data().claimed;
+      // 🔒 boolean/문자열 모두 안전 처리
+      return (raw === true || raw === "true");
+    }
+
+    function tileHTML(id, claimed){
+      return `
+        <div class="id">FRAGMENT ${id}
+          <span class="badge ${claimed?'':'open'}">${claimed?'LOCKED':'OPEN'}</span>
+        </div>
+        <div class="desc">${claimed ? "This fragment is locked." : "Click to lock with a code."}</div>
+      `;
+    }
+
+    async function load(){
+      status.textContent = "Loading...";
+      grid.innerHTML = "";
+
+      for(let i=1;i<=16;i++){
+        const id = String(i).padStart(2,"0");
+        const ref = doc(db, `game/season1/slots/${id}`);
+
+        let claimed = false;
+        try{
+          claimed = await readClaimed(ref);
+        }catch(e){
+          showErr("LOAD ERROR\\n" + (e?.message || e));
+        }
+
+        const tile = document.createElement("div");
+        tile.className = "tile" + (claimed ? " locked" : "");
+        tile.innerHTML = tileHTML(id, claimed);
+
+        tile.addEventListener("click", async ()=>{
+          try{
+            const nowClaimed = await readClaimed(ref);
+            openModal(id, ref, nowClaimed);
+          }catch(e){
+            showErr("CLICK ERROR\\n" + (e?.message || e));
+          }
+        });
+
+        grid.appendChild(tile);
+      }
+
+      status.textContent = "Ready.";
+    }
+
+    lockBtn.addEventListener("click", async ()=>{
+      try{
+        const input = code.value.trim();
+        if(!input){ msg.textContent = "암호를 입력해줘."; return; }
+        if(!currentRef){ msg.textContent = "ref 없음"; return; }
+
+        // 최신 상태/정답 확인
+        const snap = await getDoc(currentRef);
+        if(!snap.exists()){ msg.textContent = "문서 없음"; return; }
+
+        const data = snap.data();
+        const already = (data.claimed === true || data.claimed === "true");
+        if(already){ msg.textContent = "이미 누가 잠갔어."; return; }
+
+        const ans = String(data.answer ?? "").trim().toLowerCase();
+        const inp = input.toLowerCase();
+        if(!ans || inp !== ans){ msg.textContent = "틀림"; return; }
+
+        await updateDoc(currentRef, { claimed: true });
+        msg.textContent = "LOCKED";
+        await load();
+        setTimeout(closeModal, 300);
+      }catch(e){
+        showErr("LOCK ERROR\\n" + (e?.message || e));
+        msg.textContent = "에러";
+      }
+    });
+
+    refreshBtn.addEventListener("click", load);
+    load();
+  </script>
 </body>
 </html>
