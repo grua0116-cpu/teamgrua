@@ -2,17 +2,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/fireba
 import { getFirestore, doc, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
 
-/**
- * ✅ 너가 바꿔야 하는 유일한 부분: firebaseConfig
- * Firebase 콘솔 → Project settings → Your apps(Web) → SDK setup and configuration에서 복사
- */
 const firebaseConfig = {
-  // apiKey: "…",
-  // authDomain: "…",
-  // projectId: "…",
-  // storageBucket: "…",
-  // messagingSenderId: "…",
-  // appId: "…"
+  apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
+  authDomain: "teamgrua-f465c.firebaseapp.com",
+  projectId: "teamgrua-f465c",
+  storageBucket: "teamgrua-f465c.firebasestorage.app",
+  messagingSenderId: "1019914743201",
+  appId: "1:1019914743201:web:171550946aafb90ab96fe0"
 };
 
 const SLOT_COUNT = 16;
