@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Season1 Node Map Test</title>
+  <title>Season1 Node Map (Room Layer)</title>
+
   <style>
     :root{
       --bg0:#0e1412;
@@ -15,7 +16,6 @@
       --ok:#7CFFB2;
 
       --brick1:#8a3c2f;
-      --brick2:#6f2f25;
       --brick3:#a0503f;
       --mortar:#2a1814;
 
@@ -82,11 +82,12 @@
       pointer-events:none;
     }
 
-    /* ✅ SVG wires */
+    /* wires */
     svg.wires{
       position:absolute; inset:0;
       pointer-events:none;
       opacity:.9;
+      z-index: 1;
     }
     svg.wires line{
       stroke: rgba(231,241,236,.26);
@@ -94,6 +95,42 @@
       filter: drop-shadow(0 2px 2px rgba(0,0,0,.25));
     }
 
+    /* ✅ Room layer (결과물) */
+    .room{
+      position:absolute;
+      transform: translate(-50%,-50%);
+      width:84px;
+      height:84px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow: 0 18px 40px rgba(0,0,0,.55);
+      z-index: 5;
+
+      background:
+        linear-gradient(0deg, rgba(0,0,0,.22), rgba(0,0,0,.22)),
+        linear-gradient(90deg, var(--mortar) 2px, transparent 2px) 0 0 / 20px 20px,
+        linear-gradient(var(--mortar) 2px, transparent 2px) 0 0 / 20px 20px,
+        linear-gradient(180deg, var(--brick3), var(--brick1));
+    }
+    .room::after{
+      content:"";
+      position:absolute; inset:0;
+      border-radius:14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.10),
+                  inset 0 -10px 30px rgba(0,0,0,.25);
+      pointer-events:none;
+    }
+    .room .room-label{
+      position:absolute;
+      right:8px;
+      bottom:6px;
+      font-weight:800;
+      font-size:12px;
+      color: rgba(255,255,255,.92);
+      text-shadow: 0 2px 8px rgba(0,0,0,.6);
+    }
+
+    /* ✅ Node (항상 원형 유지) */
     .node{
       position:absolute;
       transform: translate(-50%,-50%);
@@ -106,8 +143,9 @@
       place-items:center;
       cursor:pointer;
       user-select:none;
-      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
       box-shadow: 0 10px 22px rgba(0,0,0,.35);
+      z-index: 10; /* room 위 */
     }
     .node:hover{
       transform: translate(-50%,-50%) scale(1.05);
@@ -115,27 +153,19 @@
       box-shadow: 0 14px 28px rgba(0,0,0,.42);
     }
     .node:active{ transform: translate(-50%,-50%) scale(.98); }
-    .node .label{ font-size:12px; color: rgba(231,241,236,.85); letter-spacing:.4px; }
+    .node .label{
+      font-size:12px;
+      color: rgba(231,241,236,.9);
+      letter-spacing:.3px;
+      font-weight:700;
+    }
+    .node.unset{ cursor:default; }
+    .node.unset:hover{
+      transform: translate(-50%,-50%);
+      border-color: rgba(255,255,255,.16);
+      box-shadow: 0 10px 22px rgba(0,0,0,.35);
+    }
     .node.unset .label{ color: rgba(159,181,173,.95); }
-
-    /* ✅ Completed => BRICK TILE */
-    .node.claimed{
-      width:58px; height:58px;
-      border-radius:12px;
-      cursor:default;
-      border:1px solid rgba(255,255,255,.14);
-      background:
-        linear-gradient(0deg, rgba(0,0,0,.25), rgba(0,0,0,.25)),
-        linear-gradient(90deg, var(--mortar) 2px, transparent 2px) 0 0 / 20px 20px,
-        linear-gradient(var(--mortar) 2px, transparent 2px) 0 0 / 20px 20px,
-        linear-gradient(180deg, var(--brick3), var(--brick1));
-      box-shadow: 0 16px 36px rgba(0,0,0,.55);
-    }
-    .node.claimed:hover{ transform: translate(-50%,-50%); border-color: rgba(255,255,255,.14); }
-    .node.claimed .label{
-      font-size:13px; font-weight:800; color: rgba(255,255,255,.92);
-      text-shadow: 0 2px 6px rgba(0,0,0,.55);
-    }
 
     .statusbar{
       display:flex; gap:10px;
@@ -208,13 +238,13 @@
   <div class="wrap">
     <div class="top">
       <div>
-        <h1 class="title">Season 1 · Node Map (Fresh Start)</h1>
+        <h1 class="title">Season 1 · Node Map (Room Layer)</h1>
         <p class="sub">
-          노드 클릭 → 암호 입력 → 정답이면 <b>claimed=true</b>로 업데이트되고 <b>벽돌 타일</b>로 완성됩니다.<br>
-          지금은 <b>01만</b> 실제 검증/업데이트가 동작합니다.
+          노드는 <b>항상 동그라미</b>로 유지됩니다. 정답이면 해당 위치에 <b>벽돌 방(결과물)</b>이 생성돼요.<br>
+          지금은 <b>01만</b> 검증/업데이트가 동작합니다.
         </p>
       </div>
-      <div class="pill">Firestore: game/season1/slots/01~16</div>
+      <div class="pill">game/season1/slots/01~16</div>
     </div>
 
     <div class="map" id="map"></div>
@@ -247,7 +277,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
     import { getFirestore, doc, getDoc, runTransaction } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
-    // ✅ 네 firebaseConfig (그대로 사용)
+    // ✅ 네 firebaseConfig (그대로)
     const firebaseConfig = {
       apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
       authDomain: "teamgrua-f465c.firebaseapp.com",
@@ -257,10 +287,10 @@
       appId: "1:1019914743201:web:171550946aafb90ab96fe0"
     };
 
-    // 고정 경로
+    // ✅ Firestore 문서 경로 (01만 테스트)
     const SLOT01_PATH = "game/season1/slots/01";
 
-    // 노드 배치 (0~100 좌표계)
+    // ✅ 노드 좌표 (0~100)
     const NODES = [
       {id:"01", x:12, y:78},
       {id:"02", x:22, y:60},
@@ -283,7 +313,7 @@
       {id:"16",x:90, y:20},
     ];
 
-    // 연결선(예시)
+    // ✅ 연결선
     const EDGES = [
       ["01","02"],["02","03"],["03","04"],
       ["02","06"],["06","10"],["10","14"],
@@ -307,7 +337,10 @@
     let slot01Claimed = false;
     let activeSlotId = null;
 
+    const isConfigured = (id) => id === "01"; // 지금은 01만 동작
+
     function setStatus(msg){ statusEl.textContent = msg; }
+    function nodeById(id){ return NODES.find(n=>n.id===id); }
 
     function openModal(slotId){
       activeSlotId = slotId;
@@ -322,17 +355,15 @@
       backdrop.style.display = "none";
       activeSlotId = null;
     }
-    function nodeById(id){ return NODES.find(n=>n.id===id); }
 
-    function render(){
+    function draw(){
       mapEl.innerHTML = "";
 
-      // ✅ SVG wires (항상 보임)
+      // wires
       const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
       svg.setAttribute("class","wires");
       svg.setAttribute("viewBox","0 0 100 100");
       svg.setAttribute("preserveAspectRatio","none");
-
       for(const [a,b] of EDGES){
         const pa = nodeById(a), pb = nodeById(b);
         if(!pa || !pb) continue;
@@ -345,34 +376,47 @@
       }
       mapEl.appendChild(svg);
 
-      // ✅ Nodes
+      // ✅ Room layer (결과물): claimed면 방 생성 (01만)
+      if(slot01Claimed){
+        const p = nodeById("01");
+        const room = document.createElement("div");
+        room.className = "room";
+        room.style.left = p.x + "%";
+        room.style.top  = p.y + "%";
+
+        const label = document.createElement("div");
+        label.className = "room-label";
+        label.textContent = "01";
+        room.appendChild(label);
+
+        mapEl.appendChild(room);
+      }
+
+      // nodes (항상 원형)
       for(const n of NODES){
         const node = document.createElement("div");
         node.className = "node";
         node.style.left = n.x + "%";
         node.style.top  = n.y + "%";
 
-        const isConfigured = (n.id === "01");
-        const isClaimed = (n.id === "01") ? slot01Claimed : false;
-
-        if(isClaimed){
-          node.classList.add("claimed");
-        }else if(!isConfigured){
-          node.classList.add("unset");
-        }
-
         const label = document.createElement("div");
         label.className = "label";
-        label.textContent = isClaimed ? n.id : (isConfigured ? "?" : "…");
+
+        if(isConfigured(n.id)){
+          label.textContent = "●";
+        }else{
+          node.classList.add("unset");
+          label.textContent = "…";
+        }
         node.appendChild(label);
 
         node.addEventListener("click", ()=>{
-          if(isClaimed){
-            setStatus(`슬롯 ${n.id} 는 이미 완성(claimed=true) 상태입니다.`);
+          if(!isConfigured(n.id)){
+            setStatus(`슬롯 ${n.id} 는 아직 테스트 대상이 아닙니다. (지금은 01만 동작)`);
             return;
           }
-          if(!isConfigured){
-            setStatus(`슬롯 ${n.id} 는 아직 테스트 대상이 아닙니다. (지금은 01만 동작)`);
+          if(slot01Claimed){
+            setStatus("01은 이미 완성(claimed=true) 상태입니다.");
             return;
           }
           openModal(n.id);
@@ -382,7 +426,7 @@
       }
     }
 
-    async function loadSlot01(){
+    async function load01(){
       setStatus("Firestore 로딩 중... (slot 01)");
       try{
         const ref = doc(db, SLOT01_PATH);
@@ -391,15 +435,14 @@
           slot01Claimed = false;
           setStatus("slot/01 문서가 없습니다. Firestore에 먼저 만들어주세요.");
         }else{
-          const data = snap.data();
-          slot01Claimed = !!data.claimed;
+          slot01Claimed = !!snap.data().claimed;
           setStatus(`로딩 완료. (01 claimed=${slot01Claimed ? "true":"false"})`);
         }
       }catch(e){
         console.error(e);
         setStatus("로드 실패: " + (e?.message ?? String(e)));
       }
-      render();
+      draw();
     }
 
     async function claim01(userAnswer){
@@ -415,20 +458,22 @@
       });
     }
 
-    // Modal actions
+    // events
+    btnReload.addEventListener("click", load01);
     btnCancel.addEventListener("click", closeModal);
     backdrop.addEventListener("click", (e)=>{ if(e.target === backdrop) closeModal(); });
     document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") closeModal(); });
-    btnReload.addEventListener("click", loadSlot01);
 
     btnSubmit.addEventListener("click", async ()=>{
       if(activeSlotId !== "01") return;
+
       const val = answerInput.value.trim();
       if(!val){
         hintEl.textContent = "암호를 입력해줘.";
         hintEl.className = "hint bad";
         return;
       }
+
       btnSubmit.disabled = true;
       btnCancel.disabled = true;
       hintEl.textContent = "확인 중...";
@@ -440,10 +485,10 @@
           hintEl.textContent = "틀렸어. 다시 입력해봐.";
           hintEl.className = "hint bad";
         }else{
-          hintEl.textContent = res.already ? "이미 완성된 슬롯이야." : "성공! 벽돌 타일이 완성됐어.";
+          hintEl.textContent = res.already ? "이미 완성된 슬롯이야." : "성공! 방이 생성됐어.";
           hintEl.className = "hint ok";
-          await loadSlot01();
-          setTimeout(closeModal, 400);
+          await load01();
+          setTimeout(closeModal, 350);
         }
       }catch(e){
         console.error(e);
@@ -455,16 +500,16 @@
       }
     });
 
-    // Start
+    // start
     try{
       const app = initializeApp(firebaseConfig);
       db = getFirestore(app);
       setStatus("Firebase 초기화 완료. Firestore 로딩 시작...");
-      await loadSlot01();
+      await load01();
     }catch(e){
       console.error(e);
       setStatus("Firebase 초기화 실패: " + (e?.message ?? String(e)));
-      render();
+      draw();
     }
   </script>
 </body>
