@@ -2,37 +2,62 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TEAM GRUA · FRAGMENT:16</title>
-  <link rel="stylesheet" href="./css/style.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>teamgrua — season1</title>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <div class="brand-title">teamgrua</div>
+        <div class="brand-sub">season1 / fragments</div>
+      </div>
+    </div>
+    <button id="refreshBtn" class="btn ghost" type="button">REFRESH</button>
+  </header>
+
   <main class="wrap">
-    <header class="header">
-      <div class="brand">TEAM GRUA</div>
-      <h1 class="title">FRAGMENT : 16</h1>
-      <p class="sub">각자는 하나의 자리만 선택할 수 있다. 선택은 되돌릴 수 없다.</p>
-    </header>
-
     <section class="panel">
-      <div class="topbar">
-        <div id="progress" class="progress">00/16 CLAIMED</div>
-        <button id="open" class="open" disabled>SCENARIO OPEN</button>
-      </div>
-
-      <div id="grid" class="grid" aria-label="fragment grid"></div>
-
-      <div class="log">
-        <div class="log-title">SYSTEM LOG</div>
-        <div id="msg" class="msg">waiting…</div>
-      </div>
+      <div class="panel-title">FRAGMENTS</div>
+      <div class="panel-sub">Click a fragment → enter code → lock it.</div>
     </section>
 
-    <footer class="footer">
-      <span class="muted">Powered by GitHub Pages + Firebase</span>
-    </footer>
+    <section id="grid" class="grid" aria-label="Fragments grid">
+      <!-- app.js가 01~16 생성 -->
+    </section>
+
+    <section class="footnote">
+      <span class="hint">Accent</span> is controlled by <code>--accent</code>.
+      <span id="status" class="status">Ready.</span>
+    </section>
   </main>
 
-  <script type="module" src="./js/app.js"></script>
+  <!-- LOCK MODAL -->
+  <div id="lockModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close="1"></div>
+
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-head">
+        <div>
+          <div id="modalTitle" class="modal-title">LOCK FRAGMENT</div>
+          <div id="modalSub" class="modal-sub">암호를 입력하면 이 조각을 잠급니다.</div>
+        </div>
+        <button id="modalX" class="iconbtn" type="button" aria-label="Close">✕</button>
+      </div>
+
+      <input id="lockInput" class="modal-input" type="text" autocomplete="off" placeholder="Enter code" />
+
+      <div class="modal-actions">
+        <button id="modalCancel" class="btn ghost" type="button">CANCEL</button>
+        <button id="modalConfirm" class="btn primary" type="button">LOCK</button>
+      </div>
+
+      <div id="modalMsg" class="modal-msg" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
