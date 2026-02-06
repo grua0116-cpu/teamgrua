@@ -1,19 +1,26 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, updateDoc
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-/* 🔴 네 Firebase 값으로 교체 */
+/* Firebase config */
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
+  authDomain: "teamgrua-f465c.firebaseapp.com",
+  projectId: "teamgrua-f465c",
+  storageBucket: "teamgrua-f465c.firebasestorage.app",
+  messagingSenderId: "1019914743201",
+  appId: "1:1019914743201:web:171550946aafb90ab96fe0"
 };
 
+/* Initialize Firebase */
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+/* UI */
 const grid = document.getElementById("grid");
 const status = document.getElementById("status");
 
@@ -27,6 +34,7 @@ const lockBtn = document.getElementById("lockBtn");
 let currentId = null;
 let currentRef = null;
 
+/* Modal */
 function openModal(id, ref, claimed){
   currentId = id;
   currentRef = ref;
@@ -48,6 +56,7 @@ function openModal(id, ref, claimed){
 
 cancelBtn.onclick = () => modal.classList.add("hidden");
 
+/* Lock */
 lockBtn.onclick = async () => {
   const code = lockInput.value.trim();
   if(!code) return;
@@ -72,6 +81,7 @@ lockBtn.onclick = async () => {
   setTimeout(()=>modal.classList.add("hidden"), 400);
 };
 
+/* Load grid */
 async function load(){
   grid.innerHTML = "";
   for(let i=1;i<=16;i++){
@@ -80,15 +90,16 @@ async function load(){
     const snap = await getDoc(ref);
     const claimed = snap.exists() && snap.data().claimed;
 
-    const div = document.createElement("div");
-    div.className = "tile" + (claimed?" locked":"");
-    div.innerHTML = `
+    const tile = document.createElement("div");
+    tile.className = "tile" + (claimed?" locked":"");
+    tile.innerHTML = `
       <div class="tile-id">FRAGMENT ${id}</div>
       <div class="tile-sub">${claimed?"LOCKED":"CLICK TO LOCK"}</div>
     `;
-    div.onclick = () => openModal(id, ref, claimed);
-    grid.appendChild(div);
+    tile.onclick = () => openModal(id, ref, claimed);
+    grid.appendChild(tile);
   }
 }
 
+/* Start */
 load();
