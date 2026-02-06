@@ -1,37 +1,112 @@
 <!doctype html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Unlock</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
 </head>
 <body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div>
+          <div class="title" id="title">Unlock</div>
+          <div class="sub">암호가 맞으면 해당 슬롯의 claimed가 true로 바뀝니다.</div>
+        </div>
+        <a class="btn" id="backHint" href="#">힌트로</a>
+      </div>
 
-  <h1>암호 입력 페이지</h1>
+      <div class="row">
+        <input class="input" id="code" placeholder="암호 입력" autocomplete="off" />
+        <button class="btn" id="submit">확인</button>
+      </div>
 
-  <input id="code" placeholder="암호 입력">
-  <button onclick="check()">확인</button>
+      <div class="msg" id="msg">불러오는 중…</div>
 
-  <p id="msg"></p>
+      <div class="row">
+        <a class="btn" href="./index.html">보드로</a>
+      </div>
+    </div>
+  </div>
 
-  <script>
-    const params = new URLSearchParams(location.search);
-    const slot = params.get("slot");
+  <script type="module">
+    import { fetchSlot, claimSlot } from "./assets/app.js";
 
-    function check() {
-      const input = document.getElementById("code").value;
+    const slot = new URLSearchParams(location.search).get("slot") || "01";
+    document.getElementById("title").textContent = `Unlock — ${slot}`;
+    document.getElementById("backHint").href = `./hint.html?slot=${encodeURIComponent(slot)}`;
 
-      if (input === "OPEN") {
-        document.getElementById("msg").innerText =
-          slot + "번 퍼즐 해금 성공!";
-        setTimeout(() => {
-          location.href = "./index.html";
-        }, 1000);
-      } else {
-        document.getElementById("msg").innerText =
-          "암호가 틀렸습니다";
+    const codeEl = document.getElementById("code");
+    const submitBtn = document.getElementById("submit");
+    const msgEl = document.getElementById("msg");
+
+    let slotData = null;
+
+    async function load(){
+      slotData = await fetchSlot(slot);
+
+      if (!slotData){
+        msgEl.textContent = "슬롯 문서가 없습니다. (01~16 생성 확인)";
+        msgEl.className = "msg bad";
+        submitBtn.disabled = true;
+        return;
+      }
+
+      if (slotData.claimed === true){
+        msgEl.textContent = "이미 해금된 조각입니다. 보드로 돌아가세요.";
+        msgEl.className = "msg ok";
+        submitBtn.disabled = true;
+        return;
+      }
+
+      msgEl.textContent = "암호를 입력하세요.";
+      msgEl.className = "msg";
+    }
+
+    async function submit(){
+      const input = (codeEl.value || "").trim();
+      if (!input){
+        msgEl.textContent = "암호를 입력해 주세요.";
+        msgEl.className = "msg bad";
+        return;
+      }
+
+      const expected = String(slotData.answer || "").trim();
+
+      if (input !== expected){
+        msgEl.textContent = "실패: 암호가 틀렸습니다.";
+        msgEl.className = "msg bad";
+        return;
+      }
+
+      submitBtn.disabled = true;
+      msgEl.textContent = "성공! 해금 처리 중…";
+      msgEl.className = "msg";
+
+      try{
+        await claimSlot(slot);
+        msgEl.textContent = "해금 완료! 보드로 이동합니다…";
+        msgEl.className = "msg ok";
+        setTimeout(()=>{
+          location.href = `./index.html?opened=${encodeURIComponent(slot)}`;
+        }, 600);
+      }catch(e){
+        console.error(e);
+        msgEl.textContent = "업데이트 실패: Firestore 규칙/권한 확인";
+        msgEl.className = "msg bad";
+        submitBtn.disabled = false;
       }
     }
-  </script>
 
+    submitBtn.addEventListener("click", submit);
+    codeEl.addEventListener("keydown", (e)=>{ if(e.key==="Enter") submit(); });
+
+    load().catch(e=>{
+      console.error(e);
+      msgEl.textContent = "불러오기 실패: firebaseConfig/경로/규칙 확인";
+      msgEl.className = "msg bad";
+    });
+  </script>
 </body>
 </html>
