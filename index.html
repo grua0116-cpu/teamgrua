@@ -8,16 +8,17 @@
     :root{
       --bg0:#0e1412;
       --bg1:#101a16;
-      --panel:#0f1915cc;
       --text:#e7f1ec;
       --muted:#9fb5ad;
       --accent:#47d3a6;
       --danger:#ff6b6b;
       --ok:#7CFFB2;
+
       --brick1:#8a3c2f;
       --brick2:#6f2f25;
       --brick3:#a0503f;
       --mortar:#2a1814;
+
       --shadow: rgba(0,0,0,.45);
     }
     *{box-sizing:border-box}
@@ -34,12 +35,7 @@
       justify-content:center;
       padding:24px;
     }
-    .wrap{
-      width:min(980px, 100%);
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:14px;
-    }
+    .wrap{ width:min(980px, 100%); display:grid; gap:14px; }
     .top{
       background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       border:1px solid rgba(255,255,255,.08);
@@ -47,28 +43,16 @@
       padding:14px 16px;
       box-shadow: 0 10px 30px var(--shadow);
       display:flex;
-      align-items:flex-start;
       justify-content:space-between;
-      gap:14px;
+      gap:12px;
+      align-items:flex-start;
     }
-    .title{
-      font-weight:800;
-      letter-spacing:.2px;
-      margin:0 0 6px 0;
-      font-size:18px;
-    }
-    .sub{
-      margin:0;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.35;
-    }
+    .title{ margin:0 0 6px 0; font-size:18px; font-weight:800; }
+    .sub{ margin:0; color:var(--muted); font-size:13px; line-height:1.35; }
     .pill{
-      font-size:12px;
-      color:var(--muted);
+      font-size:12px; color:var(--muted);
       border:1px solid rgba(255,255,255,.10);
-      padding:8px 10px;
-      border-radius:999px;
+      padding:8px 10px; border-radius:999px;
       background: rgba(0,0,0,.18);
       white-space:nowrap;
       align-self:center;
@@ -87,8 +71,6 @@
         radial-gradient(700px 420px at 75% 70%, rgba(71,211,166,.10) 0%, transparent 55%),
         linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
     }
-
-    /* faint grid texture */
     .map::before{
       content:"";
       position:absolute; inset:0;
@@ -100,13 +82,16 @@
       pointer-events:none;
     }
 
-    .edge{
-      position:absolute;
-      height:2px;
-      background: rgba(231,241,236,.18);
-      transform-origin:left center;
-      filter: drop-shadow(0 2px 2px rgba(0,0,0,.25));
+    /* ✅ SVG wires */
+    svg.wires{
+      position:absolute; inset:0;
       pointer-events:none;
+      opacity:.9;
+    }
+    svg.wires line{
+      stroke: rgba(231,241,236,.26);
+      stroke-width: 0.8;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,.25));
     }
 
     .node{
@@ -129,61 +114,39 @@
       border-color: rgba(71,211,166,.55);
       box-shadow: 0 14px 28px rgba(0,0,0,.42);
     }
-    .node:active{
-      transform: translate(-50%,-50%) scale(.98);
-    }
-    .node .label{
-      font-size:12px;
-      color: rgba(231,241,236,.85);
-      letter-spacing:.4px;
-    }
-    .node.unset .label{ color: rgba(159,181,173,.9); }
+    .node:active{ transform: translate(-50%,-50%) scale(.98); }
+    .node .label{ font-size:12px; color: rgba(231,241,236,.85); letter-spacing:.4px; }
+    .node.unset .label{ color: rgba(159,181,173,.95); }
 
-    /* Completed => turn node into BRICK TILE */
+    /* ✅ Completed => BRICK TILE */
     .node.claimed{
-      width:58px;
-      height:58px;
+      width:58px; height:58px;
       border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
       cursor:default;
+      border:1px solid rgba(255,255,255,.14);
       background:
         linear-gradient(0deg, rgba(0,0,0,.25), rgba(0,0,0,.25)),
-        /* brick pattern */
         linear-gradient(90deg, var(--mortar) 2px, transparent 2px) 0 0 / 20px 20px,
         linear-gradient(var(--mortar) 2px, transparent 2px) 0 0 / 20px 20px,
-        linear-gradient(90deg, transparent 10px, rgba(0,0,0,.10) 10px, transparent 11px) 0 0 / 20px 20px,
         linear-gradient(180deg, var(--brick3), var(--brick1));
       box-shadow: 0 16px 36px rgba(0,0,0,.55);
     }
     .node.claimed:hover{ transform: translate(-50%,-50%); border-color: rgba(255,255,255,.14); }
     .node.claimed .label{
-      font-size:13px;
-      font-weight:800;
-      color: rgba(255,255,255,.92);
+      font-size:13px; font-weight:800; color: rgba(255,255,255,.92);
       text-shadow: 0 2px 6px rgba(0,0,0,.55);
     }
 
-    .node.locked{
-      outline: 2px solid rgba(124,255,178,.22);
-    }
-
     .statusbar{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
+      display:flex; gap:10px;
+      align-items:center; justify-content:space-between;
       flex-wrap:wrap;
       background: rgba(0,0,0,.20);
       border:1px solid rgba(255,255,255,.08);
       border-radius:16px;
       padding:10px 12px;
     }
-    .status{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.35;
-      white-space:pre-wrap;
-    }
+    .status{ font-size:12px; color:var(--muted); line-height:1.35; white-space:pre-wrap; }
     .btn{
       border:1px solid rgba(255,255,255,.12);
       background: rgba(255,255,255,.06);
@@ -214,20 +177,11 @@
       box-shadow: 0 18px 48px rgba(0,0,0,.65);
       padding:14px;
     }
-    .modal h3{
-      margin:6px 6px 4px 6px;
-      font-size:15px;
-    }
-    .modal p{
-      margin:0 6px 10px 6px;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.35;
-    }
+    .modal h3{ margin:6px 6px 4px 6px; font-size:15px; }
+    .modal p{ margin:0 6px 10px 6px; color:var(--muted); font-size:12px; line-height:1.35; }
     .row{ display:flex; gap:10px; padding:6px; }
     input{
-      flex:1;
-      padding:11px 12px;
+      flex:1; padding:11px 12px;
       border-radius:12px;
       border:1px solid rgba(255,255,255,.12);
       background: rgba(0,0,0,.25);
@@ -235,12 +189,7 @@
       outline:none;
     }
     input:focus{ border-color: rgba(71,211,166,.55); }
-    .actions{
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-      padding:6px;
-    }
+    .actions{ display:flex; gap:10px; justify-content:flex-end; padding:6px; }
     .btn.primary{
       border-color: rgba(71,211,166,.55);
       background: rgba(71,211,166,.12);
@@ -259,13 +208,13 @@
   <div class="wrap">
     <div class="top">
       <div>
-        <h1 class="title">Season 1 · Node Map (Test)</h1>
+        <h1 class="title">Season 1 · Node Map (Fresh Start)</h1>
         <p class="sub">
-          노드를 클릭 → 암호 입력 → 정답이면 <b>claimed=true</b>로 잠기고, 그 노드가 <b>벽돌 타일</b>로 완성됩니다.<br/>
+          노드 클릭 → 암호 입력 → 정답이면 <b>claimed=true</b>로 업데이트되고 <b>벽돌 타일</b>로 완성됩니다.<br>
           지금은 <b>01만</b> 실제 검증/업데이트가 동작합니다.
         </p>
       </div>
-      <div class="pill" id="pill">Firestore: game/season1/slots/01~16</div>
+      <div class="pill">Firestore: game/season1/slots/01~16</div>
     </div>
 
     <div class="map" id="map"></div>
@@ -280,9 +229,9 @@
 
   <!-- Modal -->
   <div class="modal-backdrop" id="backdrop">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mtitle">
-      <h3 id="mtitle">암호 입력</h3>
-      <p id="mdesc">슬롯 <b id="slotIdText">01</b> 을(를) 해금합니다.</p>
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3>암호 입력</h3>
+      <p>슬롯 <b id="slotIdText">01</b> 을(를) 해금합니다.</p>
       <div class="row">
         <input id="answerInput" type="password" placeholder="암호" autocomplete="off" />
       </div>
@@ -294,30 +243,24 @@
     </div>
   </div>
 
- <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, runTransaction } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
-    authDomain: "teamgrua-f465c.firebaseapp.com",
-    projectId: "teamgrua-f465c",
-    storageBucket: "teamgrua-f465c.firebasestorage.app",
-    messagingSenderId: "1019914743201",
-    appId: "1:1019914743201:web:171550946aafb90ab96fe0"
-  };
+    // ✅ 네 firebaseConfig (그대로 사용)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
+      authDomain: "teamgrua-f465c.firebaseapp.com",
+      projectId: "teamgrua-f465c",
+      storageBucket: "teamgrua-f465c.firebasestorage.app",
+      messagingSenderId: "1019914743201",
+      appId: "1:1019914743201:web:171550946aafb90ab96fe0"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    // 고정 경로
+    const SLOT01_PATH = "game/season1/slots/01";
 
-  console.log("🔥 Firebase 연결 성공");
-</script>
-
-    // 2) 고정 경로
-    const SEASON_DOC = docPath("game", "season1");
-    const SLOTS_COL  = colPath("game", "season1", "slots");
-
-    // 3) 노드 배치(16개) - 화면에서만 위치를 정함
+    // 노드 배치 (0~100 좌표계)
     const NODES = [
       {id:"01", x:12, y:78},
       {id:"02", x:22, y:60},
@@ -340,7 +283,7 @@
       {id:"16",x:90, y:20},
     ];
 
-    // (선택) 간단한 연결선 (예시로 몇 개만)
+    // 연결선(예시)
     const EDGES = [
       ["01","02"],["02","03"],["03","04"],
       ["02","06"],["06","10"],["10","14"],
@@ -349,12 +292,6 @@
       ["09","10"],["13","14"]
     ];
 
-    // 내부 상태
-    let app, db;
-    let slotState = {}; // { "01": {claimed:boolean, answerExists:boolean} ... }
-    let activeSlotId = null;
-
-    // 엘리먼트
     const mapEl = document.getElementById("map");
     const statusEl = document.getElementById("status");
     const btnReload = document.getElementById("btnReload");
@@ -366,11 +303,12 @@
     const btnCancel = document.getElementById("btnCancel");
     const btnSubmit = document.getElementById("btnSubmit");
 
-    // util: Firestore path helpers (collection/doc 구분 실수 방지)
-    function docPath(...segs){ return segs.join("/"); }
-    function colPath(...segs){ return segs.join("/"); }
+    let db;
+    let slot01Claimed = false;
+    let activeSlotId = null;
 
     function setStatus(msg){ statusEl.textContent = msg; }
+
     function openModal(slotId){
       activeSlotId = slotId;
       slotIdText.textContent = slotId;
@@ -384,59 +322,52 @@
       backdrop.style.display = "none";
       activeSlotId = null;
     }
-    function nodePos(id){
-      return NODES.find(n=>n.id===id);
-    }
+    function nodeById(id){ return NODES.find(n=>n.id===id); }
 
     function render(){
       mapEl.innerHTML = "";
 
-      // edges 먼저
-      for (const [a,b] of EDGES){
-        const pa = nodePos(a), pb = nodePos(b);
+      // ✅ SVG wires (항상 보임)
+      const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+      svg.setAttribute("class","wires");
+      svg.setAttribute("viewBox","0 0 100 100");
+      svg.setAttribute("preserveAspectRatio","none");
+
+      for(const [a,b] of EDGES){
+        const pa = nodeById(a), pb = nodeById(b);
         if(!pa || !pb) continue;
-        const dx = pb.x - pa.x;
-        const dy = pb.y - pa.y;
-        const len = Math.hypot(dx, dy);
-        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-        const edge = document.createElement("div");
-        edge.className = "edge";
-        edge.style.left = pa.x + "%";
-        edge.style.top  = pa.y + "%";
-        edge.style.width = `calc(${len}% * 1)`; // percent 기반이므로 대충 느낌만
-        // percent 길이 왜곡 방지하려면 SVG가 정석인데, 테스트용이라 “느낌”만 냄
-        edge.style.transform = `rotate(${angle}deg)`;
-        mapEl.appendChild(edge);
+        const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+        line.setAttribute("x1", pa.x);
+        line.setAttribute("y1", pa.y);
+        line.setAttribute("x2", pb.x);
+        line.setAttribute("y2", pb.y);
+        svg.appendChild(line);
       }
+      mapEl.appendChild(svg);
 
-      // nodes
+      // ✅ Nodes
       for(const n of NODES){
-        const st = slotState[n.id] ?? { claimed:false, exists:false };
-
         const node = document.createElement("div");
         node.className = "node";
-
-        // “01만 동작” 조건: 01 외에는 unset 처리
-        const isConfigured = (n.id === "01");
-
-        if(st.claimed){
-          node.classList.add("claimed", "locked");
-        }else{
-          if(!isConfigured) node.classList.add("unset");
-        }
-
         node.style.left = n.x + "%";
         node.style.top  = n.y + "%";
 
+        const isConfigured = (n.id === "01");
+        const isClaimed = (n.id === "01") ? slot01Claimed : false;
+
+        if(isClaimed){
+          node.classList.add("claimed");
+        }else if(!isConfigured){
+          node.classList.add("unset");
+        }
+
         const label = document.createElement("div");
         label.className = "label";
-        label.textContent = st.claimed ? n.id : (isConfigured ? "?" : "…");
+        label.textContent = isClaimed ? n.id : (isConfigured ? "?" : "…");
         node.appendChild(label);
 
-        // 클릭 로직
         node.addEventListener("click", ()=>{
-          if(st.claimed){
+          if(isClaimed){
             setStatus(`슬롯 ${n.id} 는 이미 완성(claimed=true) 상태입니다.`);
             return;
           }
@@ -451,25 +382,19 @@
       }
     }
 
-    async function loadStates(){
-      setStatus("Firestore 상태 로딩 중...");
-      slotState = {};
+    async function loadSlot01(){
+      setStatus("Firestore 로딩 중... (slot 01)");
       try{
-        // 지금은 테스트라서: 01만 읽어도 충분하지만, 형태는 16칸 기준으로 둠
-        const ref01 = doc(db, docPath(SLOTS_COL, "01"));
-        const snap = await getDoc(ref01);
-
-        if(snap.exists()){
-          const data = snap.data();
-          slotState["01"] = {
-            exists:true,
-            claimed: !!data.claimed
-          };
+        const ref = doc(db, SLOT01_PATH);
+        const snap = await getDoc(ref);
+        if(!snap.exists()){
+          slot01Claimed = false;
+          setStatus("slot/01 문서가 없습니다. Firestore에 먼저 만들어주세요.");
         }else{
-          slotState["01"] = { exists:false, claimed:false };
+          const data = snap.data();
+          slot01Claimed = !!data.claimed;
+          setStatus(`로딩 완료. (01 claimed=${slot01Claimed ? "true":"false"})`);
         }
-
-        setStatus(`로딩 완료. (01 claimed=${slotState["01"]?.claimed ? "true" : "false"})`);
       }catch(e){
         console.error(e);
         setStatus("로드 실패: " + (e?.message ?? String(e)));
@@ -477,67 +402,49 @@
       render();
     }
 
-    async function claimSlot01(userAnswer){
-      const slotId = "01";
-      const slotRef = doc(db, docPath(SLOTS_COL, slotId));
-
-      // 트랜잭션: answer 확인 + claimed=false일 때만 claimed=true로
-      return await runTransaction(db, async (tx) => {
-        const snap = await tx.get(slotRef);
-        if(!snap.exists()){
-          throw new Error("slot/01 문서가 없습니다. Firestore에 먼저 만들어주세요.");
-        }
+    async function claim01(userAnswer){
+      const ref = doc(db, SLOT01_PATH);
+      return await runTransaction(db, async (tx)=>{
+        const snap = await tx.get(ref);
+        if(!snap.exists()) throw new Error("slot/01 문서가 없습니다. Firestore에 문서를 만들어주세요.");
         const data = snap.data();
-        const correct = (String(data.answer ?? "") === String(userAnswer ?? ""));
-        if(!correct){
-          return { ok:false, reason:"wrong" };
-        }
-        if(data.claimed === true){
-          return { ok:true, already:true };
-        }
-        tx.update(slotRef, { claimed:true });
-        return { ok:true, already:false };
+        if(String(data.answer ?? "") !== String(userAnswer ?? "")) return {ok:false};
+        if(data.claimed === true) return {ok:true, already:true};
+        tx.update(ref, { claimed:true });
+        return {ok:true, already:false};
       });
     }
 
-    // 이벤트
-    btnReload.addEventListener("click", loadStates);
+    // Modal actions
     btnCancel.addEventListener("click", closeModal);
     backdrop.addEventListener("click", (e)=>{ if(e.target === backdrop) closeModal(); });
     document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") closeModal(); });
+    btnReload.addEventListener("click", loadSlot01);
 
     btnSubmit.addEventListener("click", async ()=>{
       if(activeSlotId !== "01") return;
-
       const val = answerInput.value.trim();
       if(!val){
         hintEl.textContent = "암호를 입력해줘.";
         hintEl.className = "hint bad";
         return;
       }
-
       btnSubmit.disabled = true;
       btnCancel.disabled = true;
       hintEl.textContent = "확인 중...";
       hintEl.className = "hint";
 
       try{
-        const res = await claimSlot01(val);
+        const res = await claim01(val);
         if(!res.ok){
           hintEl.textContent = "틀렸어. 다시 입력해봐.";
           hintEl.className = "hint bad";
-          return;
-        }
-        if(res.already){
-          hintEl.textContent = "이미 완성된 슬롯이야.";
-          hintEl.className = "hint ok";
         }else{
-          hintEl.textContent = "성공! 벽돌 타일이 완성됐어.";
+          hintEl.textContent = res.already ? "이미 완성된 슬롯이야." : "성공! 벽돌 타일이 완성됐어.";
           hintEl.className = "hint ok";
+          await loadSlot01();
+          setTimeout(closeModal, 400);
         }
-        // UI 갱신
-        await loadStates();
-        setTimeout(closeModal, 450);
       }catch(e){
         console.error(e);
         hintEl.textContent = e?.message ?? String(e);
@@ -548,15 +455,16 @@
       }
     });
 
-    // 시작
+    // Start
     try{
-      app = initializeApp(firebaseConfig);
+      const app = initializeApp(firebaseConfig);
       db = getFirestore(app);
-      setStatus("Firebase 초기화 완료. 상태 로딩 시작...");
-      await loadStates();
+      setStatus("Firebase 초기화 완료. Firestore 로딩 시작...");
+      await loadSlot01();
     }catch(e){
       console.error(e);
       setStatus("Firebase 초기화 실패: " + (e?.message ?? String(e)));
+      render();
     }
   </script>
 </body>
