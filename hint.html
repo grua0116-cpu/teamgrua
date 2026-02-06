@@ -1,27 +1,71 @@
 <!doctype html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Hint</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
 </head>
 <body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div>
+          <div class="title" id="title">Hint</div>
+          <div class="sub">힌트를 확인하고 입력 페이지로 이동하세요.</div>
+        </div>
+        <a class="btn" href="./index.html">보드로</a>
+      </div>
 
-  <h1>힌트 페이지</h1>
+      <div class="msg" id="hintBox">불러오는 중…</div>
 
-  <p id="hint">힌트 로딩 중...</p>
+      <div class="row">
+        <a class="btn" id="goUnlock" href="#">입력하기</a>
+        <a class="btn" id="goBack" href="./index.html">취소</a>
+      </div>
+    </div>
+  </div>
 
-  <a id="go" href="#">입력 페이지로</a>
+  <script type="module">
+    import { fetchSlot } from "./assets/app.js";
 
-  <script>
-    const params = new URLSearchParams(location.search);
-    const slot = params.get("slot");
+    const slot = new URLSearchParams(location.search).get("slot") || "01";
+    document.getElementById("title").textContent = `Hint — ${slot}`;
+    document.getElementById("goUnlock").href = `./unlock.html?slot=${encodeURIComponent(slot)}`;
 
-    document.getElementById("hint").innerText =
-      "이건 " + slot + "번 힌트입니다.";
+    // Firestore hint가 없을 때의 로컬 힌트(원하면 여기만 채워도 됨)
+    const localHints = {
+      "01": "예시 힌트: ROSE + 01",
+      "02": "예시 힌트: ...",
+    };
 
-    document.getElementById("go").href =
-      "./unlock.html?slot=" + slot;
+    async function main(){
+      const box = document.getElementById("hintBox");
+
+      const data = await fetchSlot(slot);
+      if (!data){
+        box.textContent = "슬롯 문서가 없습니다. (01~16 문서 생성 확인)";
+        box.className = "msg bad";
+        return;
+      }
+
+      if (data.claimed === true){
+        box.textContent = "이미 해금된 조각입니다. 보드에서 확인하세요.";
+        box.className = "msg ok";
+        return;
+      }
+
+      const hint = (data.hint && String(data.hint).trim()) || localHints[slot] || "힌트가 아직 준비되지 않았습니다.";
+      box.textContent = hint;
+      box.className = "msg";
+    }
+
+    main().catch(e=>{
+      console.error(e);
+      const box = document.getElementById("hintBox");
+      box.textContent = "힌트 불러오기 실패: Firestore/규칙 확인";
+      box.className = "msg bad";
+    });
   </script>
-
 </body>
 </html>
