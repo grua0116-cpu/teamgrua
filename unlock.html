@@ -12,7 +12,7 @@
       <div class="header">
         <div>
           <div class="title" id="title">Unlock</div>
-          <div class="sub">암호가 맞으면 해당 슬롯의 claimed가 true로 바뀝니다.</div>
+          <div class="sub">암호가 맞으면 claimed=true로 바뀝니다.</div>
         </div>
         <a class="btn" id="backHint" href="#">힌트로</a>
       </div>
@@ -47,14 +47,14 @@
       slotData = await fetchSlot(slot);
 
       if (!slotData){
-        msgEl.textContent = "슬롯 문서가 없습니다. (01~16 생성 확인)";
+        msgEl.textContent = "슬롯 문서가 없습니다. (01~16 ID 확인)";
         msgEl.className = "msg bad";
         submitBtn.disabled = true;
         return;
       }
 
       if (slotData.claimed === true){
-        msgEl.textContent = "이미 해금된 조각입니다. 보드로 돌아가세요.";
+        msgEl.textContent = "이미 해금됨. 보드로 돌아가세요.";
         msgEl.className = "msg ok";
         submitBtn.disabled = true;
         return;
@@ -102,9 +102,8 @@
     submitBtn.addEventListener("click", submit);
     codeEl.addEventListener("keydown", (e)=>{ if(e.key==="Enter") submit(); });
 
-    load().catch(e=>{
-      console.error(e);
-      msgEl.textContent = "불러오기 실패: firebaseConfig/경로/규칙 확인";
+    load().catch(()=>{
+      msgEl.textContent = "불러오기 실패: Firestore/규칙 확인";
       msgEl.className = "msg bad";
     });
   </script>
