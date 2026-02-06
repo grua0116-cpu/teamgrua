@@ -13,22 +13,43 @@
         <div>
           <div class="title">Season 1 Puzzle</div>
           <div class="sub">
-            노드를 클릭 → 힌트 확인 → 암호 입력 → 성공 시 조각 해금<br/>
-            (claimed=true인 조각만 그림이 드러납니다)
+            학교 맵(건물)을 클릭 → 힌트 → 입력 → 성공 시 퍼즐 이미지가 <b>한 칸(1/16)</b>씩 공개됩니다.
           </div>
         </div>
         <a class="btn" href="./index.html">새로고침</a>
       </div>
 
-      <div id="toast" class="toast" style="display:none;"></div>
+      <div id="toast" class="toast"></div>
 
-      <div class="board-wrap">
-        <div class="board" id="board">
-          <div class="grid" id="grid"></div>
+      <div class="stage-wrap">
+        <div class="stage" id="stage">
+          <!-- Layer 1: ONE full image -->
+          <div class="puzzle-image" aria-label="puzzle"></div>
 
-          <div class="overlay">
-            <svg class="lines" id="lines" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
-            <div id="nodes"></div>
+          <!-- Layer 2: 16 masks -->
+          <div class="masks" id="masks"></div>
+
+          <!-- Layer 3: campus map overlay -->
+          <div class="campus">
+            <!-- paths (campus roads) -->
+            <svg class="paths" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <!-- 대충 “캠퍼스 길” 느낌 (원하면 나중에 너 스타일로 변경 가능) -->
+              <line class="path" x1="15" y1="18" x2="50" y2="18"></line>
+              <line class="path" x1="50" y1="18" x2="85" y2="18"></line>
+
+              <line class="path" x1="15" y1="18" x2="15" y2="52"></line>
+              <line class="path" x1="50" y1="18" x2="50" y2="52"></line>
+              <line class="path" x1="85" y1="18" x2="85" y2="52"></line>
+
+              <line class="path" x1="15" y1="52" x2="50" y2="52"></line>
+              <line class="path" x1="50" y1="52" x2="85" y2="52"></line>
+
+              <line class="path" x1="25" y1="85" x2="75" y2="85"></line>
+              <line class="path" x1="50" y1="52" x2="50" y2="85"></line>
+            </svg>
+
+            <!-- buildings injected by JS -->
+            <div id="buildings"></div>
           </div>
         </div>
       </div>
@@ -40,98 +61,112 @@
   <script type="module">
     import { fetchAllSlots, pad2 } from "./assets/app.js";
 
-    const grid = document.getElementById("grid");
-    const nodesEl = document.getElementById("nodes");
-    const linesEl = document.getElementById("lines");
+    const masksEl = document.getElementById("masks");
+    const buildingsEl = document.getElementById("buildings");
     const statusEl = document.getElementById("status");
     const toastEl = document.getElementById("toast");
 
-    // 4x4의 각 타일 중심을 (0~100) 좌표로 만든다.
-    function slotCenter(slotNum){
-      const idx = slotNum - 1;
-      const col = idx % 4;
-      const row = Math.floor(idx / 4);
-      const x = (col + 0.5) * 25;  // 0~100에서 4등분
-      const y = (row + 0.5) * 25;
-      return {x, y};
-    }
+    // ===== 캠퍼스 건물 배치 (0~100 좌표) =====
+    // slot(01~16) ↔ 건물 1:1 매칭
+    // x,y는 “건물 카드의 중심” 위치 (퍼즐 위에 얹힘)
+    const CAMPUS = [
+      { slot:"01", name:"정문",       desc:"입학처",        x:15, y:18 },
+      { slot:"02", name:"본관",       desc:"행정동",        x:50, y:18 },
+      { slot:"03", name:"도서관",     desc:"열람실",        x:85, y:18 },
+
+      { slot:"04", name:"강의동 A",   desc:"1층 로비",      x:15, y:38 },
+      { slot:"05", name:"강의동 B",   desc:"강의실",        x:50, y:38 },
+      { slot:"06", name:"연구관",     desc:"랩동",          x:85, y:38 },
+
+      { slot:"07", name:"학생회관",   desc:"라운지",        x:15, y:58 },
+      { slot:"08", name:"중앙광장",   desc:"분수대",        x:50, y:52 },
+      { slot:"09", name:"공연장",     desc:"오디토리움",    x:85, y:58 },
+
+      { slot:"10", name:"음악관",     desc:"스튜디오",      x:22, y:78 },
+      { slot:"11", name:"미술관",     desc:"전시실",        x:38, y:72 },
+      { slot:"12", name:"체육관",     desc:"아레나",        x:62, y:72 },
+      { slot:"13", name:"기숙사",     desc:"레지던스",      x:78, y:78 },
+
+      { slot:"14", name:"카페테리아", desc:"식당",          x:25, y:90 },
+      { slot:"15", name:"동아리방",   desc:"클럽",          x:50, y:90 },
+      { slot:"16", name:"비밀정원",   desc:"엔딩",          x:75, y:90 },
+    ];
 
     function showToastFromQuery(){
       const qs = new URLSearchParams(location.search);
       const opened = qs.get("opened");
-      if (opened){
-        toastEl.style.display = "block";
-        toastEl.textContent = `${opened}번 조각이 해금되었습니다.`;
+      if (!opened) return;
+      toastEl.style.display = "block";
+      toastEl.textContent = `${opened}번 조각이 공개되었습니다.`;
+    }
+
+    // ===== Layer 2: 16 masks 생성 =====
+    function buildMasks(){
+      masksEl.innerHTML = "";
+      for (let i=1; i<=16; i++){
+        const slot = pad2(i);
+        const mask = document.createElement("div");
+        mask.className = "mask";
+        mask.dataset.slot = slot;
+        masksEl.appendChild(mask);
       }
     }
 
-    function renderTiles(map){
-      grid.innerHTML = "";
-      for (let i=1; i<=16; i++){
-        const slot = pad2(i);
-        const claimed = !!map?.[slot]?.claimed;
+    // ===== Layer 3: 캠퍼스 건물 생성 =====
+    function buildCampus(map){
+      buildingsEl.innerHTML = "";
+      for (const b of CAMPUS){
+        const claimed = !!map?.[b.slot]?.claimed;
 
-        const tile = document.createElement("div");
-        tile.className = "tile" + (claimed ? "" : " locked");
+        const el = document.createElement("div");
+        el.className = "building " + (claimed ? "open" : "locked");
+        el.style.left = b.x + "%";
+        el.style.top  = b.y + "%";
+        el.dataset.slot = b.slot;
 
-        const idx = i - 1;
-        const col = idx % 4;
-        const row = Math.floor(idx / 4);
-        tile.style.backgroundPosition = `${col * 33.3333}% ${row * 33.3333}%`;
+        el.innerHTML = `
+          <div class="tag">
+            <div class="code">${b.slot}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.55)">${claimed ? "OPEN" : "LOCK"}</div>
+          </div>
+          <div class="name">${b.name}</div>
+          <div class="desc">${b.desc}</div>
+        `;
 
-        grid.appendChild(tile);
-      }
-    }
-
-    function renderNodes(map){
-      nodesEl.innerHTML = "";
-      linesEl.innerHTML = "";
-
-      // 라인: 01->02->...->16 (원하면 나중에 너의 노드맵 구조대로 바꾸면 됨)
-      for (let i=1; i<16; i++){
-        const a = slotCenter(i);
-        const b = slotCenter(i+1);
-        const line = document.createElementNS("http://www.w3.org/2000/svg","line");
-        line.setAttribute("class","line");
-        line.setAttribute("x1", a.x);
-        line.setAttribute("y1", a.y);
-        line.setAttribute("x2", b.x);
-        line.setAttribute("y2", b.y);
-        linesEl.appendChild(line);
-      }
-
-      for (let i=1; i<=16; i++){
-        const slot = pad2(i);
-        const c = slotCenter(i);
-        const claimed = !!map?.[slot]?.claimed;
-
-        const node = document.createElement("div");
-        node.className = "node" + (claimed ? " open" : "");
-        node.textContent = slot;
-        node.style.left = c.x + "%";
-        node.style.top  = c.y + "%";
-        node.dataset.slot = slot;
-
-        node.addEventListener("click", () => {
-          location.href = `./hint.html?slot=${encodeURIComponent(slot)}`;
+        el.addEventListener("click", () => {
+          location.href = `./hint.html?slot=${encodeURIComponent(b.slot)}`;
         });
 
-        nodesEl.appendChild(node);
+        buildingsEl.appendChild(el);
       }
+    }
+
+    // ===== claimed=true면 마스크를 “사라지게” =====
+    function applyClaims(map){
+      document.querySelectorAll(".mask").forEach(mask => {
+        const slot = mask.dataset.slot;
+        const claimed = !!map?.[slot]?.claimed;
+        if (claimed) mask.classList.add("open");
+        else mask.classList.remove("open");
+      });
     }
 
     async function main(){
       showToastFromQuery();
+      buildMasks();
+
       try{
         const map = await fetchAllSlots();
-        renderTiles(map);
-        renderNodes(map);
+
+        applyClaims(map);
+        buildCampus(map);
 
         const opened = Object.values(map).filter(s => s.claimed).length;
-        statusEl.textContent = `진행: ${opened} / 16 조각 해금됨`;
+        statusEl.textContent = `진행: ${opened} / 16`;
+        statusEl.className = "msg " + (opened ? "ok" : "");
       }catch(e){
         console.error(e);
-        statusEl.textContent = "불러오기 실패: firebaseConfig/Firestore 경로/규칙 확인";
+        statusEl.textContent = "불러오기 실패: firebaseConfig / Firestore 경로/규칙 확인";
         statusEl.className = "msg bad";
       }
     }
