@@ -5,13 +5,16 @@ import {
 
 /** 1) 너 프로젝트 설정값으로 교체 */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
+  authDomain: "teamgrua-f465c.firebaseapp.com",
+  projectId: "teamgrua-f465c",
+  storageBucket: "teamgrua-f465c.firebasestorage.app",
+  messagingSenderId: "1019914743201",
+  appId: "1:1019914743201:web:171550946aafb90ab96fe0"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
 /** 2) Firestore 경로 고정 */
 const PATH = {
