@@ -1,10 +1,15 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {
-  getFirestore, collection, doc, query, orderBy,
-  onSnapshot, runTransaction
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+// app.js (ES Module)
 
-/** ✅ 여기만 네 값으로 채워넣기 */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc, collection,
+  getDocs, query, orderBy,
+  runTransaction, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* =========================
+   1) Firebase 설정 (교체)
+========================= */
 const firebaseConfig = {
   apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
   authDomain: "teamgrua-f465c.firebaseapp.com",
@@ -14,358 +19,383 @@ const firebaseConfig = {
   appId: "1:1019914743201:web:171550946aafb90ab96fe0"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+let app, db;
+export function initFirebase(){
+  if (db) return;
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+}
 
-/* ===== INTRO (기관 브리핑 오프닝) ===== */
-const intro = document.getElementById("intro");
-const introType = document.getElementById("introType");
-const enterBtn = document.getElementById("enterBtn");
-const skipBtn = document.getElementById("skipBtn");
+/* =========================
+   2) Paths / Round helpers
+========================= */
+const SEASON = "season1";
 
-const introScript =
-  "[기관 브리핑]\n" +
-  "상태: 제한 공개 · 권한: 임시 승인\n" +
-  "목표: GRUA CAMPUS 접근 및 16개 노드 해금\n" +
-  "규정: 한 사람, 한 개의 열쇠.\n" +
-  "\n" +
-  "…우리 팀에 합류할래?";
+export async function getActiveRoundId(){
+  initFirebase();
+  const metaRef = doc(db, "game", SEASON, "meta");
+  const metaSnap = await getDoc(metaRef);
+  if (!metaSnap.exists()) throw new Error("meta missing");
+  const { activeRound } = metaSnap.data();
+  return roundId(activeRound || 1);
+}
+function roundId(n){
+  const s = String(n).padStart(4,"0");
+  return `R${s}`;
+}
+function slotDocRef(roundIdStr, slotId){
+  return doc(db, "game", SEASON, "rounds", roundIdStr, "slots", slotId);
+}
 
-typeWriter(introScript, introType, 16);
+/* =========================
+   3) One-time join issue (localStorage)
+========================= */
+const JOIN_KEY = "grua_join_issued_v1";
+export function isJoinIssued(){
+  return !!localStorage.getItem(JOIN_KEY);
+}
+export function markJoinIssued(memberId){
+  localStorage.setItem(JOIN_KEY, memberId);
+}
 
-function typeWriter(text, el, speed=16){
-  let i=0;
-  const tick=()=>{
-    el.textContent = text.slice(0,i++);
-    if(i<=text.length) setTimeout(tick, speed);
+/* =========================
+   4) Issue member ID (immediate join)
+   - no admin approval
+   - writes a record to members collection (optional)
+========================= */
+export async function issueMemberId({ nick, roundId }){
+  initFirebase();
+  // memberId: GR-S1-R0001-AB7K (짧은 랜덤)
+  const rand = randomBase32(4);
+  const memberId = `GR-S1-${roundId}-${rand}`;
+
+  const membersRef = doc(db, "members", memberId);
+  await setDoc(membersRef, {
+    memberId,
+    nick,
+    season: SEASON,
+    roundId,
+    issuedAt: Date.now(),
+    createdAt: serverTimestamp()
+  });
+
+  return { memberId, issuedAt: Date.now() };
+}
+
+function randomBase32(len){
+  const chars = "ABCDEFGHJKMNPQRSTVWXYZ23456789"; // 헷갈리는 문자 제거
+  let out = "";
+  const arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  for (let i=0;i<len;i++){
+    out += chars[arr[i] % chars.length];
+  }
+  return out;
+}
+
+/* =========================
+   5) Index page logic (map/puzzle)
+========================= */
+const isIndex = location.pathname.endsWith("index.html") || location.pathname.endsWith("/");
+if (isIndex){
+  initFirebase();
+  bootIndex().catch(console.error);
+}
+
+async function bootIndex(){
+  const nodesLayer = document.getElementById("nodesLayer");
+  const puzzleLayer = document.getElementById("puzzleLayer");
+  const roundBadge = document.getElementById("roundBadge");
+  const progressBadge = document.getElementById("progressBadge");
+  const refreshBtn = document.getElementById("refreshBtn");
+
+  // modal
+  const modalBackdrop = document.getElementById("modalBackdrop");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalMeta = document.getElementById("modalMeta");
+  const nameInput = document.getElementById("nameInput");
+  const answerInput = document.getElementById("answerInput");
+  const claimBtn = document.getElementById("claimBtn");
+  const submitBtn = document.getElementById("submitBtn");
+  const closeBtn = document.getElementById("closeBtn");
+  const modalHint = document.getElementById("modalHint");
+
+  // final sequence
+  const finalOverlay = document.getElementById("finalOverlay");
+  const finalDim = document.getElementById("finalDim");
+  const finalTitle = document.getElementById("finalTitle");
+  const finalSub = document.getElementById("finalSub");
+  const mapWrap = document.getElementById("mapWrap");
+
+  let activeRound = await getActiveRoundId();
+  roundBadge.textContent = `ROUND: ${activeRound}`;
+
+  refreshBtn.onclick = async () => location.reload();
+
+  // Build 16 puzzle pieces overlay
+  buildPieces(puzzleLayer);
+
+  // Node positions (예시 %). 너의 IFAP~OELB / 랜드마크 좌표로 교체하면 됨.
+  // 최소한 "오른쪽 쏠림" 방지를 위해 % 좌표 + 중앙정렬 구조를 쓰는 상태임.
+  const NODES = makeDefaultNodes();
+
+  // Load all slots
+  const slots = await fetchSlots(activeRound);
+  renderAll(slots);
+
+  // Modal handlers
+  let currentSlotId = null;
+  let currentSlot = null;
+  let isFinalSequencePlaying = false;
+
+  function openModal(slotId){
+    currentSlotId = slotId;
+    currentSlot = slots.get(slotId);
+    if (!currentSlot) return;
+
+    modalTitle.textContent = `SLOT ${slotId} · ${currentSlot.positionName || ""}`;
+    modalMeta.textContent = `${currentSlot.typeCode || ""} · 난이도: ${currentSlot.difficulty || "-"}`;
+    modalHint.textContent = currentSlot.hint ? `HINT: ${currentSlot.hint}` : "";
+    answerInput.value = "";
+    nameInput.value = (localStorage.getItem("grua_name") || "");
+
+    // 버튼 상태
+    const claimed = !!currentSlot.claimed;
+    const unlocked = !!currentSlot.unlocked;
+    claimBtn.disabled = unlocked || claimed;
+    submitBtn.disabled = unlocked || !claimed;
+
+    modalBackdrop.style.display = "flex";
+  }
+  function closeModal(){
+    modalBackdrop.style.display = "none";
+  }
+  closeBtn.onclick = closeModal;
+  modalBackdrop.addEventListener("click", (e)=>{ if (e.target === modalBackdrop) closeModal(); });
+
+  // Claim (transaction)
+  claimBtn.onclick = async ()=>{
+    const nm = (nameInput.value || "").trim();
+    if (!nm){ alert("닉네임을 입력해줘."); return; }
+    localStorage.setItem("grua_name", nm);
+
+    if (!currentSlotId) return;
+    try{
+      await claimSlot(activeRound, currentSlotId, nm);
+      // refresh slot
+      const updated = await getDoc(slotDocRef(activeRound, currentSlotId));
+      slots.set(currentSlotId, updated.data());
+      renderAll(slots);
+      openModal(currentSlotId);
+    }catch(e){
+      console.error(e);
+      alert("이미 누군가 점유했거나 오류가 발생했어.");
+    }
   };
-  tick();
-}
 
-function closeIntro(){
-  intro.style.opacity = "0";
-  intro.style.pointerEvents = "none";
-  setTimeout(()=> intro.remove(), 450);
-}
-enterBtn.addEventListener("click", closeIntro);
-skipBtn.addEventListener("click", closeIntro);
-window.addEventListener("keydown", (e)=> {
-  if(e.key === "Enter" && intro) closeIntro();
-});
+  // Submit answer
+  submitBtn.onclick = async ()=>{
+    const ans = (answerInput.value || "").trim();
+    if (!ans){ alert("정답을 입력해줘."); return; }
+    if (!currentSlotId) return;
 
-/* ===== UI refs ===== */
-const statusText = document.getElementById("statusText");
-const nodesEl = document.getElementById("nodes");
-const linesSvg = document.getElementById("campusLines");
-const puzzleLayer = document.getElementById("puzzleLayer");
-const landmarksEl = document.getElementById("landmarks");
-const finalReveal = document.getElementById("finalReveal");
+    try{
+      await submitAnswer(activeRound, currentSlotId, ans);
+      const updated = await getDoc(slotDocRef(activeRound, currentSlotId));
+      slots.set(currentSlotId, updated.data());
+      renderAll(slots);
+      openModal(currentSlotId);
 
-// Modal
-const modalBackdrop = document.getElementById("modalBackdrop");
-const modalClose = document.getElementById("modalClose");
-const modalTitle = document.getElementById("modalTitle");
-const mQuestion = document.getElementById("mQuestion");
-const mHint = document.getElementById("mHint");
-const mExplain = document.getElementById("mExplain");
-const mAnswer = document.getElementById("mAnswer");
-const mSubmit = document.getElementById("mSubmit");
+      // completion check
+      const unlockedCount = [...slots.values()].filter(s=>s.unlocked).length;
+      if (unlockedCount === 16 && !isFinalSequencePlaying){
+        isFinalSequencePlaying = true;
+        closeModal();
+        await playFinalSequence({
+          mapWrap, nodesLayer, finalOverlay, finalDim, finalTitle, finalSub, puzzleLayer
+        });
+        location.href = "world.html";
+      }
 
-modalBackdrop.classList.add("hidden");
+    }catch(e){
+      console.error(e);
+      alert("오답이거나 제출 실패. 힌트를 다시 확인해줘.");
+    }
+  };
 
-let slots = [];
-let selectedId = null;
+  // Render
+  function renderAll(slotsMap){
+    nodesLayer.innerHTML = "";
+    const unlockedCount = [...slotsMap.values()].filter(s=>s.unlocked).length;
+    progressBadge.textContent = `UNLOCKED: ${unlockedCount}/16`;
 
-/* ===== 타입 16개: 기존 장소/구역 유지 + 추가 랜드마크 6개 별도 (총 22개) ===== */
-const GRUA_META = [
-  { idx:1,  type:"IFAP", place:"기록 보관 구역", icon:"🗄️", axis:"Inner–Faith–Anchor–Participant" },
-  { idx:2,  type:"IFAB", place:"관측 구역",     icon:"👁️", axis:"Inner–Faith–Anchor–Observer" },
-  { idx:3,  type:"IFLP", place:"창작 구역",     icon:"✍️", axis:"Inner–Faith–Flow–Participant" },
-  { idx:4,  type:"IFLB", place:"전시 구역",     icon:"🗂️", axis:"Inner–Faith–Flow–Observer" },
+    // Nodes
+    for (const n of NODES){
+      const slot = slotsMap.get(n.slotId);
+      const el = document.createElement("div");
+      el.className = n.kind === "landmark" ? "landmark" : "node";
+      el.style.left = `${n.x}%`;
+      el.style.top = `${n.y}%`;
+      el.textContent = n.label;
 
-  { idx:5,  type:"IEAP", place:"분석실",       icon:"🧠", axis:"Inner–Evidence–Anchor–Participant" },
-  { idx:6,  type:"IEAB", place:"통계실",       icon:"📐", axis:"Inner–Evidence–Anchor–Observer" },
-  { idx:7,  type:"IELP", place:"전략 회의실",   icon:"♟️", axis:"Inner–Evidence–Flow–Participant" },
-  { idx:8,  type:"IELB", place:"사건 기록구역", icon:"🧾", axis:"Inner–Evidence–Flow–Observer" },
+      if (n.kind !== "landmark"){
+        const state = slot?.unlocked ? "unlocked" : slot?.claimed ? "claimed" : "idle";
+        el.dataset.state = state;
+        el.onclick = ()=> openModal(n.slotId);
+      }else{
+        // 랜드마크는 클릭 필요 없으면 주석
+        el.onclick = ()=>{};
+      }
+      nodesLayer.appendChild(el);
+    }
 
-  { idx:9,  type:"OFAP", place:"중앙 광장 구역", icon:"💞", axis:"Outer–Faith–Anchor–Participant" },
-  { idx:10, type:"OFAB", place:"접경 구역",     icon:"🛡️", axis:"Outer–Faith–Anchor–Observer" },
-  { idx:11, type:"OFLP", place:"통신 구역",     icon:"📡", axis:"Outer–Faith–Flow–Participant" },
-  { idx:12, type:"OFLB", place:"시간 기록 구역", icon:"⏳", axis:"Outer–Faith–Flow–Observer" },
-
-  { idx:13, type:"OEAP", place:"증언실",       icon:"🕯️", axis:"Outer–Evidence–Anchor–Participant" },
-  { idx:14, type:"OEAB", place:"봉인 서고",     icon:"🔒", axis:"Outer–Evidence–Anchor–Observer" },
-  { idx:15, type:"OELP", place:"전환 통로",     icon:"🔁", axis:"Outer–Evidence–Flow–Participant" },
-  { idx:16, type:"OELB", place:"사후 접근 가능 구역", icon:"👣", axis:"Outer–Evidence–Flow–Observer" },
-];
-
-function metaByIdx(idx){ return GRUA_META.find(m => m.idx === idx) || null; }
-function parseType(typeCode){
-  const t = String(typeCode || "").trim().toUpperCase();
-  return { io: t[0] || "I", fe: t[1] || "F", al: t[2] || "A", pb: t[3] || "P" };
-}
-
-/* ✅ 추가 장소 6개(랜드마크) */
-const LANDMARKS = [
-  { name:"광장",     icon:"🌿", x:520, y:355, cls:"big" },
-  { name:"분수",     icon:"⛲", x:520, y:300, cls:"fountain" },
-  { name:"기숙사",   icon:"🛏️", x:260, y:438, cls:"" },
-  { name:"학생회관", icon:"🏛️", x:410, y:235, cls:"" },
-  { name:"식당",     icon:"🍽️", x:720, y:235, cls:"" },
-  { name:"도서관",   icon:"📚", x:780, y:438, cls:"" },
-];
-
-/* ===== 캠퍼스형 배치 ===== */
-const NODE_LAYOUT = [
-  { idx:1,  x:170, y:140 }, { idx:2,  x:330, y:120 }, { idx:3,  x:500, y:145 }, { idx:4,  x:660, y:125 },
-  { idx:5,  x:210, y:280 }, { idx:6,  x:360, y:290 }, { idx:7,  x:520, y:305 }, { idx:8,  x:690, y:290 },
-  { idx:9,  x:260, y:395 }, { idx:10, x:380, y:430 }, { idx:11, x:560, y:430 }, { idx:12, x:720, y:395 },
-  { idx:13, x:840, y:175 }, { idx:14, x:875, y:285 }, { idx:16, x:805, y:340 }, { idx:15, x:875, y:410 },
-];
-
-/* 곡선 동선 */
-const EDGES = [
-  [1,2],[2,3],[3,4],
-  [2,6],[3,7],[4,8],
-  [5,6],[6,7],[7,8],
-  [5,9],[6,10],[7,11],[8,12],
-  [4,13],[8,14],[11,16],[12,15],
-];
-
-/* ===== Firestore ===== */
-const slotsCol = collection(db, "game", "season1", "slots");
-const q = query(slotsCol, orderBy("orderIndex", "asc"));
-
-function makeFallbackSlots(){
-  return Array.from({ length: 16 }, (_, i) => ({
-    id: String(i + 1).padStart(2, "0"),
-    orderIndex: i + 1,
-    typeCode: metaByIdx(i + 1)?.type || "",
-    question: "",
-    hint: "",
-    answer: "",
-    explanation: "",
-    unlocked: false,
-  }));
-}
-
-onSnapshot(
-  q,
-  (snap) => {
-    const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    slots = (data && data.length) ? data : makeFallbackSlots();
-    renderAll();
-    if (selectedId) fillModal();
-  },
-  (err) => {
-    console.error("🔥 Firestore onSnapshot error:", err);
-    slots = makeFallbackSlots();
-    renderAll();
+    // Puzzle pieces blur/unblur
+    updatePieces(puzzleLayer, slotsMap);
   }
-);
 
-/* ===== Modal ===== */
-modalClose.addEventListener("click", closeModal);
-modalBackdrop.addEventListener("click", (e) => { if (e.target === modalBackdrop) closeModal(); });
-window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
-
-function openModal(){
-  if (!selectedId) return;
-  modalBackdrop.classList.remove("hidden");
-  puzzleLayer.classList.add("dim");
-  mAnswer.value = "";
-  setTimeout(()=> mAnswer.focus(), 50);
-}
-function closeModal(){
-  modalBackdrop.classList.add("hidden");
-  puzzleLayer.classList.remove("dim");
-  selectedId = null;
-  renderNodes();
-}
-
-function fillModal(){
-  const s = slots.find(x=>x.id===selectedId);
-  if(!s) return;
-
-  const idx = s.orderIndex ?? 1;
-  const meta = metaByIdx(idx);
-  const typeCode = (s.typeCode || meta?.type || s.id || "").toUpperCase();
-
-  modalTitle.textContent = `${meta?.place || "NODE"} · ${typeCode} · #${idx}`;
-  mQuestion.textContent = s.question || "";
-  mHint.textContent = s.hint || "";
-  mExplain.textContent = s.explanation || "";
-
-  if (s.unlocked) {
-    mAnswer.disabled = true;
-    mSubmit.disabled = true;
-    mSubmit.textContent = "이미 해금됨";
-  } else {
-    mAnswer.disabled = false;
-    mSubmit.disabled = false;
-    mSubmit.textContent = "정답 제출 → 조각 열기";
+  async function fetchSlots(roundIdStr){
+    const out = new Map();
+    for (let i=1;i<=16;i++){
+      const id = String(i).padStart(2,"0");
+      const snap = await getDoc(slotDocRef(roundIdStr, id));
+      if (snap.exists()) out.set(id, snap.data());
+      else out.set(id, { claimed:false, unlocked:false, positionName:`Slot ${id}` });
+    }
+    return out;
   }
-  mSubmit.onclick = () => submitAnswer(s.id, mAnswer.value, s.answer || "");
 }
 
-async function submitAnswer(slotId, input, correctAnswer){
-  const userAns = (input || "").trim();
-  if(!userAns) return alert("정답을 입력해줘.");
-  if(!correctAnswer) return alert("이 슬롯의 answer가 비어 있어.");
+function makeDefaultNodes(){
+  // ⚠️ 예시 배치. 너의 “대학스럽게 리디자인” 좌표로 나중에 교체.
+  // slotId 01~16 + landmark 6개 = 총 22개
+  const nodes = [];
+  const ring = [
+    [50,18],[66,22],[78,34],[82,50],[78,66],[66,78],[50,82],[34,78],
+    [22,66],[18,50],[22,34],[34,22],[50,30],[70,50],[50,70],[30,50]
+  ];
+  for (let i=1;i<=16;i++){
+    const id = String(i).padStart(2,"0");
+    const [x,y] = ring[i-1];
+    nodes.push({ kind:"node", slotId:id, label:`${id}`, x, y });
+  }
+  nodes.push({ kind:"landmark", label:"광장", x:50, y:50 });
+  nodes.push({ kind:"landmark", label:"분수", x:56, y:44 });
+  nodes.push({ kind:"landmark", label:"기숙사", x:18, y:78 });
+  nodes.push({ kind:"landmark", label:"학생회관", x:82, y:22 });
+  nodes.push({ kind:"landmark", label:"식당", x:80, y:78 });
+  nodes.push({ kind:"landmark", label:"도서관", x:20, y:22 });
+  return nodes;
+}
 
-  const ok = normalize(userAns) === normalize(correctAnswer);
-  if(!ok) return alert("오답!");
+/* =========================
+   6) Puzzle pieces build/update
+========================= */
+function buildPieces(layer){
+  layer.innerHTML = "";
+  const size = 25; // 4x4 => 25% each
+  for (let r=0;r<4;r++){
+    for (let c=0;c<4;c++){
+      const idx = r*4 + c + 1;
+      const id = String(idx).padStart(2,"0");
+      const el = document.createElement("div");
+      el.className = "piece";
+      el.dataset.slotId = id;
+      el.style.left = `${c*size}%`;
+      el.style.top = `${r*size}%`;
+      el.style.width = `${size}%`;
+      el.style.height = `${size}%`;
+      el.style.backgroundPosition = `${c * (100/3)}% ${r * (100/3)}%`;
+      layer.appendChild(el);
+    }
+  }
+}
+function updatePieces(layer, slotsMap){
+  const pieces = layer.querySelectorAll(".piece");
+  pieces.forEach(p=>{
+    const id = p.dataset.slotId;
+    const s = slotsMap.get(id);
+    if (s?.unlocked) p.classList.add("unlocked");
+    else p.classList.remove("unlocked");
+  });
+}
 
-  const ref = doc(db, "game", "season1", "slots", slotId);
+/* =========================
+   7) Claim transaction (선착)
+========================= */
+async function claimSlot(roundIdStr, slotId, claimerName){
+  initFirebase();
+  const ref = slotDocRef(roundIdStr, slotId);
+  await runTransaction(db, async (tx)=>{
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error("slot missing");
+    const data = snap.data();
+    if (data.unlocked) throw new Error("already unlocked");
+    if (data.claimed) throw new Error("already claimed");
 
-  try{
-    await runTransaction(db, async (tx)=>{
-      const snap = await tx.get(ref);
-      if(!snap.exists()) throw new Error("문서가 없어.");
-      const data = snap.data();
-      if(data.unlocked) return;
-      tx.update(ref, { unlocked: true });
+    tx.update(ref, {
+      claimed: true,
+      claimerName,
+      claimedAt: serverTimestamp()
     });
-    alert("정답! 해당 퍼즐 조각이 열렸어.");
-  }catch(e){
-    alert(e?.message || String(e));
-  }
-}
-
-/* ===== Render ===== */
-function renderAll(){
-  renderStatus();
-  renderPuzzleLayer();
-  renderPaths();
-  renderLandmarks();
-  renderNodes();
-  renderFinalIfAllUnlocked();
-}
-
-function renderStatus(){
-  const unlockedCount = slots.filter(s => !!s.unlocked).length;
-  statusText.textContent = `해금 ${unlockedCount}/16 · 노드를 눌러 문제를 풀면 해당 조각이 열립니다.`;
-}
-
-function renderPuzzleLayer(){
-  puzzleLayer.innerHTML = "";
-  slots.forEach(s => {
-    const piece = document.createElement("div");
-    piece.className = `piece ${s.unlocked ? "unlocked" : "locked"}`;
-
-    const i = (s.orderIndex ?? 1) - 1;
-    const row = Math.floor(i / 4);
-    const col = i % 4;
-    const x = (col * 100) / 3;
-    const y = (row * 100) / 3;
-
-    piece.style.backgroundPosition = `${x}% ${y}%`;
-    piece.innerHTML = `<div class="tag">${s.orderIndex ?? "?"}</div>`;
-    puzzleLayer.appendChild(piece);
   });
 }
 
-function renderPaths(){
-  linesSvg.innerHTML = "";
-  EDGES.forEach(([a,b])=>{
-    const A = NODE_LAYOUT.find(n=>n.idx===a);
-    const B = NODE_LAYOUT.find(n=>n.idx===b);
-    if(!A || !B) return;
+/* =========================
+   8) Submit answer (단순 비교)
+========================= */
+async function submitAnswer(roundIdStr, slotId, answerInput){
+  initFirebase();
+  const ref = slotDocRef(roundIdStr, slotId);
+  await runTransaction(db, async (tx)=>{
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error("slot missing");
+    const data = snap.data();
 
-    const meta = metaByIdx(a);
-    const p = parseType(meta?.type || "IFAP");
+    if (!data.claimed) throw new Error("not claimed");
+    if (data.unlocked) return;
 
-    const mx = (A.x + B.x) / 2;
-    const my = (A.y + B.y) / 2;
-    const bend = 28;
-    const cx = mx + (A.y - B.y) / 520 * bend;
-    const cy = my + (B.x - A.x) / 1000 * bend;
+    const correct = normalize(answerInput) === normalize(data.answer || "");
+    if (!correct) throw new Error("wrong");
 
-    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
-    path.setAttribute("d", `M ${A.x} ${A.y} Q ${cx} ${cy} ${B.x} ${B.y}`);
-    path.setAttribute("fill", "none");
-    path.setAttribute("stroke-width", "2");
-
-    path.setAttribute("data-fe", p.fe);
-    path.setAttribute("data-io", p.io);
-
-    linesSvg.appendChild(path);
+    tx.update(ref, {
+      unlocked: true,
+      unlockedAt: serverTimestamp()
+    });
   });
 }
-
-function renderLandmarks(){
-  if(!landmarksEl) return;
-  landmarksEl.innerHTML = "";
-  LANDMARKS.forEach(lm=>{
-    const d = document.createElement("div");
-    d.className = `landmark ${lm.cls || ""}`.trim();
-    d.style.left = `${lm.x}px`;
-    d.style.top  = `${lm.y}px`;
-    d.innerHTML = `<span class="ico">${escapeHtml(lm.icon)}</span>${escapeHtml(lm.name)}`;
-    landmarksEl.appendChild(d);
-  });
+function normalize(s){
+  return String(s).trim().toLowerCase().replace(/\s+/g," ");
 }
 
-function renderNodes(){
-  nodesEl.innerHTML = "";
-  slots.forEach(s=>{
-    const idx = s.orderIndex ?? 1;
-    const layout = NODE_LAYOUT.find(n=>n.idx===idx) || { x: 100, y: 100 };
-    const meta = metaByIdx(idx);
-    const typeCode = (s.typeCode || meta?.type || s.id || "").toUpperCase();
-    const p = parseType(typeCode);
+/* =========================
+   9) Final sequence (단계 연출 + 딜레이)
+   - total ~1.9s then caller navigates
+========================= */
+async function playFinalSequence({ mapWrap, nodesLayer, finalOverlay, finalDim, finalTitle, finalSub, puzzleLayer }){
+  // LOCK interactions
+  nodesLayer.style.pointerEvents = "none";
 
-    const node = document.createElement("div");
-    node.className = `node ${selectedId===s.id ? "active" : ""}`;
-    node.style.left = `${layout.x}px`;
-    node.style.top  = `${layout.y}px`;
-    node.dataset.fe = p.fe;
-    node.dataset.io = p.io;
+  // T+150: fade map layers (nodes + svg)
+  await sleep(150);
+  nodesLayer.style.opacity = "0";
+  const svg = mapWrap.querySelector(".map-svg");
+  if (svg) svg.style.opacity = "0";
+  // sharpen puzzle
+  puzzleLayer.classList.add("puzzle-sharpen");
 
-    node.innerHTML = `
-      <div class="ico">${escapeHtml(meta?.icon || "●")}</div>
-      <div class="place">${escapeHtml(meta?.place || "장소")}</div>
-      <div class="mini">${escapeHtml(typeCode)} · ${idx}</div>
-    `;
+  // T+800: show ACCESS GRANTED
+  await sleep(650); // 150->800
+  finalTitle.textContent = "ACCESS GRANTED";
+  finalSub.textContent = "CLEARANCE LEVEL: 01";
+  finalOverlay.classList.add("on");
+  finalDim.classList.add("on");
 
-    node.onclick = () => {
-      selectedId = s.id;
-      renderNodes();
-      openModal();
-      fillModal();
-    };
+  // T+1400: HOLD (0.6s)
+  await sleep(600);
 
-    nodesEl.appendChild(node);
-  });
+  // T+1900: transition out (fade)
+  mapWrap.classList.add("fade-out");
+  await sleep(200);
 }
 
-function renderFinalIfAllUnlocked(){
-  const unlockedCount = slots.filter(s => !!s.unlocked).length;
-  const all = unlockedCount >= 16;
-
-  if(all){
-    nodesEl.style.display = "none";
-    linesSvg.style.display = "none";
-    if(landmarksEl) landmarksEl.style.display = "none";
-    finalReveal.classList.remove("hidden");
-    modalBackdrop.classList.add("hidden");
-    puzzleLayer.classList.remove("dim");
-    selectedId = null;
-  }else{
-    nodesEl.style.display = "";
-    linesSvg.style.display = "";
-    if(landmarksEl) landmarksEl.style.display = "";
-    finalReveal.classList.add("hidden");
-  }
-}
-
-/* ===== Utils ===== */
-function normalize(s){ return String(s).toLowerCase().replace(/\s+/g,""); }
-function escapeHtml(s){
-  return String(s)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
+function sleep(ms){ return new Promise(res=>setTimeout(res, ms)); }
