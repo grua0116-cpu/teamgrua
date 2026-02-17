@@ -43,26 +43,31 @@ let selectedId = null;
 /* ===== GRUA META (카드 기반 표시) =====
    ※ 너 카드 레퍼런스 기반으로 “아이콘/한글 POSITION/GROUND/TYPE”를 여기서 고정 */
 const GRUA_META = [
-  { idx:1,  type:"IFAP", pos:"기록 보관자", ground:"기록 보관 구역", icon:"🗄️", axis:"Inner–Faith–Anchor–Participant" },
-  { idx:2,  type:"IFAB", pos:"증인",       ground:"관측 구역",       icon:"👁️", axis:"Inner–Faith–Anchor–Observer" },
-  { idx:3,  type:"IFLP", pos:"저자",       ground:"창작 구역",       icon:"✍️", axis:"Inner–Faith–Flow–Participant" },
-  { idx:4,  type:"IFLB", pos:"정리자",     ground:"전시 구역",       icon:"🗂️", axis:"Inner–Faith–Flow–Observer" },
+  // 1~4: 상단(입구~학술 중심축)
+  { idx:1,  type:"IFAP", place:"기록보관관",     ground:"기록 구역", icon:"🗄️", axis:"Inner–Faith–Anchor–Participant" },
+  { idx:2,  type:"IFAB", place:"관측열람실",     ground:"관측 구역", icon:"👁️", axis:"Inner–Faith–Anchor–Observer" },
+  { idx:3,  type:"IFLP", place:"저술연구실",     ground:"창작 구역", icon:"✍️", axis:"Inner–Faith–Flow–Participant" },
+  { idx:4,  type:"IFLB", place:"정리전시실",     ground:"전시 구역", icon:"🗂️", axis:"Inner–Faith–Flow–Observer" },
 
-  { idx:5,  type:"IEAP", pos:"분석가",       ground:"분석실",       icon:"🧠", axis:"Inner–Evidence–Anchor–Participant" },
-  { idx:6,  type:"IEAB", pos:"기준 관찰자", ground:"통계실",       icon:"📐", axis:"Inner–Evidence–Anchor–Observer" },
-  { idx:7,  type:"IELP", pos:"전략가",      ground:"전략 회의실",   icon:"♟️", axis:"Inner–Evidence–Flow–Participant" },
-  { idx:8,  type:"IELB", pos:"추적자",      ground:"사건 기록구역", icon:"🧾", axis:"Inner–Evidence–Flow–Observer" },
+  // 5~8: 중앙(연구/판단/분석 클러스터)
+  { idx:5,  type:"IEAP", place:"분석실",         ground:"분석 구역", icon:"🧠", axis:"Inner–Evidence–Anchor–Participant" },
+  { idx:6,  type:"IEAB", place:"기준실",         ground:"기준 구역", icon:"📐", axis:"Inner–Evidence–Anchor–Observer" },
+  { idx:7,  type:"IELP", place:"전략실",         ground:"전략 구역", icon:"♟️", axis:"Inner–Evidence–Flow–Participant" },
+  { idx:8,  type:"IELB", place:"추적기록실",     ground:"추적 구역", icon:"🧾", axis:"Inner–Evidence–Flow–Observer" },
 
-  { idx:9,  type:"OFAP", pos:"애호가",     ground:"중앙 광장",     icon:"💞", axis:"Outer–Faith–Anchor–Participant" },
-  { idx:10, type:"OFAB", pos:"파수",       ground:"접경 구역",     icon:"🛡️", axis:"Outer–Faith–Anchor–Observer" },
-  { idx:11, type:"OFLP", pos:"공명자",     ground:"통신 구역",     icon:"📡", axis:"Outer–Faith–Flow–Participant" },
-  { idx:12, type:"OFLB", pos:"기억자",     ground:"시간 기록 구역", icon:"⏳", axis:"Outer–Faith–Flow–Observer" },
+  // 9~12: 하단(광장/생활/공명)
+  { idx:9,  type:"OFAP", place:"중앙광장",       ground:"교류 구역", icon:"🌿", axis:"Outer–Faith–Anchor–Participant" },
+  { idx:10, type:"OFAB", place:"경계초소",       ground:"접경 구역", icon:"🛡️", axis:"Outer–Faith–Anchor–Observer" },
+  { idx:11, type:"OFLP", place:"공명센터",       ground:"통신 구역", icon:"📡", axis:"Outer–Faith–Flow–Participant" },
+  { idx:12, type:"OFLB", place:"기억보존관",     ground:"시간 구역", icon:"⏳", axis:"Outer–Faith–Flow–Observer" },
 
-  { idx:13, type:"OEAP", pos:"고해자",        ground:"증언실",     icon:"🕯️", axis:"Outer–Evidence–Anchor–Participant" },
-  { idx:14, type:"OEAB", pos:"종결 기록자",   ground:"봉인 서고",   icon:"🔒", axis:"Outer–Evidence–Anchor–Observer" },
-  { idx:15, type:"OELP", pos:"호환자",        ground:"전환 통로",   icon:"🔁", axis:"Outer–Evidence–Flow–Participant" },
-  { idx:16, type:"OELB", pos:"목격자",        ground:"사후 접근 가능 구역", icon:"👣", axis:"Outer–Evidence–Flow–Observer" },
+  // 13~16: 우측 외곽(고백/봉인/전환/잔흔)
+  { idx:13, type:"OEAP", place:"고해실",         ground:"증언 구역", icon:"🕯️", axis:"Outer–Evidence–Anchor–Participant" },
+  { idx:14, type:"OEAB", place:"봉인서고",       ground:"봉인 구역", icon:"🔒", axis:"Outer–Evidence–Anchor–Observer" },
+  { idx:15, type:"OELP", place:"전환게이트",     ground:"전환 구역", icon:"🔁", axis:"Outer–Evidence–Flow–Participant" },
+  { idx:16, type:"OELB", place:"사후접근로",     ground:"잔흔 구역", icon:"👣", axis:"Outer–Evidence–Flow–Observer" },
 ];
+
 function metaByIdx(idx){ return GRUA_META.find(m => m.idx === idx) || null; }
 function parseType(typeCode){
   const t = String(typeCode || "").trim().toUpperCase();
@@ -71,11 +76,31 @@ function parseType(typeCode){
 
 /* ===== 대학 지도 배치 (좌표만 바꾸면 됨) ===== */
 const NODE_LAYOUT = [
-  { idx:1,  x:130, y:95 }, { idx:2,  x:290, y:80 }, { idx:3,  x:440, y:110 }, { idx:4,  x:600, y:90 },
-  { idx:5,  x:160, y:220 },{ idx:6,  x:320, y:215 },{ idx:7,  x:480, y:235 },{ idx:8,  x:650, y:215 },
-  { idx:9,  x:190, y:380 },{ idx:10, x:350, y:395 },{ idx:11, x:510, y:390 },{ idx:12, x:700, y:380 },
-  { idx:13, x:860, y:110 },{ idx:14, x:890, y:225 },{ idx:15, x:900, y:360 },{ idx:16, x:770, y:300 },
+  // 상단 중심축 (입구→학술)
+  { idx:1,  x:120, y:90  },
+  { idx:2,  x:270, y:70  },
+  { idx:3,  x:430, y:95  },
+  { idx:4,  x:585, y:80  },
+
+  // 중앙 클러스터 (연구/분석/전략/추적)
+  { idx:5,  x:170, y:215 },
+  { idx:6,  x:320, y:230 },
+  { idx:7,  x:475, y:240 },
+  { idx:8,  x:635, y:220 },
+
+  // 하단 생활/광장/공명
+  { idx:9,  x:230, y:395 },
+  { idx:10, x:360, y:425 },
+  { idx:11, x:520, y:405 },
+  { idx:12, x:700, y:395 },
+
+  // 우측 외곽 (봉인/전환/잔흔)
+  { idx:13, x:840, y:120 },
+  { idx:14, x:885, y:235 },
+  { idx:16, x:785, y:305 },
+  { idx:15, x:900, y:385 },
 ];
+
 
 /* 맵 연결선(대학 동선 느낌) */
 const EDGES = [
@@ -263,7 +288,7 @@ function renderNodes(){
 
     node.innerHTML = `
       <div class="ico">${escapeHtml(meta?.icon || "●")}</div>
-      <div class="pos">${escapeHtml(meta?.pos || (s.positionName || "노드"))}</div>
+      <div class="pos">${escapeHtml(meta?.place || "장소")}</div>
       <div class="type">${escapeHtml(typeCode)}</div>
       <div class="ground">${escapeHtml(meta?.ground || "")}</div>
     `;
