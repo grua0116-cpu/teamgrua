@@ -3,177 +3,53 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GRUA | 16인 공동 퍼즐</title>
+  <title>GRUA | Click Test</title>
   <style>
-    :root{
-      --bg:#07121a; --panel:#0c1c28; --text:#e8f1ff; --muted:#9bb0c8;
-      --line:rgba(255,255,255,.12);
-    }
+    :root{ --bg:#07121a; --panel:#0c1c28; --text:#e8f1ff; --muted:#9bb0c8; --line:rgba(255,255,255,.12); }
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;background:var(--bg);color:var(--text)}
     .wrap{max-width:1100px;margin:0 auto;padding:18px}
-    .top{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
-    .badge{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:6px 10px;border-radius:999px}
     .grid{display:grid;grid-template-columns:1fr 360px;gap:14px}
     @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
-
-    .map-stage{display:flex;justify-content:center;padding:10px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:16px}
-    .map-wrap{
-      position:relative;
-      width:min(92vw, 760px);
-      aspect-ratio: 1 / 1;
-      margin:0 auto;
-      overflow: visible;
-    }
-    .map-img,.map-svg,.nodes-layer,.puzzle-layer,.final-overlay{
-      position:absolute;inset:0;width:100%;height:100%;
-    }
-    .map-img{object-fit:contain;z-index:1;opacity:.95}
-    .map-svg{z-index:2;pointer-events:none;opacity:.9}
-    .nodes-layer{z-index:3}
-    .puzzle-layer{z-index:4;pointer-events:none}
-    .final-overlay{z-index:5;display:none;place-items:center}
-
-    .node,.landmark{
-      position:absolute;transform:translate(-50%,-50%);
-      border:1px solid var(--line);border-radius:12px;
-      padding:8px 10px;font-size:12px;background:rgba(12,28,40,.88);
-      backdrop-filter: blur(6px);
-      cursor:pointer;user-select:none;
-      transition: transform .18s ease, opacity .3s ease, filter .3s ease;
-    }
-    .node:hover,.landmark:hover{transform:translate(-50%,-50%) scale(1.03)}
-    .node[data-state="claimed"]{filter:saturate(1.2);animation:pulse 1.2s infinite}
-    .node[data-state="unlocked"]{border-color:rgba(180,255,210,.55);box-shadow:0 0 18px rgba(120,255,190,.18)}
-    @keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.04)}}
-
-    .piece{
-      position:absolute;
-      background-image:url("puzzle.png");
-      background-size:400% 400%;
-      filter: blur(16px) brightness(.85);
-      transition: filter .45s ease;
-      border:1px solid rgba(255,255,255,.06);
-    }
-    .piece.unlocked{filter: blur(0px) brightness(1.02)}
-    .puzzle-sharpen{filter: contrast(1.08) brightness(1.06)}
-
-    .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}
-    .h{font-weight:800;font-size:15px;margin:0 0 8px}
-    .p{color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 12px}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;position:relative;z-index:9999}
     .btn{
       display:inline-flex;align-items:center;justify-content:center;
-      gap:8px;padding:10px 12px;border-radius:12px;
-      border:1px solid var(--line);background:rgba(255,255,255,.03);
-      color:var(--text);cursor:pointer;text-decoration:none;font-size:13px
+      padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+      background:rgba(255,255,255,.05);color:var(--text);cursor:pointer;
+      font-size:14px; user-select:none;
+      pointer-events:auto !important;
     }
-    .btn:disabled{opacity:.5;cursor:not-allowed}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    .small{font-size:12px;color:var(--muted)}
-
-    .modal-backdrop{
-      position:fixed;inset:0;background:rgba(0,0,0,.55);
-      display:none;align-items:center;justify-content:center;z-index:50;
-    }
-    .modal{
-      width:min(92vw,520px);
-      background:var(--panel);border:1px solid var(--line);border-radius:16px;
-      padding:14px;
-    }
-    .modal .title{font-weight:900;margin:0 0 6px}
-    .modal label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
-    .modal input{
-      width:100%;box-sizing:border-box;padding:10px 11px;border-radius:12px;
-      border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text)
-    }
-    .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
-
-    .final-overlay.on{display:grid}
-    .final-card{
-      text-align:center;
-      padding:18px 18px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(0,0,0,.35);
-      backdrop-filter: blur(8px);
-      transform: translateY(6px);
-      opacity:0;
-      transition: opacity .25s ease, transform .25s ease;
-    }
-    .final-overlay.on .final-card{opacity:1;transform: translateY(0)}
-    .final-title{font-weight:1000; letter-spacing:.12em; font-size:14px}
-    .final-sub{margin-top:6px;color:var(--muted);font-size:12px}
-    .fade-out{opacity:0;transition:opacity .2s ease}
-    .final-dim{position:absolute;inset:0;background:rgba(0,0,0,.18);opacity:0;transition:opacity .25s ease}
-    .final-dim.on{opacity:1}
+    .btn:active{transform:translateY(1px)}
+    .note{color:var(--muted);font-size:13px;margin-top:10px;line-height:1.45}
+    /* 혹시 페이지 전체를 덮는 레이어가 있으면 클릭이 막히니까 강제로 없앰 */
+    .kill-overlay, .overlay, #finalOverlay, #modalBackdrop { display:none !important; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="top">
-      <div class="badge" id="roundBadge">ROUND: -</div>
-      <div class="badge" id="progressBadge">UNLOCKED: 0/16</div>
-    </div>
-
     <div class="grid">
-      <div class="map-stage">
-        <div class="map-wrap" id="mapWrap">
-          <img class="map-img" src="map.png" alt="GRUA Campus Map" />
-
-          <svg class="map-svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
-            <path d="M200 520 C 360 380, 520 380, 680 520" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3" />
-          </svg>
-
-          <div class="nodes-layer" id="nodesLayer"></div>
-          <div class="puzzle-layer" id="puzzleLayer"></div>
-
-          <div class="final-overlay" id="finalOverlay" aria-hidden="true">
-            <div class="final-dim" id="finalDim"></div>
-            <div class="final-card">
-              <div class="final-title" id="finalTitle">ACCESS GRANTED</div>
-              <div class="final-sub" id="finalSub">CLEARANCE LEVEL: 01</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div style="min-height:420px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.03)"></div>
 
       <div class="panel">
-        <p class="h">GRUA 16인 공동 퍼즐</p>
-        <p class="p">
-          16명이 각자 1개의 슬롯을 선착으로 점유하고 정답을 입력해 해금합니다.
-          16개가 모두 해금되면 “기관 브리핑”으로 전환됩니다.
-        </p>
+        <div style="font-weight:900;margin-bottom:10px">버튼 클릭 진단</div>
 
-        <div class="row">
-          <button class="btn" id="refreshBtn">새로고침</button>
-          <button class="btn" id="initSlotsBtn">슬롯 16개 자동 생성</button>
-        </div>
+        <!-- ✅ JS 없이도 무조건 떠야 함 -->
+        <button class="btn"
+          onclick="alert('✅ 클릭 인식됨 (HTML onclick)');">
+          1) 클릭 테스트 (무조건 알림 떠야 정상)
+        </button>
 
-        <p class="small" style="margin-top:12px">
-          ※ 먼저 Firestore Rules가 쓰기 허용 상태여야 생성됩니다.<br/>
-          ※ 생성 후에는 Firestore에서 question/hint/answer/explanation만 채우면 됩니다.
+        <div style="height:10px"></div>
+
+        <!-- ✅ app.js가 로드되면 여기 버튼도 alert 떠야 함 -->
+        <button class="btn" id="jsBtn">
+          2) JS 클릭 테스트 (app.js가 살아있으면 알림)
+        </button>
+
+        <p class="note">
+          - 1번 버튼을 눌렀는데도 알림이 안 뜨면: <b>버튼 위에 투명 레이어가 덮여서 클릭이 막힌 것</b>입니다.<br/>
+          - 1번은 뜨는데 2번은 안 뜨면: <b>app.js가 로드/실행이 안 된 것</b>입니다.
         </p>
       </div>
-    </div>
-  </div>
-
-  <!-- Modal -->
-  <div class="modal-backdrop" id="modalBackdrop">
-    <div class="modal">
-      <p class="title" id="modalTitle">SLOT</p>
-      <div class="small" id="modalMeta"></div>
-
-      <label>이름(선착 점유용)</label>
-      <input id="nameInput" placeholder="닉네임" maxlength="20" />
-
-      <label style="margin-top:10px">정답</label>
-      <input id="answerInput" placeholder="정답 입력" maxlength="60" />
-
-      <div class="actions">
-        <button class="btn" id="closeBtn">닫기</button>
-        <button class="btn" id="claimBtn">점유하기</button>
-        <button class="btn" id="submitBtn">정답 제출</button>
-      </div>
-      <p class="small" id="modalHint" style="margin-top:10px"></p>
     </div>
   </div>
 
