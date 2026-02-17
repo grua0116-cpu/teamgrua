@@ -10,10 +10,9 @@
   <main class="wrap">
     <header class="top">
       <h1>GRUA 16 공동 퍼즐</h1>
-      <p id="statusText">캠퍼스 맵 노드를 눌러 문제를 풀면, 뒤에 깔린 퍼즐 조각이 열립니다.</p>
+      <p id="statusText">노드를 눌러 문제를 풀면, 뒤에 깔린 퍼즐 조각이 열립니다.</p>
     </header>
 
-    <!-- 캠퍼스 맵(퍼즐 배경 + 노드) -->
     <section class="panel">
       <h2 class="sectionTitle">CAMPUS MAP</h2>
 
@@ -29,11 +28,11 @@
         <div id="nodes" class="nodes"></div>
       </div>
 
-      <p class="muted">노드 배치는 app.js의 NODE_LAYOUT 좌표만 바꾸면 됨.</p>
+      <p class="muted">노드 배치는 assets/app.js의 NODE_LAYOUT 좌표만 바꾸면 됨.</p>
     </section>
   </main>
 
-  <!-- 모달 -->
+  <!-- 모달(처음엔 hidden이어야 함) -->
   <div id="modalBackdrop" class="modalBackdrop hidden">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="modalTop">
@@ -56,7 +55,7 @@
           <div class="label">정답 입력</div>
           <input id="mAnswer" placeholder="정답 입력" />
           <button id="mSubmit">정답 제출 → 조각 열기</button>
-          <div class="muted">자율 신뢰 버전(정답은 Firestore에 저장됨)</div>
+          <div class="muted">자율 신뢰 버전(정답은 Firestore 기준)</div>
         </div>
 
         <div class="row">
