@@ -10,33 +10,30 @@
   <main class="wrap">
     <header class="top">
       <h1>GRUA 16 공동 퍼즐</h1>
-      <p id="statusText">로그인 후, 한 사람당 1칸 선착순 점유 → 정답 해금</p>
+      <p id="statusText">맵의 노드를 눌러 문제를 풀고, 정답이면 퍼즐 조각이 열립니다.</p>
     </header>
 
+    <!-- 캠퍼스 맵 -->
     <section class="panel">
-      <div class="bar">
-        <button id="loginBtn">로그인(익명)</button>
-        <span id="userText" class="muted">미로그인</span>
+      <h2 class="sectionTitle">CAMPUS MAP</h2>
+      <div id="campus" class="campus">
+        <div class="campusGrid"></div>
+        <svg class="campusLines" viewBox="0 0 1000 520" preserveAspectRatio="none"></svg>
+        <div id="nodes" class="nodes"></div>
       </div>
-
-      <div class="bar">
-        <input id="nameInput" placeholder="닉네임(claimerName)" maxlength="20" />
-        <button id="refreshBtn">새로고침</button>
-      </div>
-
-      <div id="grid" class="grid"></div>
+      <p class="muted">노드 위치는 코드에서 좌표로 조절 가능.</p>
     </section>
 
+    <!-- 퍼즐 보드 -->
+    <section class="panel">
+      <h2 class="sectionTitle">PUZZLE BOARD</h2>
+      <div id="board" class="board"></div>
+    </section>
+
+    <!-- 상세 -->
     <section id="detail" class="detail hidden"></section>
-
-    <!-- 🔥 여기 수정됨 -->
-    <section id="final" class="final hidden">
-      <h2>전체 해금 완료</h2>
-      <p class="muted">세계관 이미지 공개</p>
-    <script type="module" src="./assets/app.js"></script>
-    </section>
   </main>
 
- <img src="./images/puzzle.png" alt="Final Puzzle Image" />
+  <script type="module" src="./assets/app.js"></script>
 </body>
 </html>
