@@ -215,3 +215,7 @@ line[data-io="I"]{ stroke-dasharray: none; }
   border:1px solid rgba(255,255,255,.10);
   display:block;
 }
+.finalLink{ display:block; }
+.finalImg{ cursor:pointer; }
+.finalImg:hover{ filter: brightness(1.05) contrast(1.02); }
+
