@@ -1,22 +1,12 @@
-// app.js (NO MODULE VERSION)
+// app.js (NO MODULE) - 무조건 화면에 "JS: OK" 찍고, jsTest 함수 제공
 
-// ===== 1) JS 로드 확인 =====
 console.log("🔥 app.js loaded");
 
+window.jsTest = function(){
+  alert("✅ 2번: JS 함수 호출 OK (app.js 실행 중)");
+};
+
 document.addEventListener("DOMContentLoaded", function(){
-
-  const jsBtn = document.getElementById("jsBtn");
-  if(jsBtn){
-    jsBtn.onclick = function(){
-      alert("✅ app.js 정상 실행됨");
-    };
-  }
-
-  const initBtn = document.getElementById("initSlotsBtn");
-  if(initBtn){
-    initBtn.onclick = function(){
-      alert("🔥 버튼 정상 연결됨 (이제 Firestore 붙이면 됨)");
-    };
-  }
-
+  const s = document.getElementById("jsStatus");
+  if (s) s.textContent = "JS: OK";
 });
