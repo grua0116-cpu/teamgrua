@@ -33,12 +33,13 @@ const SEASON = "season1";
 
 export async function getActiveRoundId(){
   initFirebase();
-  const metaRef = doc(db, "game", SEASON, "meta");
+  const metaRef = doc(db, "game", SEASON, "meta", "meta"); // 👈 반드시 이 구조
   const metaSnap = await getDoc(metaRef);
   if (!metaSnap.exists()) throw new Error("meta missing");
   const { activeRound } = metaSnap.data();
   return roundId(activeRound || 1);
 }
+
 function roundId(n){
   const s = String(n).padStart(4,"0");
   return `R${s}`;
