@@ -1,10 +1,22 @@
-// app.js - JS 로드 여부만 확인하는 초간단 파일
+// app.js (NO MODULE VERSION)
 
-window.__APP_LOADED__ = true;
+// ===== 1) JS 로드 확인 =====
+console.log("🔥 app.js loaded");
 
-window.addEventListener("DOMContentLoaded", ()=>{
+document.addEventListener("DOMContentLoaded", function(){
+
   const jsBtn = document.getElementById("jsBtn");
-  if (jsBtn){
-    jsBtn.onclick = ()=> alert("✅ app.js 로드/실행됨 (JS 클릭 인식)");
+  if(jsBtn){
+    jsBtn.onclick = function(){
+      alert("✅ app.js 정상 실행됨");
+    };
   }
+
+  const initBtn = document.getElementById("initSlotsBtn");
+  if(initBtn){
+    initBtn.onclick = function(){
+      alert("🔥 버튼 정상 연결됨 (이제 Firestore 붙이면 됨)");
+    };
+  }
+
 });
