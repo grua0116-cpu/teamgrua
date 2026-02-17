@@ -11,7 +11,7 @@ body{ margin:0; font-family:system-ui,-apple-system,sans-serif; background:var(-
 .top h1{ margin:0 0 8px; }
 .top p{ margin:0 0 16px; color:var(--muted); }
 
-.panel{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:12px; }
+.panel{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; }
 .sectionTitle{ margin:0 0 10px; font-size:14px; letter-spacing:0.08em; color:var(--muted); }
 .muted{ color:var(--muted); font-size:13px; margin:10px 0 0; }
 
@@ -25,7 +25,7 @@ body{ margin:0; font-family:system-ui,-apple-system,sans-serif; background:var(-
   background: rgba(255,255,255,.02);
 }
 
-/* 퍼즐이 맵 '뒤'에 깔리는 레이어 */
+/* 퍼즐(뒤) */
 .puzzleLayer{
   position:absolute; inset:0;
   display:grid;
@@ -34,6 +34,8 @@ body{ margin:0; font-family:system-ui,-apple-system,sans-serif; background:var(-
   padding:14px;
   z-index:1;
   pointer-events:none;
+  opacity:.55; /* 배경처럼 */
+  filter:saturate(.85) contrast(.95);
 }
 .piece{
   position:relative;
@@ -58,53 +60,71 @@ body{ margin:0; font-family:system-ui,-apple-system,sans-serif; background:var(-
   border-radius:999px;
 }
 
+/* 지도(위) */
 .campusGrid{
   position:absolute; inset:0;
   background-image:
-    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
-  background-size: 40px 40px;
-  opacity:.20;
+    linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+  background-size: 36px 36px;
+  opacity:.38;
   z-index:2;
 }
-.campusLines{ position:absolute; inset:0; opacity:.60; z-index:3; }
+.campusLines{ position:absolute; inset:0; opacity:.90; z-index:3; }
+.landmarks{ position:absolute; inset:0; z-index:3; pointer-events:none; }
 .nodes{ position:absolute; inset:0; z-index:4; }
 
-/* ===== 노드(아이콘 + 한글 POSITION + GROUND) ===== */
+/* ===== LANDMARKS ===== */
+.landmark{
+  position:absolute;
+  transform: translate(-50%, -50%);
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(8,12,22,.55);
+  backdrop-filter: blur(6px);
+  color: rgba(232,238,252,.92);
+  font-weight:900;
+  font-size:12px;
+  white-space:nowrap;
+  box-shadow:0 10px 26px rgba(0,0,0,.25);
+}
+.landmark .ico{ margin-right:6px; }
+.landmark.big{ font-size:13px; padding:12px 14px; border-radius:16px; background: rgba(12,18,34,.62); border-color: rgba(255,255,255,.14); }
+.landmark.fountain{
+  padding:12px 14px;
+  border-radius:999px;
+  background: rgba(12,18,34,.58);
+  border:1px solid rgba(120,190,255,.22);
+  box-shadow:0 0 0 6px rgba(120,190,255,.06), 0 10px 26px rgba(0,0,0,.25);
+}
+
+/* ===== NODE (장소명만 표시) ===== */
 .node{
   position:absolute;
-  width:88px; height:88px;
+  width:92px; height:92px;
   border-radius:18px;
-  border:1px solid rgba(255,255,255,.16);
-  background: rgba(11,18,32,.86);
+  border:1.5px solid rgba(255,255,255,.16);
+  background: rgba(8,12,22,.92);
   display:grid;
   place-items:center;
   padding:8px 6px;
   cursor:pointer;
   transform: translate(-50%, -50%);
-  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  box-shadow: 0 10px 28px rgba(0,0,0,.45);
   user-select:none;
   text-align:center;
 }
 .node .ico{ font-size:18px; line-height:1; }
-.node .pos{ font-weight:900; font-size:12px; line-height:1.05; }
-.node .type{ font-size:10px; opacity:.85; }
-.node .ground{ font-size:10px; color:rgba(232,238,252,.70); }
+.node .place{ font-weight:950; font-size:12.5px; line-height:1.05; }
+.node .mini{ font-size:10px; opacity:.82; }
 
 .node.active{ outline:3px solid rgba(255,255,255,.18); }
 
-/* ===== 타입 축 기반 스타일: FE 색 / AL 글로우 / IO 라인 ===== */
 .node[data-fe="F"]{ border-color: rgba(255,120,120,.90); }
 .node[data-fe="E"]{ border-color: rgba(120,190,255,.95); }
-
-.node[data-al="A"]{ box-shadow: 0 0 0 3px rgba(255,255,255,.08), 0 12px 28px rgba(0,0,0,.35); }
-.node[data-al="L"]{ box-shadow: 0 0 0 3px rgba(255,255,255,.16), 0 12px 28px rgba(0,0,0,.35); }
-
-.node.unlocked[data-fe="F"]{ box-shadow: 0 0 0 3px rgba(255,120,120,.18), 0 0 28px rgba(255,120,120,.18); }
-.node.unlocked[data-fe="E"]{ box-shadow: 0 0 0 3px rgba(120,190,255,.18), 0 0 28px rgba(120,190,255,.18); }
-
-line[data-fe="F"]{ stroke: rgba(255,120,120,.25); }
-line[data-fe="E"]{ stroke: rgba(120,190,255,.25); }
+line[data-fe="F"]{ stroke: rgba(255,120,120,.28); }
+line[data-fe="E"]{ stroke: rgba(120,190,255,.28); }
 line[data-io="O"]{ stroke-dasharray: 8 8; opacity:.70; }
 line[data-io="I"]{ stroke-dasharray: none; }
 
@@ -115,7 +135,7 @@ line[data-io="I"]{ stroke-dasharray: none; }
   background: rgba(0,0,0,.55);
   display:grid; place-items:center;
   padding:16px;
-  z-index:50;
+  z-index:90;
 }
 .modal{
   width:min(720px, 100%);
@@ -130,7 +150,7 @@ line[data-io="I"]{ stroke-dasharray: none; }
   padding:14px 16px;
   border-bottom:1px solid rgba(255,255,255,.08);
 }
-.modalTitle{ margin:0; font-size:16px; font-weight:900; }
+.modalTitle{ margin:0; font-size:16px; font-weight:950; }
 .modalClose{
   border:1px solid rgba(255,255,255,.12);
   background: rgba(0,0,0,.25);
@@ -141,7 +161,7 @@ line[data-io="I"]{ stroke-dasharray: none; }
 }
 .modalBody{ padding:16px; }
 .row{ margin:10px 0; }
-.label{ font-weight:800; margin-bottom:6px; }
+.label{ font-weight:900; margin-bottom:6px; }
 .box{
   background:rgba(255,255,255,0.03);
   border:1px solid rgba(255,255,255,0.08);
@@ -169,33 +189,29 @@ line[data-io="I"]{ stroke-dasharray: none; }
 }
 .modal button:disabled{ opacity:.5; cursor:not-allowed; }
 
-/* ===== 튜닝: 지도 더 진하게 / 퍼즐은 더 뒤로 ===== */
-
-/* 퍼즐을 더 흐리게(뒤) */
-.puzzleLayer{
-  opacity: .55;               /* 전체 톤 다운 */
-  filter: saturate(.85) contrast(.95);
+/* ===== ✅ 올클리어: 노드 대신 이미지 앞으로 ===== */
+.finalReveal{
+  position:absolute; inset:0;
+  z-index:80;
+  display:grid;
+  place-items:center;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(2px);
 }
-
-/* 맵 그리드를 더 진하게 */
-.campusGrid{
-  opacity: .38;               /* 기존 0.20 → 더 진하게 */
-  background-size: 36px 36px; /* 살짝 촘촘하게(지도 느낌) */
+.finalCard{
+  width:min(920px, 95%);
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(18,27,47,.92);
+  padding:16px;
+  box-shadow: 0 22px 80px rgba(0,0,0,.55);
 }
-
-/* 라인 더 진하게 */
-.campusLines{
-  opacity: .90;               /* 기존 0.60 → 더 진하게 */
+.finalTitle{ font-weight:950; font-size:18px; margin:0 0 6px; }
+.finalSub{ color:var(--muted); margin:0 0 12px; font-size:13px; }
+.finalImg{
+  width:100%;
+  height:auto;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  display:block;
 }
-
-/* 노드 더 또렷하게 */
-.node{
-  background: rgba(8, 12, 22, .92);
-  border-width: 1.5px;
-  box-shadow: 0 10px 28px rgba(0,0,0,.45);
-}
-
-/* 노드 글씨 대비 */
-.node .pos{ font-size: 12.5px; }
-.node .ground{ opacity: .85; }
-
