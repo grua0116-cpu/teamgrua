@@ -161,13 +161,16 @@ function renderNodes(){
 }
 
 function openModal(){
+  // ✅ 노드 선택(=selectedId) 없으면 절대 열지 않기
+  if (!selectedId) return;
+
   modalBackdrop.classList.remove("hidden");
   mAnswer.value = "";
-  // 접근성/편의
   setTimeout(()=> mAnswer.focus(), 50);
 }
+
 function closeModal(){
-  modalBackdrop.classList.add("hidden");
+  modalBackdrop.classList.add("hidden"); // ✅ 최초 로드에서 무조건 닫힘
   selectedId = null;
   renderNodes();
 }
