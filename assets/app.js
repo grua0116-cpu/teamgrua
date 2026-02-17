@@ -399,3 +399,40 @@ async function playFinalSequence({ mapWrap, nodesLayer, finalOverlay, finalDim, 
 }
 
 function sleep(ms){ return new Promise(res=>setTimeout(res, ms)); }
+
+// =============================
+// 🔥 슬롯 16개 자동 생성 (한 번만 실행)
+// =============================
+window.createInitialSlots = async function () {
+  initFirebase();
+
+  const roundId = "R0001";
+
+  for (let i = 1; i <= 16; i++) {
+    const id = String(i).padStart(2, "0");
+
+    await setDoc(
+      doc(db, "game", "season1", "rounds", roundId, "slots", id),
+      {
+        claimed: false,
+        unlocked: false,
+        claimerName: "",
+        claimedAt: null,
+        unlockedAt: null,
+
+        typeCode: "T" + id,
+        positionName: "Slot " + id,
+        difficulty: "easy",
+        orderIndex: i,
+
+        question: "",
+        hint: "",
+        answer: "",
+        explanation: ""
+      }
+    );
+  }
+
+  alert("🔥 16개 슬롯 생성 완료!");
+};
+
