@@ -1,183 +1,42 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>16-TILE PUZZLE</title>
-
-<style>
-:root{
-  --bg:#0b1220;
-  --panel:#111a2c;
-  --text:#e9eefc;
-  --line:rgba(255,255,255,.12);
-}
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR",sans-serif;
-  background:var(--bg);
-  color:var(--text);
-}
-.wrap{max-width:900px;margin:40px auto;padding:20px}
-h1{margin:0 0 10px}
-.board{
-  position:relative;
-  width:100%;
-  aspect-ratio:1/1;
-  border-radius:16px;
-  overflow:hidden;
-  background:url("./images/puzzle.png") center/cover no-repeat;
-  border:1px solid var(--line);
-}
-.tile{
-  position:absolute;
-  width:25%;
-  height:25%;
-  background:rgba(0,0,0,.6);
-  border:1px solid var(--line);
-  cursor:pointer;
-  transition:opacity .5s ease, transform .5s ease;
-}
-.tile.revealed{
-  opacity:0;
-  transform:translateY(10px);
-  pointer-events:none;
-}
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-.modal.show{display:flex}
-.box{
-  background:var(--panel);
-  padding:20px;
-  border-radius:16px;
-  width:300px;
-}
-input{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-}
-button{
-  margin-top:10px;
-  padding:8px 12px;
-  cursor:pointer;
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GRUA 16 공동 퍼즐</title>
+  <link rel="stylesheet" href="./style.css" />
 </head>
-
 <body>
-<div class="wrap">
-  <h1>16-TILE PUZZLE</h1>
-  <p>정답을 맞히면 타일이 열립니다.</p>
-  <div class="board" id="board"></div>
-</div>
+  <main class="wrap">
+    <header class="top">
+      <h1>GRUA 16 공동 퍼즐</h1>
+      <p id="statusText">로그인 후, 한 사람당 1칸 선착순 점유 → 정답 해금</p>
+    </header>
 
-<div class="modal" id="modal">
-  <div class="box">
-    <div id="modalTitle">타일</div>
-    <input id="answerInput" placeholder="정답 입력">
-    <button id="submitBtn">입력</button>
-  </div>
-</div>
+    <section class="panel">
+      <div class="bar">
+        <button id="loginBtn">로그인(익명)</button>
+        <span id="userText" class="muted">미로그인</span>
+      </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc } 
-from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+      <div class="bar">
+        <input id="nameInput" placeholder="닉네임(claimerName)" maxlength="20" />
+        <button id="refreshBtn">새로고침</button>
+      </div>
 
-/* 🔥 여기 네 Firebase 설정값 넣어 */
-const firebaseConfig = {
-  apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
-  authDomain: "teamgrua-f465c.firebaseapp.com",
-  projectId: "teamgrua-f465c",
-  storageBucket: "teamgrua-f465c.firebasestorage.app",
-  messagingSenderId: "1019914743201",
-  appId: "1:1019914743201:web:171550946aafb90ab96fe0"
-};
+      <div id="grid" class="grid"></div>
+    </section>
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+    <section id="detail" class="detail hidden"></section>
 
-const board = document.getElementById("board");
-const modal = document.getElementById("modal");
-const input = document.getElementById("answerInput");
-const btn = document.getElementById("submitBtn");
-let currentId = null;
-let currentAnswer = "";
+    <section id="final" class="final hidden">
+      <h2>전체 해금 완료</h2>
+      <p class="muted">여기에 세계관 최종 이미지를 넣으면 돼.</p>
+      <!-- 최종 이미지 경로를 바꾸려면 아래 src만 수정 -->
+      <img src="./final.jpg" alt="Final World Image" />
+    </section>
+  </main>
 
-function id2(i){ return String(i).padStart(2,"0"); }
-
-function position(i){
-  const r = Math.floor((i-1)/4);
-  const c = (i-1)%4;
-  return { top:`${r*25}%`, left:`${c*25}%` };
-}
-
-async function loadBoard(){
-  for(let i=1;i<=16;i++){
-    const id = id2(i);
-    const tile = document.createElement("div");
-    tile.className="tile";
-    tile.dataset.id=id;
-
-    const pos=position(i);
-    tile.style.top=pos.top;
-    tile.style.left=pos.left;
-
-    tile.onclick = async()=>{
-      const ref = doc(db,"game","season1","slots",id);
-      const snap = await getDoc(ref);
-      if(!snap.exists()) return;
-
-      const data=snap.data();
-      currentId=id;
-      currentAnswer=(data.answer||"").trim();
-
-      if(data.claimed){
-        tile.classList.add("revealed");
-        return;
-      }
-
-      modal.classList.add("show");
-      input.value="";
-      input.focus();
-    };
-
-    board.appendChild(tile);
-
-    // 초기 claimed 반영
-    const ref = doc(db,"game","season1","slots",id);
-    const snap = await getDoc(ref);
-    if(snap.exists() && snap.data().claimed){
-      tile.classList.add("revealed");
-    }
-  }
-}
-
-btn.onclick=async()=>{
-  const val=input.value.trim();
-  if(val.toLowerCase()===currentAnswer.toLowerCase()){
-    const ref = doc(db,"game","season1","slots",currentId);
-    await updateDoc(ref,{claimed:true});
-    document.querySelector(`.tile[data-id="${currentId}"]`)
-      .classList.add("revealed");
-    modal.classList.remove("show");
-  }
-};
-
-modal.onclick=(e)=>{
-  if(e.target===modal) modal.classList.remove("show");
-};
-
-loadBoard();
-</script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
