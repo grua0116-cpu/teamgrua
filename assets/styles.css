@@ -168,3 +168,34 @@ line[data-io="I"]{ stroke-dasharray: none; }
   cursor:pointer;
 }
 .modal button:disabled{ opacity:.5; cursor:not-allowed; }
+
+/* ===== 튜닝: 지도 더 진하게 / 퍼즐은 더 뒤로 ===== */
+
+/* 퍼즐을 더 흐리게(뒤) */
+.puzzleLayer{
+  opacity: .55;               /* 전체 톤 다운 */
+  filter: saturate(.85) contrast(.95);
+}
+
+/* 맵 그리드를 더 진하게 */
+.campusGrid{
+  opacity: .38;               /* 기존 0.20 → 더 진하게 */
+  background-size: 36px 36px; /* 살짝 촘촘하게(지도 느낌) */
+}
+
+/* 라인 더 진하게 */
+.campusLines{
+  opacity: .90;               /* 기존 0.60 → 더 진하게 */
+}
+
+/* 노드 더 또렷하게 */
+.node{
+  background: rgba(8, 12, 22, .92);
+  border-width: 1.5px;
+  box-shadow: 0 10px 28px rgba(0,0,0,.45);
+}
+
+/* 노드 글씨 대비 */
+.node .pos{ font-size: 12.5px; }
+.node .ground{ opacity: .85; }
+
