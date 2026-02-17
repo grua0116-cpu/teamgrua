@@ -4,108 +4,119 @@ import {
   onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/** ✅ Firebase 콘솔에서 복사한 firebaseConfig를 여기에 붙여넣기 */
+/** ✅ 너 Firebase 콘솔에서 복사한 firebaseConfig 붙여넣기 */
 const firebaseConfig = {
-  apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
-  authDomain: "teamgrua-f465c.firebaseapp.com",
-  projectId: "teamgrua-f465c",
-  storageBucket: "teamgrua-f465c.firebasestorage.app",
-  messagingSenderId: "1019914743201",
-  appId: "1:1019914743201:web:171550946aafb90ab96fe0"
+  // apiKey: "...",
+  // authDomain: "...",
+  // projectId: "...",
+  // storageBucket: "...",
+  // messagingSenderId: "...",
+  // appId: "..."
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Firestore 경로: game/season1/slots (01~16)
+// Firestore 경로: game/season1/slots
 const slotsCol = collection(db, "game", "season1", "slots");
 const q = query(slotsCol, orderBy("orderIndex", "asc"));
 
 // UI
 const statusText = document.getElementById("statusText");
-const boardEl = document.getElementById("board");
-const detailEl = document.getElementById("detail");
 const nodesEl = document.getElementById("nodes");
 const linesSvg = document.getElementById("campusLines");
+const puzzleLayer = document.getElementById("puzzleLayer");
+
+// Modal UI
+const modalBackdrop = document.getElementById("modalBackdrop");
+const modalClose = document.getElementById("modalClose");
+const modalTitle = document.getElementById("modalTitle");
+const mQuestion = document.getElementById("mQuestion");
+const mHint = document.getElementById("mHint");
+const mExplain = document.getElementById("mExplain");
+const mAnswer = document.getElementById("mAnswer");
+const mSubmit = document.getElementById("mSubmit");
 
 let slots = [];
 let selectedId = null;
 
-/**
- * 🎓 캠퍼스맵 노드 배치 좌표
- * - x,y: 0~1000 / 0~520 (svg viewBox 기준)
- * - label은 “건물 약자” 느낌 (원하면 변경)
- */
+/** 🎓 대학 지도처럼 보이게 “클러스터” 느낌 배치 */
 const NODE_LAYOUT = [
-  { idx: 1,  x: 110, y: 120, label: "GATE" },
-  { idx: 2,  x: 220, y: 95,  label: "ADMIN" },
-  { idx: 3,  x: 345, y: 140, label: "LIB" },
-  { idx: 4,  x: 470, y: 110, label: "HALL" },
+  // 정문/본부 라인
+  { idx: 1,  x: 120, y: 95,  label: "GATE" },
+  { idx: 2,  x: 250, y: 80,  label: "ADMIN" },
+  { idx: 3,  x: 390, y: 110, label: "LIB" },
+  { idx: 4,  x: 540, y: 90,  label: "HALL" },
 
-  { idx: 5,  x: 140, y: 260, label: "LAB" },
-  { idx: 6,  x: 280, y: 240, label: "ART" },
-  { idx: 7,  x: 420, y: 260, label: "STU" },
-  { idx: 8,  x: 560, y: 235, label: "CAFÉ" },
+  // 강의/동아리 구역
+  { idx: 5,  x: 150, y: 220, label: "LAB" },
+  { idx: 6,  x: 290, y: 215, label: "ART" },
+  { idx: 7,  x: 430, y: 235, label: "STU" },
+  { idx: 8,  x: 590, y: 215, label: "CAFÉ" },
 
-  { idx: 9,  x: 170, y: 395, label: "GYM" },
-  { idx: 10, x: 320, y: 390, label: "DORM" },
-  { idx: 11, x: 470, y: 400, label: "STAGE" },
-  { idx: 12, x: 620, y: 385, label: "PARK" },
+  // 기숙/운동/야외
+  { idx: 9,  x: 170, y: 380, label: "GYM" },
+  { idx: 10, x: 320, y: 395, label: "DORM" },
+  { idx: 11, x: 470, y: 390, label: "STAGE" },
+  { idx: 12, x: 640, y: 380, label: "PARK" },
 
-  { idx: 13, x: 760, y: 120, label: "OBS" },
-  { idx: 14, x: 820, y: 245, label: "TOWER" },
-  { idx: 15, x: 880, y: 380, label: "PORT" },
-  { idx: 16, x: 700, y: 320, label: "ARCH" },
+  // 외곽 시설
+  { idx: 13, x: 820, y: 110, label: "OBS" },
+  { idx: 14, x: 860, y: 225, label: "TOWER" },
+  { idx: 15, x: 880, y: 360, label: "PORT" },
+  { idx: 16, x: 720, y: 300, label: "ARCH" },
 ];
 
-// “캠퍼스 동선” 느낌 연결선 (원하면 수정)
 const EDGES = [
   [1,2],[2,3],[3,4],
-  [1,5],[2,6],[3,7],[4,8],
+  [2,6],[3,7],[4,8],
   [5,6],[6,7],[7,8],
   [5,9],[6,10],[7,11],[8,12],
   [4,13],[8,14],[12,15],[11,16],
 ];
 
-// 실시간 구독
+modalClose.addEventListener("click", closeModal);
+modalBackdrop.addEventListener("click", (e) => {
+  if (e.target === modalBackdrop) closeModal();
+});
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeModal();
+});
+
 onSnapshot(q, (snap) => {
   slots = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   renderStatus();
-  renderBoard();
+  renderPuzzleLayer();
+  renderLines();
   renderNodes();
-  renderDetail();
+  if (selectedId) fillModal(); // 실시간 업데이트 반영
 });
 
 function renderStatus(){
   const unlockedCount = slots.filter(s => !!s.unlocked).length;
-  statusText.textContent = `해금 ${unlockedCount}/16 · 노드를 클릭해서 문제를 풀면 퍼즐 조각이 열립니다.`;
+  statusText.textContent = `해금 ${unlockedCount}/16 · 노드를 눌러 문제를 풀면 해당 조각이 열립니다.`;
 }
 
-function renderBoard(){
-  boardEl.innerHTML = "";
+function renderPuzzleLayer(){
+  puzzleLayer.innerHTML = "";
   slots.forEach(s => {
     const piece = document.createElement("div");
     piece.className = `piece ${s.unlocked ? "unlocked" : "locked"}`;
 
-    // orderIndex(1~16) → 4x4 행/열
     const i = (s.orderIndex ?? 1) - 1;
     const row = Math.floor(i / 4);
     const col = i % 4;
-
-    // background-position: 0, 33.333, 66.666, 100
     const x = (col * 100) / 3;
     const y = (row * 100) / 3;
 
     piece.style.backgroundPosition = `${x}% ${y}%`;
     piece.innerHTML = `<div class="tag">${s.orderIndex ?? "?"}</div>`;
-    boardEl.appendChild(piece);
+    puzzleLayer.appendChild(piece);
   });
 }
 
-function renderNodes(){
-  nodesEl.innerHTML = "";
+function renderLines(){
   linesSvg.innerHTML = "";
-
-  // 선 그리기
   EDGES.forEach(([a,b])=>{
     const A = NODE_LAYOUT.find(n=>n.idx===a);
     const B = NODE_LAYOUT.find(n=>n.idx===b);
@@ -120,8 +131,10 @@ function renderNodes(){
     line.setAttribute("stroke-width", "2");
     linesSvg.appendChild(line);
   });
+}
 
-  // 노드 생성
+function renderNodes(){
+  nodesEl.innerHTML = "";
   slots.forEach(s=>{
     const idx = s.orderIndex ?? 1;
     const layout = NODE_LAYOUT.find(n=>n.idx===idx) || { x: 100, y: 100, label: "NODE" };
@@ -130,67 +143,55 @@ function renderNodes(){
     node.className = `node ${s.unlocked ? "unlocked" : ""} ${selectedId===s.id ? "active" : ""}`;
     node.style.left = `${layout.x}px`;
     node.style.top  = `${layout.y}px`;
-    node.title = `${idx} · ${s.typeCode || s.id}`;
 
     node.innerHTML = `
       <div class="n">${idx}</div>
       <div class="t">${escapeHtml(layout.label)}</div>
     `;
 
-    node.onclick = ()=>{
+    node.onclick = () => {
       selectedId = s.id;
       renderNodes();
-      renderDetail();
-      // 상세 섹션이 화면 아래면 자연스럽게 이동
-      window.scrollTo({ top: detailEl.offsetTop - 20, behavior: "smooth" });
+      openModal();
+      fillModal();
     };
 
     nodesEl.appendChild(node);
   });
 }
 
-function renderDetail(){
-  if(!selectedId){
-    detailEl.classList.add("hidden");
-    detailEl.innerHTML = "";
-    return;
-  }
+function openModal(){
+  modalBackdrop.classList.remove("hidden");
+  mAnswer.value = "";
+  // 접근성/편의
+  setTimeout(()=> mAnswer.focus(), 50);
+}
+function closeModal(){
+  modalBackdrop.classList.add("hidden");
+  selectedId = null;
+  renderNodes();
+}
 
+function fillModal(){
   const s = slots.find(x=>x.id===selectedId);
   if(!s) return;
 
-  detailEl.classList.remove("hidden");
+  modalTitle.textContent = `${s.typeCode || s.id} · #${s.orderIndex ?? "?"}`;
+  mQuestion.textContent = s.question || "";
+  mHint.textContent = s.hint || "";
+  mExplain.textContent = s.explanation || "";
 
-  detailEl.innerHTML = `
-    <h2>${escapeHtml(s.typeCode || s.id)} · #${s.orderIndex ?? "?"}</h2>
+  if (s.unlocked) {
+    mAnswer.disabled = true;
+    mSubmit.disabled = true;
+    mSubmit.textContent = "이미 해금됨";
+  } else {
+    mAnswer.disabled = false;
+    mSubmit.disabled = false;
+    mSubmit.textContent = "정답 제출 → 조각 열기";
+  }
 
-    <div class="row">
-      <div class="label">Question</div>
-      <div class="box">${escapeHtml(s.question || "")}</div>
-    </div>
-
-    <div class="row">
-      <div class="label">Hint</div>
-      <div class="box">${escapeHtml(s.hint || "")}</div>
-    </div>
-
-    <div class="row">
-      <div class="label">정답 입력</div>
-      <input id="ansInput" placeholder="정답 입력" ${s.unlocked ? "disabled" : ""} />
-      <button id="submitBtn" ${s.unlocked ? "disabled" : ""}>정답 제출 → 조각 열기</button>
-      <div class="muted">자율 신뢰 버전: 정답은 Firestore에 저장되어 있어요.</div>
-    </div>
-
-    <div class="row">
-      <div class="label">Explanation</div>
-      <div class="box">${escapeHtml(s.explanation || "")}</div>
-    </div>
-  `;
-
-  document.getElementById("submitBtn")?.addEventListener("click", ()=>{
-    const input = document.getElementById("ansInput").value;
-    submitAnswer(s.id, input, s.answer || "");
-  });
+  mSubmit.onclick = () => submitAnswer(s.id, mAnswer.value, s.answer || "");
 }
 
 async function submitAnswer(slotId, input, correctAnswer){
@@ -211,7 +212,7 @@ async function submitAnswer(slotId, input, correctAnswer){
       if(data.unlocked) return;
       tx.update(ref, { unlocked: true });
     });
-    alert("정답! 조각이 열렸어.");
+    alert("정답! 해당 퍼즐 조각이 열렸어.");
   }catch(e){
     alert(e?.message || String(e));
   }
