@@ -10,27 +10,24 @@
   <main class="wrap">
     <header class="top">
       <h1>GRUA 16 공동 퍼즐</h1>
-      <p id="statusText">맵의 노드를 눌러 문제를 풀고, 정답이면 퍼즐 조각이 열립니다.</p>
+      <p id="statusText">캠퍼스 맵의 노드를 눌러 퍼즐을 풉니다. 정답이면 퍼즐 조각이 열립니다.</p>
     </header>
 
-    <!-- 캠퍼스 맵 -->
     <section class="panel">
       <h2 class="sectionTitle">CAMPUS MAP</h2>
       <div id="campus" class="campus">
         <div class="campusGrid"></div>
-        <svg class="campusLines" viewBox="0 0 1000 520" preserveAspectRatio="none"></svg>
+        <svg id="campusLines" class="campusLines" viewBox="0 0 1000 520" preserveAspectRatio="none"></svg>
         <div id="nodes" class="nodes"></div>
       </div>
-      <p class="muted">노드 위치는 코드에서 좌표로 조절 가능.</p>
+      <p class="muted">노드 위치는 app.js의 NODE_LAYOUT에서 좌표만 바꾸면 됩니다.</p>
     </section>
 
-    <!-- 퍼즐 보드 -->
     <section class="panel">
       <h2 class="sectionTitle">PUZZLE BOARD</h2>
       <div id="board" class="board"></div>
     </section>
 
-    <!-- 상세 -->
     <section id="detail" class="detail hidden"></section>
   </main>
 
