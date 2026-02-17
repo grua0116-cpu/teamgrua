@@ -3,35 +3,48 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GRUA PROJECT </title>
+  <title>GRUA UNION PROJECT</title>
   <link rel="stylesheet" href="./assets/styles.css" />
 </head>
 <body>
   <main class="wrap">
     <header class="top">
-      <h1>GRUA PROJECT </h1>
-      <p id="statusText">노드를 눌러 문제를 풀면, 당신이 알아야 할 이야기가 열립니다.</p>
+      <h1>GRUA UNION PROJECT</h1>
+      <p id="statusText">로딩 중...</p>
     </header>
 
     <section class="panel">
       <h2 class="sectionTitle">CAMPUS MAP</h2>
 
       <div id="campus" class="campus">
-        <!-- 퍼즐이 맵 뒤에 깔림 -->
+        <!-- 퍼즐(배경) -->
         <div id="puzzleLayer" class="puzzleLayer"></div>
 
-        <!-- 맵 배경 -->
+        <!-- ✅ 올클리어 시, 퍼즐이 앞으로 나오는 레이어 -->
+        <div id="finalReveal" class="finalReveal hidden">
+          <div class="finalCard">
+            <div class="finalTitle">전체 해금 완료</div>
+            <div class="finalSub">16개의 이야기가 모두 열렸습니다.</div>
+            <img class="finalImg" src="./images/puzzle.png" alt="Final World Image" />
+          </div>
+        </div>
+
+        <!-- 지도 레이어 -->
         <div class="campusGrid"></div>
         <svg id="campusLines" class="campusLines" viewBox="0 0 1000 520" preserveAspectRatio="none"></svg>
+
+        <!-- 랜드마크 -->
+        <div id="landmarks" class="landmarks"></div>
 
         <!-- 노드 -->
         <div id="nodes" class="nodes"></div>
       </div>
 
+      <p class="muted">노드 배치는 assets/app.js의 NODE_LAYOUT 좌표만 바꾸면 됨.</p>
     </section>
   </main>
 
-  <!-- 모달(처음엔 hidden이어야 함) -->
+  <!-- 모달 -->
   <div id="modalBackdrop" class="modalBackdrop hidden">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="modalTop">
