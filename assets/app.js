@@ -13,7 +13,6 @@ const firebaseConfig = {
   messagingSenderId: "1019914743201",
   appId: "1:1019914743201:web:171550946aafb90ab96fe0"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -70,3 +69,162 @@ const EDGES = [
 // 실시간 구독
 onSnapshot(q, (snap) => {
   slots = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderStatus();
+  renderBoard();
+  renderNodes();
+  renderDetail();
+});
+
+function renderStatus(){
+  const unlockedCount = slots.filter(s => !!s.unlocked).length;
+  statusText.textContent = `해금 ${unlockedCount}/16 · 노드를 클릭해서 문제를 풀면 퍼즐 조각이 열립니다.`;
+}
+
+function renderBoard(){
+  boardEl.innerHTML = "";
+  slots.forEach(s => {
+    const piece = document.createElement("div");
+    piece.className = `piece ${s.unlocked ? "unlocked" : "locked"}`;
+
+    // orderIndex(1~16) → 4x4 행/열
+    const i = (s.orderIndex ?? 1) - 1;
+    const row = Math.floor(i / 4);
+    const col = i % 4;
+
+    // background-position: 0, 33.333, 66.666, 100
+    const x = (col * 100) / 3;
+    const y = (row * 100) / 3;
+
+    piece.style.backgroundPosition = `${x}% ${y}%`;
+    piece.innerHTML = `<div class="tag">${s.orderIndex ?? "?"}</div>`;
+    boardEl.appendChild(piece);
+  });
+}
+
+function renderNodes(){
+  nodesEl.innerHTML = "";
+  linesSvg.innerHTML = "";
+
+  // 선 그리기
+  EDGES.forEach(([a,b])=>{
+    const A = NODE_LAYOUT.find(n=>n.idx===a);
+    const B = NODE_LAYOUT.find(n=>n.idx===b);
+    if(!A || !B) return;
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+    line.setAttribute("x1", String(A.x));
+    line.setAttribute("y1", String(A.y));
+    line.setAttribute("x2", String(B.x));
+    line.setAttribute("y2", String(B.y));
+    line.setAttribute("stroke", "rgba(255,255,255,0.18)");
+    line.setAttribute("stroke-width", "2");
+    linesSvg.appendChild(line);
+  });
+
+  // 노드 생성
+  slots.forEach(s=>{
+    const idx = s.orderIndex ?? 1;
+    const layout = NODE_LAYOUT.find(n=>n.idx===idx) || { x: 100, y: 100, label: "NODE" };
+
+    const node = document.createElement("div");
+    node.className = `node ${s.unlocked ? "unlocked" : ""} ${selectedId===s.id ? "active" : ""}`;
+    node.style.left = `${layout.x}px`;
+    node.style.top  = `${layout.y}px`;
+    node.title = `${idx} · ${s.typeCode || s.id}`;
+
+    node.innerHTML = `
+      <div class="n">${idx}</div>
+      <div class="t">${escapeHtml(layout.label)}</div>
+    `;
+
+    node.onclick = ()=>{
+      selectedId = s.id;
+      renderNodes();
+      renderDetail();
+      // 상세 섹션이 화면 아래면 자연스럽게 이동
+      window.scrollTo({ top: detailEl.offsetTop - 20, behavior: "smooth" });
+    };
+
+    nodesEl.appendChild(node);
+  });
+}
+
+function renderDetail(){
+  if(!selectedId){
+    detailEl.classList.add("hidden");
+    detailEl.innerHTML = "";
+    return;
+  }
+
+  const s = slots.find(x=>x.id===selectedId);
+  if(!s) return;
+
+  detailEl.classList.remove("hidden");
+
+  detailEl.innerHTML = `
+    <h2>${escapeHtml(s.typeCode || s.id)} · #${s.orderIndex ?? "?"}</h2>
+
+    <div class="row">
+      <div class="label">Question</div>
+      <div class="box">${escapeHtml(s.question || "")}</div>
+    </div>
+
+    <div class="row">
+      <div class="label">Hint</div>
+      <div class="box">${escapeHtml(s.hint || "")}</div>
+    </div>
+
+    <div class="row">
+      <div class="label">정답 입력</div>
+      <input id="ansInput" placeholder="정답 입력" ${s.unlocked ? "disabled" : ""} />
+      <button id="submitBtn" ${s.unlocked ? "disabled" : ""}>정답 제출 → 조각 열기</button>
+      <div class="muted">자율 신뢰 버전: 정답은 Firestore에 저장되어 있어요.</div>
+    </div>
+
+    <div class="row">
+      <div class="label">Explanation</div>
+      <div class="box">${escapeHtml(s.explanation || "")}</div>
+    </div>
+  `;
+
+  document.getElementById("submitBtn")?.addEventListener("click", ()=>{
+    const input = document.getElementById("ansInput").value;
+    submitAnswer(s.id, input, s.answer || "");
+  });
+}
+
+async function submitAnswer(slotId, input, correctAnswer){
+  const userAns = (input || "").trim();
+  if(!userAns) return alert("정답을 입력해줘.");
+  if(!correctAnswer) return alert("이 슬롯의 answer가 비어 있어.");
+
+  const ok = normalize(userAns) === normalize(correctAnswer);
+  if(!ok) return alert("오답!");
+
+  const ref = doc(db, "game", "season1", "slots", slotId);
+
+  try{
+    await runTransaction(db, async (tx)=>{
+      const snap = await tx.get(ref);
+      if(!snap.exists()) throw new Error("문서가 없어.");
+      const data = snap.data();
+      if(data.unlocked) return;
+      tx.update(ref, { unlocked: true });
+    });
+    alert("정답! 조각이 열렸어.");
+  }catch(e){
+    alert(e?.message || String(e));
+  }
+}
+
+function normalize(s){
+  return String(s).toLowerCase().replace(/\s+/g,"");
+}
+function escapeHtml(s){
+  return String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
