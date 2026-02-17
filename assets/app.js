@@ -17,21 +17,23 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ===== INTRO (영화 오프닝) ===== */
+/* ===== INTRO (기관 브리핑 오프닝) ===== */
 const intro = document.getElementById("intro");
 const introType = document.getElementById("introType");
 const enterBtn = document.getElementById("enterBtn");
 const skipBtn = document.getElementById("skipBtn");
 
 const introScript =
-  "당신이 세계의 진실을 알고 싶다면,\n" +
-  "16개의 노드를 해금해야 합니다.\n" +
-  "한 사람은 한 개의 열쇠만 가질 수 있습니다.\n" +
-  "— GRUA CAMPUS ARCHIVE";
+  "[기관 브리핑]\n" +
+  "상태: 제한 공개 · 권한: 임시 승인\n" +
+  "목표: GRUA CAMPUS 접근 및 16개 노드 해금\n" +
+  "규정: 한 사람, 한 개의 열쇠.\n" +
+  "\n" +
+  "…우리 팀에 합류할래?";
 
-typeWriter(introScript, introType, 18);
+typeWriter(introScript, introType, 16);
 
-function typeWriter(text, el, speed=18){
+function typeWriter(text, el, speed=16){
   let i=0;
   const tick=()=>{
     el.textContent = text.slice(0,i++);
@@ -47,7 +49,6 @@ function closeIntro(){
 }
 enterBtn.addEventListener("click", closeIntro);
 skipBtn.addEventListener("click", closeIntro);
-window.addEventListener("click", (e)=> { if (intro && e.target === intro) closeIntro(); });
 window.addEventListener("keydown", (e)=> {
   if(e.key === "Enter" && intro) closeIntro();
 });
@@ -70,16 +71,12 @@ const mExplain = document.getElementById("mExplain");
 const mAnswer = document.getElementById("mAnswer");
 const mSubmit = document.getElementById("mSubmit");
 
-// ✅ 로드시 모달 자동오픈 금지
 modalBackdrop.classList.add("hidden");
 
 let slots = [];
 let selectedId = null;
 
-/* ===== 타입 16개: 기존 장소/구역(너가 이미 쓰던 값 유지) =====
-   여기의 place는 “타입별 기존 장소”로 유지해.
-   (추가 장소 6개는 아래 LANDMARKS로 별도 존재 → 총 22개)
-*/
+/* ===== 타입 16개: 기존 장소/구역 유지 + 추가 랜드마크 6개 별도 (총 22개) ===== */
 const GRUA_META = [
   { idx:1,  type:"IFAP", place:"기록 보관 구역", icon:"🗄️", axis:"Inner–Faith–Anchor–Participant" },
   { idx:2,  type:"IFAB", place:"관측 구역",     icon:"👁️", axis:"Inner–Faith–Anchor–Observer" },
@@ -118,34 +115,15 @@ const LANDMARKS = [
   { name:"도서관",   icon:"📚", x:780, y:438, cls:"" },
 ];
 
-/* ===== 캠퍼스형 배치(대학지도 느낌) ===== */
+/* ===== 캠퍼스형 배치 ===== */
 const NODE_LAYOUT = [
-  // 상단: 기록/관측/창작/전시
-  { idx:1,  x:170, y:140 },
-  { idx:2,  x:330, y:120 },
-  { idx:3,  x:500, y:145 },
-  { idx:4,  x:660, y:125 },
-
-  // 중앙: 분석/통계/전략/기록
-  { idx:5,  x:210, y:280 },
-  { idx:6,  x:360, y:290 },
-  { idx:7,  x:520, y:305 },
-  { idx:8,  x:690, y:290 },
-
-  // 하단: 교류/경계/통신/시간
-  { idx:9,  x:260, y:395 },
-  { idx:10, x:380, y:430 },
-  { idx:11, x:560, y:430 },
-  { idx:12, x:720, y:395 },
-
-  // 우측 외곽: 증언/봉인/전환/사후
-  { idx:13, x:840, y:175 },
-  { idx:14, x:875, y:285 },
-  { idx:16, x:805, y:340 },
-  { idx:15, x:875, y:410 },
+  { idx:1,  x:170, y:140 }, { idx:2,  x:330, y:120 }, { idx:3,  x:500, y:145 }, { idx:4,  x:660, y:125 },
+  { idx:5,  x:210, y:280 }, { idx:6,  x:360, y:290 }, { idx:7,  x:520, y:305 }, { idx:8,  x:690, y:290 },
+  { idx:9,  x:260, y:395 }, { idx:10, x:380, y:430 }, { idx:11, x:560, y:430 }, { idx:12, x:720, y:395 },
+  { idx:13, x:840, y:175 }, { idx:14, x:875, y:285 }, { idx:16, x:805, y:340 }, { idx:15, x:875, y:410 },
 ];
 
-/* 곡선 동선(지나가는 길) */
+/* 곡선 동선 */
 const EDGES = [
   [1,2],[2,3],[3,4],
   [2,6],[3,7],[4,8],
@@ -186,19 +164,15 @@ onSnapshot(
   }
 );
 
-/* ===== Modal handlers ===== */
+/* ===== Modal ===== */
 modalClose.addEventListener("click", closeModal);
-modalBackdrop.addEventListener("click", (e) => {
-  if (e.target === modalBackdrop) closeModal();
-});
-window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeModal();
-});
+modalBackdrop.addEventListener("click", (e) => { if (e.target === modalBackdrop) closeModal(); });
+window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
 
 function openModal(){
   if (!selectedId) return;
   modalBackdrop.classList.remove("hidden");
-  puzzleLayer.classList.add("dim"); // ✅ 모달 중 배경 덜 보이게
+  puzzleLayer.classList.add("dim");
   mAnswer.value = "";
   setTimeout(()=> mAnswer.focus(), 50);
 }
@@ -301,7 +275,6 @@ function renderPaths(){
     const meta = metaByIdx(a);
     const p = parseType(meta?.type || "IFAP");
 
-    // 곡선: 중간 제어점(캠퍼스 길처럼 살짝 휘게)
     const mx = (A.x + B.x) / 2;
     const my = (A.y + B.y) / 2;
     const bend = 28;
@@ -346,7 +319,6 @@ function renderNodes(){
     node.className = `node ${selectedId===s.id ? "active" : ""}`;
     node.style.left = `${layout.x}px`;
     node.style.top  = `${layout.y}px`;
-
     node.dataset.fe = p.fe;
     node.dataset.io = p.io;
 
