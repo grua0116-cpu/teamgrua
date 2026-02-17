@@ -27,4 +27,144 @@ body{ margin:0; font-family:system-ui,-apple-system,sans-serif; background:var(-
 
 /* 퍼즐이 맵 '뒤'에 깔리는 레이어 */
 .puzzleLayer{
-  position:absolute
+  position:absolute; inset:0;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  padding:14px;
+  z-index:1;
+  pointer-events:none;
+}
+.piece{
+  position:relative;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  overflow:hidden;
+  background-color: rgba(0,0,0,.25);
+  background-image: url("../images/puzzle.png");
+  background-size: 400% 400%;
+}
+.piece.locked::after{
+  content:""; position:absolute; inset:0;
+  backdrop-filter: blur(12px);
+  background: rgba(10,16,30,0.55);
+}
+.piece .tag{
+  position:absolute; left:10px; top:10px;
+  font-size:12px; color:rgba(232,238,252,.85);
+  background: rgba(0,0,0,.35);
+  border:1px solid rgba(255,255,255,.10);
+  padding:4px 8px;
+  border-radius:999px;
+}
+
+.campusGrid{
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity:.20;
+  z-index:2;
+}
+.campusLines{ position:absolute; inset:0; opacity:.60; z-index:3; }
+.nodes{ position:absolute; inset:0; z-index:4; }
+
+/* ===== 노드(아이콘 + 한글 POSITION + GROUND) ===== */
+.node{
+  position:absolute;
+  width:88px; height:88px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.16);
+  background: rgba(11,18,32,.86);
+  display:grid;
+  place-items:center;
+  padding:8px 6px;
+  cursor:pointer;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  user-select:none;
+  text-align:center;
+}
+.node .ico{ font-size:18px; line-height:1; }
+.node .pos{ font-weight:900; font-size:12px; line-height:1.05; }
+.node .type{ font-size:10px; opacity:.85; }
+.node .ground{ font-size:10px; color:rgba(232,238,252,.70); }
+
+.node.active{ outline:3px solid rgba(255,255,255,.18); }
+
+/* ===== 타입 축 기반 스타일: FE 색 / AL 글로우 / IO 라인 ===== */
+.node[data-fe="F"]{ border-color: rgba(255,120,120,.90); }
+.node[data-fe="E"]{ border-color: rgba(120,190,255,.95); }
+
+.node[data-al="A"]{ box-shadow: 0 0 0 3px rgba(255,255,255,.08), 0 12px 28px rgba(0,0,0,.35); }
+.node[data-al="L"]{ box-shadow: 0 0 0 3px rgba(255,255,255,.16), 0 12px 28px rgba(0,0,0,.35); }
+
+.node.unlocked[data-fe="F"]{ box-shadow: 0 0 0 3px rgba(255,120,120,.18), 0 0 28px rgba(255,120,120,.18); }
+.node.unlocked[data-fe="E"]{ box-shadow: 0 0 0 3px rgba(120,190,255,.18), 0 0 28px rgba(120,190,255,.18); }
+
+line[data-fe="F"]{ stroke: rgba(255,120,120,.25); }
+line[data-fe="E"]{ stroke: rgba(120,190,255,.25); }
+line[data-io="O"]{ stroke-dasharray: 8 8; opacity:.70; }
+line[data-io="I"]{ stroke-dasharray: none; }
+
+/* ===== Modal ===== */
+.hidden{ display:none !important; }
+.modalBackdrop{
+  position:fixed; inset:0;
+  background: rgba(0,0,0,.55);
+  display:grid; place-items:center;
+  padding:16px;
+  z-index:50;
+}
+.modal{
+  width:min(720px, 100%);
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(18,27,47,.98);
+  box-shadow: 0 18px 60px rgba(0,0,0,.45);
+  overflow:hidden;
+}
+.modalTop{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.modalTitle{ margin:0; font-size:16px; font-weight:900; }
+.modalClose{
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.25);
+  color: var(--text);
+  border-radius:12px;
+  padding:8px 10px;
+  cursor:pointer;
+}
+.modalBody{ padding:16px; }
+.row{ margin:10px 0; }
+.label{ font-weight:800; margin-bottom:6px; }
+.box{
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;
+  padding:10px 12px;
+  color:var(--text);
+  white-space:pre-wrap;
+}
+.modal input{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background: rgba(0,0,0,.22);
+  color:var(--text);
+}
+.modal button#mSubmit{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:#182444;
+  color:var(--text);
+  cursor:pointer;
+}
+.modal button:disabled{ opacity:.5; cursor:not-allowed; }
