@@ -1,1 +1,57 @@
-<script src="app.js?v=1"></script>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GRUA | JS Load Test</title>
+  <style>
+    :root{ --bg:#07121a; --panel:#0c1c28; --text:#e8f1ff; --muted:#9bb0c8; --line:rgba(255,255,255,.12); }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;background:var(--bg);color:var(--text)}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:14px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;position:relative}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+      background:rgba(255,255,255,.05);color:var(--text);cursor:pointer;font-size:14px;
+    }
+    .badge{display:inline-block;margin-left:8px;font-size:12px;color:var(--muted);border:1px solid var(--line);padding:4px 8px;border-radius:999px}
+    .note{color:var(--muted);font-size:13px;margin-top:10px;line-height:1.45}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="grid">
+      <div style="min-height:420px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.03)"></div>
+
+      <div class="panel">
+        <div style="font-weight:900;margin-bottom:10px">
+          버튼/JS 진단
+          <span class="badge" id="jsStatus">JS: ...</span>
+        </div>
+
+        <!-- 1) HTML만으로 동작 (무조건 뜸) -->
+        <button class="btn" onclick="alert('✅ 1번: HTML onclick OK')">
+          1) 클릭 테스트 (HTML)
+        </button>
+
+        <div style="height:10px"></div>
+
+        <!-- 2) JS 함수 호출 (app.js가 로드되면 무조건 뜸) -->
+        <button class="btn" onclick="jsTest && jsTest()">
+          2) 클릭 테스트 (JS 함수 호출)
+        </button>
+
+        <p class="note">
+          ✅ 페이지에 <b>JS: OK</b>가 뜨면 app.js가 로드된 것입니다.<br/>
+          ❌ JS: ... 이거나 그대로면 app.js가 로드 실패(경로/캐시)입니다.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ★ 중요: defer + 캐시 우회 -->
+  <script src="./app.js?v=999" defer></script>
+</body>
+</html>
