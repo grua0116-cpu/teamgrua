@@ -2,13 +2,12 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, setDoc, updateDoc, collection,
-  getDocs, query, orderBy,
+  getFirestore, doc, getDoc, setDoc, updateDoc,
   runTransaction, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* =========================
-   1) Firebase 설정 (교체)
+   1) Firebase 설정
 ========================= */
 const firebaseConfig = {
   apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
@@ -20,26 +19,26 @@ const firebaseConfig = {
 };
 
 let app, db;
-export function initFirebase(){
+function initFirebase(){
   if (db) return;
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
 }
 
 /* =========================
-   2) Paths / Round helpers
+   2) Season / Path helpers
 ========================= */
 const SEASON = "season1";
 
-export async function getActiveRoundId(){
+async function getActiveRoundId(){
   initFirebase();
-  const metaRef = doc(db, "game", SEASON, "meta", "meta"); // 👈 반드시 이 구조
+  // ✅ Firestore 구조: game/season1/meta/meta
+  const metaRef = doc(db, "game", SEASON, "meta", "meta");
   const metaSnap = await getDoc(metaRef);
   if (!metaSnap.exists()) throw new Error("meta missing");
   const { activeRound } = metaSnap.data();
   return roundId(activeRound || 1);
 }
-
 function roundId(n){
   const s = String(n).padStart(4,"0");
   return `R${s}`;
@@ -49,58 +48,15 @@ function slotDocRef(roundIdStr, slotId){
 }
 
 /* =========================
-   3) One-time join issue (localStorage)
-========================= */
-const JOIN_KEY = "grua_join_issued_v1";
-export function isJoinIssued(){
-  return !!localStorage.getItem(JOIN_KEY);
-}
-export function markJoinIssued(memberId){
-  localStorage.setItem(JOIN_KEY, memberId);
-}
-
-/* =========================
-   4) Issue member ID (immediate join)
-   - no admin approval
-   - writes a record to members collection (optional)
-========================= */
-export async function issueMemberId({ nick, roundId }){
-  initFirebase();
-  // memberId: GR-S1-R0001-AB7K (짧은 랜덤)
-  const rand = randomBase32(4);
-  const memberId = `GR-S1-${roundId}-${rand}`;
-
-  const membersRef = doc(db, "members", memberId);
-  await setDoc(membersRef, {
-    memberId,
-    nick,
-    season: SEASON,
-    roundId,
-    issuedAt: Date.now(),
-    createdAt: serverTimestamp()
-  });
-
-  return { memberId, issuedAt: Date.now() };
-}
-
-function randomBase32(len){
-  const chars = "ABCDEFGHJKMNPQRSTVWXYZ23456789"; // 헷갈리는 문자 제거
-  let out = "";
-  const arr = new Uint32Array(len);
-  crypto.getRandomValues(arr);
-  for (let i=0;i<len;i++){
-    out += chars[arr[i] % chars.length];
-  }
-  return out;
-}
-
-/* =========================
-   5) Index page logic (map/puzzle)
+   3) Boot index page
 ========================= */
 const isIndex = location.pathname.endsWith("index.html") || location.pathname.endsWith("/");
 if (isIndex){
   initFirebase();
-  bootIndex().catch(console.error);
+  bootIndex().catch((e)=>{
+    console.error(e);
+    alert("부팅 실패: " + (e?.message || e));
+  });
 }
 
 async function bootIndex(){
@@ -109,6 +65,7 @@ async function bootIndex(){
   const roundBadge = document.getElementById("roundBadge");
   const progressBadge = document.getElementById("progressBadge");
   const refreshBtn = document.getElementById("refreshBtn");
+  const initSlotsBtn = document.getElementById("initSlotsBtn");
 
   // modal
   const modalBackdrop = document.getElementById("modalBackdrop");
@@ -128,19 +85,40 @@ async function bootIndex(){
   const finalSub = document.getElementById("finalSub");
   const mapWrap = document.getElementById("mapWrap");
 
-  let activeRound = await getActiveRoundId();
-  roundBadge.textContent = `ROUND: ${activeRound}`;
-
   refreshBtn.onclick = async () => location.reload();
+
+  // 🔥 초보용: 버튼 클릭으로 슬롯 16개 자동 생성
+  initSlotsBtn.onclick = async () => {
+    initSlotsBtn.disabled = true;
+    initSlotsBtn.textContent = "생성 중...";
+    try{
+      await createInitialSlots("R0001");
+      alert("🔥 16개 슬롯 생성 완료!");
+      location.reload();
+    }catch(e){
+      console.error(e);
+      alert("슬롯 생성 실패: " + (e?.message || e));
+    }finally{
+      initSlotsBtn.disabled = false;
+      initSlotsBtn.textContent = "슬롯 16개 자동 생성";
+    }
+  };
 
   // Build 16 puzzle pieces overlay
   buildPieces(puzzleLayer);
 
-  // Node positions (예시 %). 너의 IFAP~OELB / 랜드마크 좌표로 교체하면 됨.
-  // 최소한 "오른쪽 쏠림" 방지를 위해 % 좌표 + 중앙정렬 구조를 쓰는 상태임.
   const NODES = makeDefaultNodes();
 
-  // Load all slots
+  // round + slot load
+  let activeRound = "R0001";
+  try{
+    activeRound = await getActiveRoundId();
+  }catch(e){
+    // meta가 안 읽혀도 슬롯 생성 버튼은 쓸 수 있게 R0001 fallback
+    console.warn("meta read failed, fallback R0001", e);
+  }
+  roundBadge.textContent = `ROUND: ${activeRound}`;
+
   const slots = await fetchSlots(activeRound);
   renderAll(slots);
 
@@ -160,7 +138,6 @@ async function bootIndex(){
     answerInput.value = "";
     nameInput.value = (localStorage.getItem("grua_name") || "");
 
-    // 버튼 상태
     const claimed = !!currentSlot.claimed;
     const unlocked = !!currentSlot.unlocked;
     claimBtn.disabled = unlocked || claimed;
@@ -168,22 +145,19 @@ async function bootIndex(){
 
     modalBackdrop.style.display = "flex";
   }
-  function closeModal(){
-    modalBackdrop.style.display = "none";
-  }
+  function closeModal(){ modalBackdrop.style.display = "none"; }
   closeBtn.onclick = closeModal;
   modalBackdrop.addEventListener("click", (e)=>{ if (e.target === modalBackdrop) closeModal(); });
 
-  // Claim (transaction)
+  // Claim
   claimBtn.onclick = async ()=>{
     const nm = (nameInput.value || "").trim();
     if (!nm){ alert("닉네임을 입력해줘."); return; }
     localStorage.setItem("grua_name", nm);
-
     if (!currentSlotId) return;
+
     try{
       await claimSlot(activeRound, currentSlotId, nm);
-      // refresh slot
       const updated = await getDoc(slotDocRef(activeRound, currentSlotId));
       slots.set(currentSlotId, updated.data());
       renderAll(slots);
@@ -207,30 +181,24 @@ async function bootIndex(){
       renderAll(slots);
       openModal(currentSlotId);
 
-      // completion check
       const unlockedCount = [...slots.values()].filter(s=>s.unlocked).length;
       if (unlockedCount === 16 && !isFinalSequencePlaying){
         isFinalSequencePlaying = true;
         closeModal();
-        await playFinalSequence({
-          mapWrap, nodesLayer, finalOverlay, finalDim, finalTitle, finalSub, puzzleLayer
-        });
+        await playFinalSequence({ mapWrap, nodesLayer, finalOverlay, finalDim, finalTitle, finalSub, puzzleLayer });
         location.href = "world.html";
       }
-
     }catch(e){
       console.error(e);
       alert("오답이거나 제출 실패. 힌트를 다시 확인해줘.");
     }
   };
 
-  // Render
   function renderAll(slotsMap){
     nodesLayer.innerHTML = "";
     const unlockedCount = [...slotsMap.values()].filter(s=>s.unlocked).length;
     progressBadge.textContent = `UNLOCKED: ${unlockedCount}/16`;
 
-    // Nodes
     for (const n of NODES){
       const slot = slotsMap.get(n.slotId);
       const el = document.createElement("div");
@@ -244,13 +212,10 @@ async function bootIndex(){
         el.dataset.state = state;
         el.onclick = ()=> openModal(n.slotId);
       }else{
-        // 랜드마크는 클릭 필요 없으면 주석
         el.onclick = ()=>{};
       }
       nodesLayer.appendChild(el);
     }
-
-    // Puzzle pieces blur/unblur
     updatePieces(puzzleLayer, slotsMap);
   }
 
@@ -266,9 +231,10 @@ async function bootIndex(){
   }
 }
 
+/* =========================
+   4) Nodes (예시)
+========================= */
 function makeDefaultNodes(){
-  // ⚠️ 예시 배치. 너의 “대학스럽게 리디자인” 좌표로 나중에 교체.
-  // slotId 01~16 + landmark 6개 = 총 22개
   const nodes = [];
   const ring = [
     [50,18],[66,22],[78,34],[82,50],[78,66],[66,78],[50,82],[34,78],
@@ -289,11 +255,11 @@ function makeDefaultNodes(){
 }
 
 /* =========================
-   6) Puzzle pieces build/update
+   5) Puzzle pieces
 ========================= */
 function buildPieces(layer){
   layer.innerHTML = "";
-  const size = 25; // 4x4 => 25% each
+  const size = 25;
   for (let r=0;r<4;r++){
     for (let c=0;c<4;c++){
       const idx = r*4 + c + 1;
@@ -321,99 +287,15 @@ function updatePieces(layer, slotsMap){
 }
 
 /* =========================
-   7) Claim transaction (선착)
+   6) Slot auto-create (복붙 대체)
+   - 문서 01~16 + 필드 전부 생성
 ========================= */
-async function claimSlot(roundIdStr, slotId, claimerName){
+async function createInitialSlots(roundIdStr){
   initFirebase();
-  const ref = slotDocRef(roundIdStr, slotId);
-  await runTransaction(db, async (tx)=>{
-    const snap = await tx.get(ref);
-    if (!snap.exists()) throw new Error("slot missing");
-    const data = snap.data();
-    if (data.unlocked) throw new Error("already unlocked");
-    if (data.claimed) throw new Error("already claimed");
-
-    tx.update(ref, {
-      claimed: true,
-      claimerName,
-      claimedAt: serverTimestamp()
-    });
-  });
-}
-
-/* =========================
-   8) Submit answer (단순 비교)
-========================= */
-async function submitAnswer(roundIdStr, slotId, answerInput){
-  initFirebase();
-  const ref = slotDocRef(roundIdStr, slotId);
-  await runTransaction(db, async (tx)=>{
-    const snap = await tx.get(ref);
-    if (!snap.exists()) throw new Error("slot missing");
-    const data = snap.data();
-
-    if (!data.claimed) throw new Error("not claimed");
-    if (data.unlocked) return;
-
-    const correct = normalize(answerInput) === normalize(data.answer || "");
-    if (!correct) throw new Error("wrong");
-
-    tx.update(ref, {
-      unlocked: true,
-      unlockedAt: serverTimestamp()
-    });
-  });
-}
-function normalize(s){
-  return String(s).trim().toLowerCase().replace(/\s+/g," ");
-}
-
-/* =========================
-   9) Final sequence (단계 연출 + 딜레이)
-   - total ~1.9s then caller navigates
-========================= */
-async function playFinalSequence({ mapWrap, nodesLayer, finalOverlay, finalDim, finalTitle, finalSub, puzzleLayer }){
-  // LOCK interactions
-  nodesLayer.style.pointerEvents = "none";
-
-  // T+150: fade map layers (nodes + svg)
-  await sleep(150);
-  nodesLayer.style.opacity = "0";
-  const svg = mapWrap.querySelector(".map-svg");
-  if (svg) svg.style.opacity = "0";
-  // sharpen puzzle
-  puzzleLayer.classList.add("puzzle-sharpen");
-
-  // T+800: show ACCESS GRANTED
-  await sleep(650); // 150->800
-  finalTitle.textContent = "ACCESS GRANTED";
-  finalSub.textContent = "CLEARANCE LEVEL: 01";
-  finalOverlay.classList.add("on");
-  finalDim.classList.add("on");
-
-  // T+1400: HOLD (0.6s)
-  await sleep(600);
-
-  // T+1900: transition out (fade)
-  mapWrap.classList.add("fade-out");
-  await sleep(200);
-}
-
-function sleep(ms){ return new Promise(res=>setTimeout(res, ms)); }
-
-// =============================
-// 🔥 슬롯 16개 자동 생성 (한 번만 실행)
-// =============================
-window.createInitialSlots = async function () {
-  initFirebase();
-
-  const roundId = "R0001";
-
-  for (let i = 1; i <= 16; i++) {
-    const id = String(i).padStart(2, "0");
-
+  for (let i=1;i<=16;i++){
+    const id = String(i).padStart(2,"0");
     await setDoc(
-      doc(db, "game", "season1", "rounds", roundId, "slots", id),
+      slotDocRef(roundIdStr, id),
       {
         claimed: false,
         unlocked: false,
@@ -430,10 +312,68 @@ window.createInitialSlots = async function () {
         hint: "",
         answer: "",
         explanation: ""
-      }
+      },
+      { merge: true } // ✅ 이미 있으면 덮어쓰기/보완
     );
   }
+}
 
-  alert("🔥 16개 슬롯 생성 완료!");
-};
+/* =========================
+   7) Claim + Submit
+========================= */
+async function claimSlot(roundIdStr, slotId, claimerName){
+  initFirebase();
+  const ref = slotDocRef(roundIdStr, slotId);
+  await runTransaction(db, async (tx)=>{
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error("slot missing");
+    const data = snap.data();
+    if (data.unlocked) throw new Error("already unlocked");
+    if (data.claimed) throw new Error("already claimed");
+    tx.update(ref, { claimed:true, claimerName, claimedAt: serverTimestamp() });
+  });
+}
 
+async function submitAnswer(roundIdStr, slotId, answerInput){
+  initFirebase();
+  const ref = slotDocRef(roundIdStr, slotId);
+  await runTransaction(db, async (tx)=>{
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error("slot missing");
+    const data = snap.data();
+    if (!data.claimed) throw new Error("not claimed");
+    if (data.unlocked) return;
+
+    const correct = normalize(answerInput) === normalize(data.answer || "");
+    if (!correct) throw new Error("wrong");
+
+    tx.update(ref, { unlocked:true, unlockedAt: serverTimestamp() });
+  });
+}
+function normalize(s){
+  return String(s).trim().toLowerCase().replace(/\s+/g," ");
+}
+
+/* =========================
+   8) Final sequence (단계 연출)
+========================= */
+async function playFinalSequence({ mapWrap, nodesLayer, finalOverlay, finalDim, finalTitle, finalSub, puzzleLayer }){
+  nodesLayer.style.pointerEvents = "none";
+
+  await sleep(150);
+  nodesLayer.style.opacity = "0";
+  const svg = mapWrap.querySelector(".map-svg");
+  if (svg) svg.style.opacity = "0";
+  puzzleLayer.classList.add("puzzle-sharpen");
+
+  await sleep(650);
+  finalTitle.textContent = "ACCESS GRANTED";
+  finalSub.textContent = "CLEARANCE LEVEL: 01";
+  finalOverlay.classList.add("on");
+  finalDim.classList.add("on");
+
+  await sleep(600);
+  mapWrap.classList.add("fade-out");
+  await sleep(200);
+}
+function sleep(ms){ return new Promise(res=>setTimeout(res, ms)); }
