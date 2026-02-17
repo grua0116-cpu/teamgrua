@@ -6,99 +6,42 @@
   --muted:rgba(232,238,252,.75);
 }
 *{ box-sizing:border-box; }
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,sans-serif;
-  background:var(--bg);
-  color:var(--text);
-}
+body{ margin:0; font-family:system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); }
 .wrap{ max-width:980px; margin:0 auto; padding:24px; }
 .top h1{ margin:0 0 8px; }
 .top p{ margin:0 0 16px; color:var(--muted); }
 
-.panel{
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:16px;
-  margin-bottom:12px;
-}
-
-.sectionTitle{
-  margin:0 0 10px;
-  font-size:14px;
-  letter-spacing:0.08em;
-  color:var(--muted);
-}
-
+.panel{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:12px; }
+.sectionTitle{ margin:0 0 10px; font-size:14px; letter-spacing:0.08em; color:var(--muted); }
 .muted{ color:var(--muted); font-size:13px; margin:10px 0 0; }
 
-/* ===== CAMPUS MAP ===== */
 .campus{
   position:relative;
   height:520px;
   border-radius:16px;
   border:1px solid rgba(255,255,255,.08);
   overflow:hidden;
-  background:
-    radial-gradient(1200px 520px at 30% 20%, rgba(74,119,255,.12), transparent 60%),
-    radial-gradient(900px 520px at 80% 70%, rgba(255,80,200,.10), transparent 55%),
-    rgba(255,255,255,.02);
+  background: rgba(255,255,255,.02);
 }
-.campusGrid{
+
+/* 퍼즐이 맵 '뒤'에 깔리는 레이어 */
+.puzzleLayer{
   position:absolute; inset:0;
-  background-image:
-    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
-  background-size: 40px 40px;
-  opacity:.25;
-}
-.campusLines{ position:absolute; inset:0; opacity:.6; }
-.nodes{ position:absolute; inset:0; }
-
-.node{
-  position:absolute;
-  width:52px; height:52px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.16);
-  background: rgba(11,18,32,.78);
-  display:grid; place-items:center;
-  cursor:pointer;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 8px 24px rgba(0,0,0,.35);
-  user-select:none;
-}
-.node .n{
-  font-weight:900;
-  font-size:14px;
-  line-height:1;
-}
-.node .t{
-  margin-top:2px;
-  font-size:10px;
-  color:rgba(232,238,252,.7);
-}
-.node.unlocked{
-  border-color: rgba(74,119,255,.9);
-  box-shadow: 0 0 0 3px rgba(74,119,255,.15), 0 12px 28px rgba(0,0,0,.35);
-}
-.node.active{ outline:3px solid rgba(255,255,255,.18); }
-
-/* ===== PUZZLE BOARD (REAL PIECES) ===== */
-.board{
   display:grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns:repeat(4,1fr);
   gap:10px;
+  padding:14px;
+  z-index:1;
+  pointer-events:none; /* 퍼즐은 클릭 안 됨 */
 }
 .piece{
   position:relative;
-  aspect-ratio: 1 / 1;
   border-radius:14px;
   border:1px solid rgba(255,255,255,.10);
   overflow:hidden;
   background-color: rgba(0,0,0,.25);
   background-image: url("../images/puzzle.png"); /* ✅ assets 기준 */
-  background-size: 400% 400%; /* 4x4 */
+  background-size: 400% 400%;
 }
 .piece.locked::after{
   content:""; position:absolute; inset:0;
@@ -114,18 +57,76 @@ body{
   border-radius:999px;
 }
 
-/* ===== DETAIL ===== */
-.detail{
-  background:var(--bg);
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:16px;
+/* 맵 배경(그리드 + 선) */
+.campusGrid{
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity:.20;
+  z-index:2;
 }
+.campusLines{ position:absolute; inset:0; opacity:.55; z-index:3; }
+.nodes{ position:absolute; inset:0; z-index:4; }
+
+/* 노드 */
+.node{
+  position:absolute;
+  width:56px; height:56px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.16);
+  background: rgba(11,18,32,.82);
+  display:grid; place-items:center;
+  cursor:pointer;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  user-select:none;
+}
+.node .n{ font-weight:900; font-size:14px; line-height:1; }
+.node .t{ margin-top:2px; font-size:10px; color:rgba(232,238,252,.7); }
+.node.unlocked{
+  border-color: rgba(74,119,255,.95);
+  box-shadow: 0 0 0 3px rgba(74,119,255,.15), 0 12px 28px rgba(0,0,0,.35);
+}
+.node.active{ outline:3px solid rgba(255,255,255,.18); }
+
+/* 모달 */
 .hidden{ display:none; }
-.detail h2{ margin:0 0 8px; }
-.detail .row{ margin:10px 0; }
-.detail .label{ font-weight:800; margin-bottom:6px; }
-.detail .box{
+.modalBackdrop{
+  position:fixed; inset:0;
+  background: rgba(0,0,0,.55);
+  display:grid; place-items:center;
+  padding:16px;
+  z-index:50;
+}
+.modal{
+  width:min(720px, 100%);
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(18,27,47,.98);
+  box-shadow: 0 18px 60px rgba(0,0,0,.45);
+  overflow:hidden;
+}
+.modalTop{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.modalTitle{ margin:0; font-size:16px; font-weight:900; }
+.modalClose{
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.25);
+  color: var(--text);
+  border-radius:12px;
+  padding:8px 10px;
+  cursor:pointer;
+}
+.modalBody{ padding:16px; }
+
+.row{ margin:10px 0; }
+.label{ font-weight:800; margin-bottom:6px; }
+.box{
   background:rgba(255,255,255,0.03);
   border:1px solid rgba(255,255,255,0.08);
   border-radius:12px;
@@ -133,15 +134,15 @@ body{
   color:var(--text);
   white-space:pre-wrap;
 }
-.detail input{
+.modal input{
   width:100%;
   padding:10px 12px;
   border-radius:12px;
   border:1px solid var(--line);
-  background:var(--panel);
+  background: rgba(0,0,0,.22);
   color:var(--text);
 }
-.detail button{
+.modal button#mSubmit{
   margin-top:10px;
   padding:10px 12px;
   border-radius:12px;
@@ -150,4 +151,4 @@ body{
   color:var(--text);
   cursor:pointer;
 }
-.detail button:disabled{ opacity:.5; cursor:not-allowed; }
+.modal button:disabled{ opacity:.5; cursor:not-allowed; }
