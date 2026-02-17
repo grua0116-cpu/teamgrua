@@ -37,7 +37,6 @@
     }
     .hero h1{ margin:0 0 6px; font-size:22px; font-weight:950; }
     .hero p{ margin:0; color:rgba(232,238,252,.78); line-height:1.7; }
-
     .hero img{
       width:100%;
       height:auto;
@@ -100,21 +99,6 @@
     }
     .cta h2{ margin:0 0 6px; font-size:18px; font-weight:950; }
     .cta p{ margin:0 0 12px; color:rgba(232,238,252,.78); line-height:1.75; }
-    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; }
-    .btn{
-      display:inline-block;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.22);
-      color:#e8eefc;
-      text-decoration:none;
-      font-weight:950;
-    }
-    .btnPrimary{
-      background: rgba(120,190,255,.16);
-      border-color: rgba(255,255,255,.16);
-    }
 
     .form{
       margin-top:10px;
@@ -131,6 +115,23 @@
       font-family:inherit;
     }
     .form textarea{ min-height:96px; resize:vertical; }
+
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; }
+    .btn{
+      display:inline-block;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      color:#e8eefc;
+      text-decoration:none;
+      font-weight:950;
+      cursor:pointer;
+    }
+    .btnPrimary{
+      background: rgba(120,190,255,.16);
+      border-color: rgba(255,255,255,.16);
+    }
     .smallNote{ font-size:12px; color:rgba(232,238,252,.62); }
   </style>
 </head>
@@ -167,9 +168,9 @@
       <article class="card">
         <div class="title2">운영 규정</div>
         <ul style="margin:0; padding-left:18px;">
-          <li><b>한 사람, 한 개의 열쇠.</b> (권한은 분산되며, 책임도 분산됩니다.)</li>
+          <li><b>한 사람, 한 개의 열쇠.</b> 권한은 분산되고, 책임도 분산됩니다.</li>
           <li><b>자율 신뢰.</b> 강제 인증이 아닌, 행동으로 증명합니다.</li>
-          <li><b>해금 = 공개.</b> 통과가 아니라, 접근 권한을 열어젖히는 행위입니다.</li>
+          <li><b>해금 = 공개.</b> 통과가 아니라 접근 권한을 여는 행위입니다.</li>
         </ul>
       </article>
 
@@ -177,7 +178,7 @@
         <div class="title2">당신의 역할</div>
         <p class="muted2" style="margin:0;">
           당신이 가진 건 “정답”이 아니라 “열쇠를 돌린 기록”입니다.
-          우리는 결과보다 과정을 봅니다. 어떤 방식으로 접근했는지, 무엇을 남겼는지.
+          우리는 결과보다 과정을 봅니다. 무엇을 남겼는지.
         </p>
       </article>
 
@@ -185,7 +186,7 @@
         <div class="title2">다음 단계</div>
         <p class="muted2" style="margin:0;">
           다음 기록은 순차 공개됩니다. 캠퍼스 지도는 업데이트될 수 있으며,
-          질문/힌트/해설은 Firestore를 통해 언제든 재편됩니다.
+          질문/힌트/해설은 Firestore에서 언제든 재편됩니다.
         </p>
       </article>
     </section>
@@ -193,39 +194,53 @@
     <section class="cta">
       <h2>우리 팀에 합류할래?</h2>
       <p>
-        GRUA는 완성된 조직이 아니라, “함께 완성되는 구조”입니다.<br/>
-        합류는 시험이 아니라 제안입니다. 당신이 원한다면, 우리는 다음 열쇠를 건넬 수 있습니다.
+        GRUA는 완성된 조직이 아니라 “함께 완성되는 구조”야.<br/>
+        아래에 간단히 남기면, 바로 합류 폼(구글폼)으로 연결해줄게.
       </p>
 
-      <!-- ✅ 간단 합류 폼(프론트만) : 필요하면 나중에 Firestore로 저장 가능 -->
       <div class="form">
         <input id="joinName" placeholder="이름/닉네임" />
         <input id="joinContact" placeholder="연락 수단 (인스타 @ / 이메일 등)" />
         <textarea id="joinMsg" placeholder="한 줄 지원서: 왜 합류하고 싶어?"></textarea>
+
         <div class="btnRow">
-          <button class="btn btnPrimary" id="joinBtn" type="button">합류 요청 보내기</button>
+          <button class="btn btnPrimary" id="joinBtn" type="button">합류 폼으로 이동</button>
           <a class="btn" href="./index.html">퍼즐로 돌아가기</a>
         </div>
-        <div class="smallNote">지금은 기기 내에서 이메일 작성창으로 연결됩니다(서버 없음). 원하면 Firestore 저장으로 바꿔줄게.</div>
+
+        <div class="smallNote">
+          * 구글폼 링크만 있으면 됨. (원하면 입력값 자동 채우기도 가능)
+        </div>
       </div>
     </section>
   </main>
 
   <script>
-    // ✅ 서버 없이도 바로 쓰는 "합류 요청" 전송(메일 작성창 열기)
+    // ✅ 네 구글폼 링크로 바꿔 넣기 (응답 링크)
+    const GOOGLE_FORM_URL = "YOUR_GOOGLE_FORM_URL";
+
+    // (선택) 구글폼 ‘미리 채우기’ URL을 쓰면 여기서 자동 채움 가능.
+    // 기본은 그냥 링크 이동.
     document.getElementById("joinBtn").addEventListener("click", () => {
-      const name = document.getElementById("joinName").value.trim() || "(미입력)";
-      const contact = document.getElementById("joinContact").value.trim() || "(미입력)";
-      const msg = document.getElementById("joinMsg").value.trim() || "(미입력)";
+      const name = document.getElementById("joinName").value.trim();
+      const contact = document.getElementById("joinContact").value.trim();
+      const msg = document.getElementById("joinMsg").value.trim();
 
-      const subject = encodeURIComponent("[GRUA] 합류 요청");
-      const body = encodeURIComponent(
-        `이름/닉네임: ${name}\n연락 수단: ${contact}\n\n지원서:\n${msg}\n`
-      );
+      // ✅ 1) 그냥 폼으로 이동(가장 안전)
+      // window.open(GOOGLE_FORM_URL, "_blank", "noopener");
+      // return;
 
-      // ⚠️ 여기 이메일 주소는 네가 받을 주소로 바꿔야 함
-      const to = "YOUR_EMAIL_HERE@example.com";
-      window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+      // ✅ 2) (가능하면) URL에 값 붙여서 이동: "미리 채우기 링크"가 있을 때만 추천
+      // GOOGLE_FORM_URL이 "미리 채우기" 링크라면, 아래 방식으로 파라미터를 붙일 수 있음.
+      // 단, entry.123456= 형태의 필드 ID가 필요함.
+      // 지금은 필드 ID를 모르니, 값은 localStorage로 저장해두고 폼에서 붙여넣기 안내로 간다.
+
+      localStorage.setItem("grua_join_name", name);
+      localStorage.setItem("grua_join_contact", contact);
+      localStorage.setItem("grua_join_msg", msg);
+
+      window.open(GOOGLE_FORM_URL, "_blank", "noopener");
+      alert("합류 폼을 새 탭에서 열었어. (입력한 내용은 임시 저장됨: 필요하면 복사해서 붙여넣기)");
     });
   </script>
 </body>
