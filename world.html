@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GRUA WORLD</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+  <style>
+    .worldWrap{ max-width:980px; margin:0 auto; padding:24px; }
+    .hero{
+      background: rgba(18,27,47,.75);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:18px;
+      padding:18px;
+      overflow:hidden;
+    }
+    .hero img{
+      width:100%;
+      height:auto;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      display:block;
+      margin-top:12px;
+    }
+    .worldTitle{ font-size:22px; font-weight:950; margin:0 0 6px; }
+    .worldSub{ color:rgba(232,238,252,.75); margin:0 0 10px; }
+    .card{
+      margin-top:14px;
+      background: rgba(18,27,47,.65);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+      padding:16px;
+      line-height:1.7;
+    }
+    .btnRow{ margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+    .btn{
+      display:inline-block;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      color:#e8eefc;
+      text-decoration:none;
+      font-weight:900;
+    }
+  </style>
+</head>
+<body>
+  <main class="worldWrap">
+    <div class="hero">
+      <div class="worldTitle">GRUA WORLD</div>
+      <p class="worldSub">16개의 노드가 모두 해금되었을 때만 열리는 기록.</p>
+      <img src="./images/puzzle.png" alt="GRUA World Image" />
+    </div>
+
+    <section class="card">
+      <h2 style="margin:0 0 8px;">세계관 설명</h2>
+      <p style="margin:0 0 10px;">
+        여기에 네가 원하는 세계관 텍스트를 넣으면 돼.
+        (문단/규칙/기관/캠퍼스 설정/다음 미션 등)
+      </p>
+
+      <ul style="margin:0; padding-left:18px;">
+        <li>이 캠퍼스는 “신뢰”를 기반으로만 작동한다.</li>
+        <li>각 장소는 하나의 역할이 아니라 하나의 관측 지점이다.</li>
+        <li>16개의 열쇠가 모이면, 이미지가 더 이상 ‘가려진 정보’가 아니다.</li>
+      </ul>
+
+      <div class="btnRow">
+        <a class="btn" href="./index.html">퍼즐로 돌아가기</a>
+        <!-- 필요하면 다음 콘텐츠로 연결 -->
+        <!-- <a class="btn" href="./hint.html">다음 기록 보기</a> -->
+      </div>
+    </section>
+  </main>
+</body>
+</html>
