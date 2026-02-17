@@ -3,185 +3,35 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GRUA | WORLD</title>
+  <title>GRUA | ACCESS GRANTED</title>
   <style>
-    :root{
-      --bg:#050e15; --panel:#0c1c28; --text:#e8f1ff; --muted:#9bb0c8; --line:rgba(255,255,255,.12);
-    }
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;background:var(--bg);color:var(--text)}
-    .wrap{max-width:980px;margin:0 auto;padding:22px}
-    .hero{border:1px solid var(--line);border-radius:18px;padding:18px;background:rgba(255,255,255,.03)}
-    .kicker{font-size:12px;color:var(--muted);letter-spacing:.12em}
-    .title{margin:8px 0 0;font-size:20px;font-weight:1000}
-    .sub{margin:8px 0 0;color:var(--muted);line-height:1.6;font-size:13px}
-    .grid{display:grid;grid-template-columns:1fr 360px;gap:14px;margin-top:14px}
-    @media (max-width: 980px){.grid{grid-template-columns:1fr}}
-    .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px}
-    .h{font-weight:900;margin:0 0 8px;font-size:14px}
-    .p{margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.6}
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;
-      padding:10px 12px;border-radius:12px;border:1px solid var(--line);
-      background:rgba(255,255,255,.03);color:var(--text);cursor:pointer;text-decoration:none;font-size:13px
-    }
-    .btn:disabled{opacity:.55;cursor:not-allowed}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-
-    /* Join card */
-    .card{
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.04);
-      border-radius:18px;
-      padding:16px;
-    }
-    .id{font-weight:1000;font-size:20px;letter-spacing:.08em}
-    .meta{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.5}
-    .warn{margin-top:10px;color:#ffd7a8;font-size:12px;line-height:1.5}
-    input{
-      width:100%;box-sizing:border-box;padding:10px 11px;border-radius:12px;
-      border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text)
-    }
+    :root{ --bg:#050b10; --panel:#0b1620; --text:#e8f1ff; --muted:#9bb0c8; --line:rgba(255,255,255,.12); }
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif}
+    .wrap{max-width:900px;margin:0 auto;padding:22px}
+    .card{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:18px;padding:18px}
+    .title{font-weight:1000;letter-spacing:.12em}
+    .muted{color:var(--muted);font-size:13px;line-height:1.6}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);cursor:pointer;text-decoration:none;font-size:13px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="hero">
-      <div class="kicker">CONFIDENTIAL / ACCESS GRANTED</div>
-      <div class="title">GRUA 기관 브리핑</div>
-      <div class="sub">
-        당신은 16개의 열쇠를 통해 접근 권한을 확보했습니다.<br/>
-        이제 선택하세요: 즉시 합류(온라인) 또는 실물 굿즈 신청.
-      </div>
-    </div>
+    <div class="card">
+      <div class="title">ACCESS GRANTED</div>
+      <p class="muted" style="margin-top:10px">
+        CONFIDENTIAL / GRUA INTERNAL BRIEFING<br/>
+        16개의 조각이 모두 해금되었습니다.
+      </p>
 
-    <div class="grid">
-      <div class="panel">
-        <p class="h">개요</p>
-        <p class="p">
-          GRUA는 강제 로그인 없이, 행동 기반으로 권한이 분산되는 구조를 지향합니다.<br/>
-          발급된 코드는 본인 확인용입니다.
-        </p>
+      <img src="puzzle.png" alt="puzzle" style="width:100%;border-radius:14px;border:1px solid var(--line);margin:14px 0;display:block" />
 
-        <p class="h" style="margin-top:14px">운영 규정</p>
-        <p class="p">
-          - 합류 코드는 브라우저당 1회 발급됩니다.<br/>
-          - 조회 기능은 추후 추가될 수 있습니다.
-        </p>
+      <h3 style="margin:0 0 8px">기관 브리핑</h3>
+      <p class="muted" style="margin:0 0 14px">
+        (여기에 브리핑/운영 규정/다음 단계/합류 CTA를 넣으면 됨)
+      </p>
 
-        <p class="h" style="margin-top:14px">다음 단계</p>
-        <p class="p">
-          합류 코드를 발급받고, 필요 시 실물 굿즈 신청 폼으로 이동하세요.
-        </p>
-      </div>
-
-      <div class="panel" id="joinPanel">
-        <p class="h">즉시 합류</p>
-        <p class="p">닉네임을 입력하고 합류 버튼을 누르면 멤버 ID가 즉시 발급됩니다.</p>
-
-        <label class="p" style="margin:0 0 6px">닉네임</label>
-        <input id="nickInput" maxlength="20" placeholder="예: OPERATOR-곰른" />
-
-        <div class="row" style="margin-top:10px">
-          <button class="btn" id="joinBtn">합류 (ID 발급)</button>
-          <a class="btn" href="index.html">퍼즐로 돌아가기</a>
-        </div>
-
-        <div id="resultArea" style="margin-top:12px;display:none">
-          <div class="card">
-            <div class="kicker">GRUA MEMBER ID</div>
-            <div class="id" id="memberIdText">GR-XXXX</div>
-            <div class="meta" id="memberMeta"></div>
-            <div class="warn">
-              ⚠️ 조회 기능은 아직 없습니다. 이 화면을 <b>캡쳐/저장</b>하세요.
-            </div>
-
-            <div class="row" style="margin-top:12px">
-              <button class="btn" id="copyBtn">ID 복사</button>
-              <a class="btn" id="goodsBtn" target="_blank" rel="noopener">실물 굿즈 신청</a>
-              <button class="btn" id="doneBtn">합류 완료</button>
-            </div>
-          </div>
-        </div>
-
-        <p class="p" id="oneTimeNote" style="margin-top:12px;display:none">
-          이미 이 브라우저에서 합류 ID를 발급받았습니다(1회 제한).
-        </p>
-      </div>
+      <a class="btn" href="index.html">돌아가기</a>
     </div>
   </div>
-
-  <script type="module">
-    import { initFirebase, issueMemberId, isJoinIssued, markJoinIssued, getActiveRoundId } from "./app.js";
-
-    // ✅ 구글폼 Prefill 링크 (너의 폼으로 교체)
-    // 1) 구글폼에서 "미리 채우기 링크 받기"로 entry.XXXX 키를 얻어야 함
-    // 2) 아래 entry 키 2개를 네 폼 키로 바꿔
-    const GOODS_FORM_BASE = "https://docs.google.com/forms/d/e/XXXXXXXXXXXX/viewform";
-    const ENTRY_MEMBER_ID = "entry.1111111111";
-    const ENTRY_NICKNAME  = "entry.2222222222";
-
-    const nickInput = document.getElementById("nickInput");
-    const joinBtn = document.getElementById("joinBtn");
-    const resultArea = document.getElementById("resultArea");
-    const memberIdText = document.getElementById("memberIdText");
-    const memberMeta = document.getElementById("memberMeta");
-    const copyBtn = document.getElementById("copyBtn");
-    const goodsBtn = document.getElementById("goodsBtn");
-    const doneBtn = document.getElementById("doneBtn");
-    const oneTimeNote = document.getElementById("oneTimeNote");
-
-    initFirebase();
-
-    // 1회 발급 제한 UI
-    if (isJoinIssued()) {
-      joinBtn.disabled = true;
-      oneTimeNote.style.display = "block";
-    }
-
-    joinBtn.addEventListener("click", async () => {
-      const nick = (nickInput.value || "").trim();
-      if (!nick) { alert("닉네임을 입력해줘."); return; }
-      if (isJoinIssued()) { alert("이 브라우저에서는 이미 발급됨(1회 제한)"); return; }
-
-      joinBtn.disabled = true;
-      joinBtn.textContent = "발급 중...";
-
-      try{
-        const roundId = await getActiveRoundId(); // R0001 같은 값
-        const issued = await issueMemberId({ nick, roundId });
-
-        // 발급 결과 UI
-        memberIdText.textContent = issued.memberId;
-        memberMeta.textContent = `NICKNAME: ${nick} · ROUND: ${roundId} · ISSUED: ${new Date(issued.issuedAt).toLocaleString()}`;
-        resultArea.style.display = "block";
-
-        // 1회 제한 저장
-        markJoinIssued(issued.memberId);
-
-        // 굿즈 폼 prefill 링크 구성
-        const url = new URL(GOODS_FORM_BASE);
-        url.searchParams.set(ENTRY_MEMBER_ID, issued.memberId);
-        url.searchParams.set(ENTRY_NICKNAME, nick);
-        goodsBtn.href = url.toString();
-
-        // 버튼들
-        copyBtn.onclick = async () => {
-          await navigator.clipboard.writeText(issued.memberId);
-          copyBtn.textContent = "복사됨";
-          setTimeout(()=>copyBtn.textContent="ID 복사", 800);
-        };
-        doneBtn.onclick = () => {
-          alert("합류 완료. (조회 기능은 추후 제공)\n필요하면 지금 화면을 캡쳐해줘.");
-        };
-
-      }catch(e){
-        console.error(e);
-        alert("발급 실패. 잠시 후 다시 시도해줘.");
-        joinBtn.disabled = false;
-      }finally{
-        joinBtn.textContent = "합류 (ID 발급)";
-      }
-    });
-  </script>
 </body>
 </html>
