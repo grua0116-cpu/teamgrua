@@ -1,9 +1,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, setDoc, updateDoc
+  getFirestore, collection, doc, query, orderBy,
+  onSnapshot, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/** 1) 너 프로젝트 설정값으로 교체 */
+import {
+  getAuth, signInAnonymously, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+/** ✅ 1) Firebase 콘솔에서 복사한 firebaseConfig를 여기에 붙여넣어 */
 const firebaseConfig = {
   apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
   authDomain: "teamgrua-f465c.firebaseapp.com",
@@ -13,226 +18,204 @@ const firebaseConfig = {
   appId: "1:1019914743201:web:171550946aafb90ab96fe0"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-/** 2) Firestore 경로 고정 */
-const PATH = {
-  game: "game",
-  season: "season1",
-  slots: "slots",
-};
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-// DOM
-const board = document.getElementById("board");
-const statusEl = document.getElementById("status");
+// UI
+const loginBtn = document.getElementById("loginBtn");
+const userText = document.getElementById("userText");
+const nameInput = document.getElementById("nameInput");
+const refreshBtn = document.getElementById("refreshBtn");
+const gridEl = document.getElementById("grid");
+const detailEl = document.getElementById("detail");
+const statusText = document.getElementById("statusText");
+const finalEl = document.getElementById("final");
 
-const backdrop = document.getElementById("modalBackdrop");
-const modalTitle = document.getElementById("modalTitle");
-const modalSub = document.getElementById("modalSub");
-const modalClose = document.getElementById("modalClose");
-const answerInput = document.getElementById("answerInput");
-const submitBtn = document.getElementById("submitBtn");
-const modalMsg = document.getElementById("modalMsg");
+let uid = null;
+let slots = [];
+let selectedId = null;
 
-// state
-let currentTileId = null;
-let currentDocRef = null;
-let currentAnswer = null;
-let currentClaimed = false;
+// Firestore 경로: game/season1/slots
+const slotsCol = collection(db, "game", "season1", "slots");
+const q = query(slotsCol, orderBy("orderIndex", "asc"));
 
-function slotDocRef(tileId2) {
-  // tileId2: "01"~"16"
-  return doc(db, PATH.game, PATH.season, PATH.slots, tileId2);
-}
-
-function id2(i) {
-  return String(i).padStart(2, "0");
-}
-
-function tilePosition(i) {
-  // i: 1~16, 01 = 좌상단
-  const idx = i - 1;
-  const r = Math.floor(idx / 4);
-  const c = idx % 4;
-  return { top: `${r * 25}%`, left: `${c * 25}%` };
-}
-
-function setStatus(text, kind = "") {
-  statusEl.textContent = text;
-  statusEl.style.color = kind === "bad" ? "var(--bad)"
-                     : kind === "good" ? "var(--good)"
-                     : "var(--text)";
-}
-
-function openModal(tileId2, docRef, answer, claimed) {
-  currentTileId = tileId2;
-  currentDocRef = docRef;
-  currentAnswer = (answer ?? "").trim();
-  currentClaimed = !!claimed;
-
-  modalTitle.textContent = `TILE ${tileId2}`;
-  modalSub.textContent = claimed ? "이미 열린 타일입니다." : "정답을 입력하세요";
-  modalMsg.textContent = "";
-  modalMsg.className = "msg";
-
-  answerInput.value = "";
-  answerInput.disabled = claimed;
-  submitBtn.disabled = claimed;
-
-  backdrop.classList.remove("hidden");
-  if (!claimed) answerInput.focus();
-}
-
-function closeModal() {
-  backdrop.classList.add("hidden");
-  currentTileId = null;
-  currentDocRef = null;
-  currentAnswer = null;
-  currentClaimed = false;
-}
-
-function markRevealed(tileId2) {
-  const el = document.querySelector(`.tileMask[data-id="${tileId2}"]`);
-  if (el) el.classList.add("revealed");
-}
-
-async function ensureDocExists(tileId2) {
-  // 문서 없으면 기본값으로 생성(개발 편의)
-  const ref = slotDocRef(tileId2);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    await setDoc(ref, { answer: "", claimed: false });
-    return { answer: "", claimed: false, _created: true };
+// 로그인
+loginBtn.addEventListener("click", async () => {
+  try {
+    await signInAnonymously(auth);
+  } catch (e) {
+    alert("로그인 실패: " + (e?.message || e));
   }
-  return snap.data();
+});
+
+onAuthStateChanged(auth, (user) => {
+  uid = user?.uid || null;
+  userText.textContent = uid ? `로그인됨 (uid: ${uid.slice(0, 6)}...)` : "미로그인";
+});
+
+// 새로고침 버튼(실시간이라 사실 필요 없지만, 안정용)
+refreshBtn.addEventListener("click", () => {
+  renderGrid();
+  renderDetail();
+});
+
+// 실시간 구독
+onSnapshot(q, (snap) => {
+  slots = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderGrid();
+  renderDetail();
+  renderFinalIfDone();
+});
+
+function renderGrid() {
+  gridEl.innerHTML = "";
+  const unlockedCount = slots.filter(s => !!s.unlocked).length;
+
+  statusText.textContent =
+    `해금 ${unlockedCount}/16 · 로그인 후 1칸 점유 → 정답 제출`;
+
+  slots.forEach(s => {
+    const tile = document.createElement("div");
+    tile.className = `tile ${s.unlocked ? "unlocked" : "locked"} ${s.claimed ? "claimed" : ""}`;
+    tile.innerHTML = `
+      <div class="meta">#${s.orderIndex ?? "—"}</div>
+      <div class="code">${escapeHtml(s.typeCode || s.id)}</div>
+      <div class="meta">${s.claimed ? `점유: ${escapeHtml(s.claimerName || "")}` : "미점유"}</div>
+      <div class="meta">${s.unlocked ? "해금됨" : "잠김"}</div>
+    `;
+    tile.onclick = () => { selectedId = s.id; renderDetail(); };
+    gridEl.appendChild(tile);
+  });
 }
 
-async function buildBoard() {
-  board.innerHTML = "";
+function renderDetail() {
+  if (!selectedId) {
+    detailEl.classList.add("hidden");
+    detailEl.innerHTML = "";
+    return;
+  }
 
-  // 16개 마스크 생성
-  for (let i = 1; i <= 16; i++) {
-    const tileId2 = id2(i);
-    const pos = tilePosition(i);
+  const s = slots.find(x => x.id === selectedId);
+  if (!s) return;
 
-    const mask = document.createElement("div");
-    mask.className = "tileMask";
-    mask.dataset.id = tileId2;
-    mask.style.top = pos.top;
-    mask.style.left = pos.left;
+  detailEl.classList.remove("hidden");
 
-    mask.addEventListener("click", async () => {
-      try {
-        setStatus(`타일 ${tileId2} 확인 중…`);
-        const ref = slotDocRef(tileId2);
-        const data = await ensureDocExists(tileId2);
+  const hasLogin = !!uid;
+  const hasName = !!(nameInput.value || "").trim();
+  const canClaim = hasLogin && hasName && !s.claimed;
+  const canAnswer = hasLogin && s.claimed && !s.unlocked; // 점유된 슬롯만 풀게(원하면 조건 완화 가능)
 
-        // claimed true면 바로 열림 처리
-        if (data.claimed) markRevealed(tileId2);
+  detailEl.innerHTML = `
+    <h2>${escapeHtml(s.typeCode || s.id)} 상세</h2>
 
-        openModal(tileId2, ref, data.answer, data.claimed);
-        setStatus(`타일 ${tileId2} 준비됨`);
-      } catch (e) {
-        console.error(e);
-        setStatus("에러: Firestore 연결/권한 확인 필요", "bad");
-      }
+    <div class="row">
+      <div class="label">Question</div>
+      <div class="box">${escapeHtml(s.question || "")}</div>
+    </div>
+
+    <div class="row">
+      <div class="label">Hint</div>
+      <div class="box">${escapeHtml(s.hint || "")}</div>
+    </div>
+
+    <div class="row">
+      <div class="label">점유 상태</div>
+      <div class="box">${s.claimed ? `이미 점유됨: ${escapeHtml(s.claimerName || "")}` : "미점유"}</div>
+      <button id="claimBtn" ${canClaim ? "" : "disabled"}>내가 점유하기</button>
+      <div class="muted">※ 1인 1타입 강제는 “자율 신뢰”로 운영 (uid 저장은 안 함)</div>
+    </div>
+
+    <div class="row">
+      <div class="label">정답 입력</div>
+      <input id="ansInput" placeholder="정답 입력" ${canAnswer ? "" : "disabled"} />
+      <button id="submitBtn" ${canAnswer ? "" : "disabled"}>정답 제출 → 해금</button>
+    </div>
+
+    <div class="row">
+      <div class="label">Explanation</div>
+      <div class="box">${escapeHtml(s.explanation || "")}</div>
+    </div>
+  `;
+
+  document.getElementById("claimBtn")?.addEventListener("click", () => claimSlot(s.id));
+  document.getElementById("submitBtn")?.addEventListener("click", () => {
+    const input = document.getElementById("ansInput").value;
+    submitAnswer(s.id, input, s.answer || "");
+  });
+}
+
+async function claimSlot(slotId) {
+  const name = (nameInput.value || "").trim();
+  if (!uid) return alert("먼저 로그인해줘.");
+  if (!name) return alert("닉네임을 입력해줘.");
+
+  const ref = doc(db, "game", "season1", "slots", slotId);
+
+  try {
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists()) throw new Error("슬롯 문서가 없어.");
+
+      const data = snap.data();
+      if (data.claimed) throw new Error("이미 누군가 점유했어.");
+
+      tx.update(ref, {
+        claimed: true,
+        claimerName: name
+      });
     });
-
-    board.appendChild(mask);
+    alert("점유 완료!");
+  } catch (e) {
+    alert(e?.message || String(e));
   }
-
-  // 초기 로딩: claimed 상태 반영
-  await refreshClaimed();
 }
 
-async function refreshClaimed() {
-  let opened = 0;
+async function submitAnswer(slotId, input, correctAnswer) {
+  if (!uid) return alert("먼저 로그인해줘.");
+  const userAns = (input || "").trim();
+  if (!userAns) return alert("정답을 입력해줘.");
 
-  for (let i = 1; i <= 16; i++) {
-    const tileId2 = id2(i);
-    try {
-      const ref = slotDocRef(tileId2);
-      const snap = await getDoc(ref);
-      if (snap.exists() && snap.data()?.claimed) {
-        opened++;
-        markRevealed(tileId2);
-      }
-    } catch (e) {
-      // 일부 실패해도 계속 진행
-      console.warn("refreshClaimed fail:", tileId2, e);
-    }
+  // 자율 신뢰 검증: 공백 제거 + 소문자 비교
+  const ok = normalize(userAns) === normalize(correctAnswer);
+  if (!ok) return alert("오답!");
+
+  const ref = doc(db, "game", "season1", "slots", slotId);
+
+  try {
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists()) throw new Error("슬롯 문서가 없어.");
+
+      const data = snap.data();
+      if (data.unlocked) return;
+
+      tx.update(ref, { unlocked: true });
+    });
+    alert("정답! 해금됨!");
+  } catch (e) {
+    alert(e?.message || String(e));
   }
+}
 
-  setStatus(`열림 ${opened}/16`);
+function renderFinalIfDone() {
+  const unlockedCount = slots.filter(s => !!s.unlocked).length;
+  if (unlockedCount === 16) {
+    finalEl.classList.remove("hidden");
+  } else {
+    finalEl.classList.add("hidden");
+  }
 }
 
 function normalize(s) {
-  return String(s ?? "").trim();
+  return String(s).toLowerCase().replace(/\s+/g, "");
 }
 
-async function submitAnswer() {
-  if (!currentDocRef || !currentTileId) return;
-
-  const input = normalize(answerInput.value);
-  if (!input) {
-    modalMsg.textContent = "정답을 입력해줘.";
-    modalMsg.className = "msg bad";
-    return;
-  }
-
-  // 정답 비교(대소문자/공백만 처리: 필요하면 여기서 더 완화 가능)
-  const ok = normalize(input).toLowerCase() === normalize(currentAnswer).toLowerCase();
-
-  if (!ok) {
-    modalMsg.textContent = "틀림. 다시 시도!";
-    modalMsg.className = "msg bad";
-    return;
-  }
-
-  try {
-    submitBtn.disabled = true;
-    answerInput.disabled = true;
-    modalMsg.textContent = "정답! 타일을 여는 중…";
-    modalMsg.className = "msg good";
-
-    await updateDoc(currentDocRef, { claimed: true });
-
-    markRevealed(currentTileId);
-    setStatus(`타일 ${currentTileId} 열림!`, "good");
-
-    setTimeout(closeModal, 450);
-    await refreshClaimed();
-  } catch (e) {
-    console.error(e);
-    modalMsg.textContent = "업데이트 실패(권한/규칙 확인 필요)";
-    modalMsg.className = "msg bad";
-    submitBtn.disabled = false;
-    answerInput.disabled = false;
-  }
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
-
-// modal events
-modalClose.addEventListener("click", closeModal);
-backdrop.addEventListener("click", (e) => {
-  if (e.target === backdrop) closeModal();
-});
-submitBtn.addEventListener("click", submitAnswer);
-answerInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") submitAnswer();
-});
-
-// start
-(async () => {
-  try {
-    setStatus("초기화 중…");
-    await buildBoard();
-    setStatus("준비 완료");
-  } catch (e) {
-    console.error(e);
-    setStatus("초기화 실패: 설정값/권한 확인", "bad");
-  }
-})();
