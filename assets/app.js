@@ -14,9 +14,43 @@ const firebaseConfig = {
   appId: "1:1019914743201:web:171550946aafb90ab96fe0"
 };
 
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+/* ===== INTRO (영화 오프닝) ===== */
+const intro = document.getElementById("intro");
+const introType = document.getElementById("introType");
+const enterBtn = document.getElementById("enterBtn");
+const skipBtn = document.getElementById("skipBtn");
+
+const introScript =
+  "당신이 세계의 진실을 알고 싶다면,\n" +
+  "16개의 노드를 해금해야 합니다.\n" +
+  "한 사람은 한 개의 열쇠만 가질 수 있습니다.\n" +
+  "— GRUA CAMPUS ARCHIVE";
+
+typeWriter(introScript, introType, 18);
+
+function typeWriter(text, el, speed=18){
+  let i=0;
+  const tick=()=>{
+    el.textContent = text.slice(0,i++);
+    if(i<=text.length) setTimeout(tick, speed);
+  };
+  tick();
+}
+
+function closeIntro(){
+  intro.style.opacity = "0";
+  intro.style.pointerEvents = "none";
+  setTimeout(()=> intro.remove(), 450);
+}
+enterBtn.addEventListener("click", closeIntro);
+skipBtn.addEventListener("click", closeIntro);
+window.addEventListener("click", (e)=> { if (intro && e.target === intro) closeIntro(); });
+window.addEventListener("keydown", (e)=> {
+  if(e.key === "Enter" && intro) closeIntro();
+});
 
 /* ===== UI refs ===== */
 const statusText = document.getElementById("statusText");
@@ -36,79 +70,88 @@ const mExplain = document.getElementById("mExplain");
 const mAnswer = document.getElementById("mAnswer");
 const mSubmit = document.getElementById("mSubmit");
 
-// ✅ 로드시 모달 절대 자동오픈 금지
+// ✅ 로드시 모달 자동오픈 금지
 modalBackdrop.classList.add("hidden");
 
 let slots = [];
 let selectedId = null;
 
-/* ===== 장소(랜드마크 + 노드명) ===== */
+/* ===== 타입 16개: 기존 장소/구역(너가 이미 쓰던 값 유지) =====
+   여기의 place는 “타입별 기존 장소”로 유지해.
+   (추가 장소 6개는 아래 LANDMARKS로 별도 존재 → 총 22개)
+*/
 const GRUA_META = [
-  { idx:1,  type:"IFAP", place:"기록보관관", icon:"🗄️" },
-  { idx:2,  type:"IFAB", place:"관측열람실", icon:"👁️" },
-  { idx:3,  type:"IFLP", place:"저술연구실", icon:"✍️" },
-  { idx:4,  type:"IFLB", place:"정리전시실", icon:"🗂️" },
+  { idx:1,  type:"IFAP", place:"기록 보관 구역", icon:"🗄️", axis:"Inner–Faith–Anchor–Participant" },
+  { idx:2,  type:"IFAB", place:"관측 구역",     icon:"👁️", axis:"Inner–Faith–Anchor–Observer" },
+  { idx:3,  type:"IFLP", place:"창작 구역",     icon:"✍️", axis:"Inner–Faith–Flow–Participant" },
+  { idx:4,  type:"IFLB", place:"전시 구역",     icon:"🗂️", axis:"Inner–Faith–Flow–Observer" },
 
-  { idx:5,  type:"IEAP", place:"분석실",     icon:"🧠" },
-  { idx:6,  type:"IEAB", place:"기준실",     icon:"📐" },
-  { idx:7,  type:"IELP", place:"전략실",     icon:"♟️" },
-  { idx:8,  type:"IELB", place:"추적기록실", icon:"🧾" },
+  { idx:5,  type:"IEAP", place:"분석실",       icon:"🧠", axis:"Inner–Evidence–Anchor–Participant" },
+  { idx:6,  type:"IEAB", place:"통계실",       icon:"📐", axis:"Inner–Evidence–Anchor–Observer" },
+  { idx:7,  type:"IELP", place:"전략 회의실",   icon:"♟️", axis:"Inner–Evidence–Flow–Participant" },
+  { idx:8,  type:"IELB", place:"사건 기록구역", icon:"🧾", axis:"Inner–Evidence–Flow–Observer" },
 
-  { idx:9,  type:"OFAP", place:"중앙광장",   icon:"🌿" },
-  { idx:10, type:"OFAB", place:"경계초소",   icon:"🛡️" },
-  { idx:11, type:"OFLP", place:"공명센터",   icon:"📡" },
-  { idx:12, type:"OFLB", place:"기억보존관", icon:"⏳" },
+  { idx:9,  type:"OFAP", place:"중앙 광장 구역", icon:"💞", axis:"Outer–Faith–Anchor–Participant" },
+  { idx:10, type:"OFAB", place:"접경 구역",     icon:"🛡️", axis:"Outer–Faith–Anchor–Observer" },
+  { idx:11, type:"OFLP", place:"통신 구역",     icon:"📡", axis:"Outer–Faith–Flow–Participant" },
+  { idx:12, type:"OFLB", place:"시간 기록 구역", icon:"⏳", axis:"Outer–Faith–Flow–Observer" },
 
-  { idx:13, type:"OEAP", place:"고해실",     icon:"🕯️" },
-  { idx:14, type:"OEAB", place:"봉인서고",   icon:"🔒" },
-  { idx:15, type:"OELP", place:"전환게이트", icon:"🔁" },
-  { idx:16, type:"OELB", place:"사후접근로", icon:"👣" },
+  { idx:13, type:"OEAP", place:"증언실",       icon:"🕯️", axis:"Outer–Evidence–Anchor–Participant" },
+  { idx:14, type:"OEAB", place:"봉인 서고",     icon:"🔒", axis:"Outer–Evidence–Anchor–Observer" },
+  { idx:15, type:"OELP", place:"전환 통로",     icon:"🔁", axis:"Outer–Evidence–Flow–Participant" },
+  { idx:16, type:"OELB", place:"사후 접근 가능 구역", icon:"👣", axis:"Outer–Evidence–Flow–Observer" },
 ];
+
 function metaByIdx(idx){ return GRUA_META.find(m => m.idx === idx) || null; }
 function parseType(typeCode){
   const t = String(typeCode || "").trim().toUpperCase();
   return { io: t[0] || "I", fe: t[1] || "F", al: t[2] || "A", pb: t[3] || "P" };
 }
 
-/* ===== 랜드마크(요청: 광장/분수/기숙사/학생회관/식당) ===== */
+/* ✅ 추가 장소 6개(랜드마크) */
 const LANDMARKS = [
-  { name:"광장",     icon:"🌿", x:520, y:380, cls:"big" },
-  { name:"분수",     icon:"⛲", x:520, y:325, cls:"fountain" },
-  { name:"기숙사",   icon:"🛏️", x:300, y:440, cls:"" },
-  { name:"학생회관", icon:"🏛️", x:430, y:260, cls:"" },
-  { name:"식당",     icon:"🍽️", x:690, y:260, cls:"" },
+  { name:"광장",     icon:"🌿", x:520, y:355, cls:"big" },
+  { name:"분수",     icon:"⛲", x:520, y:300, cls:"fountain" },
+  { name:"기숙사",   icon:"🛏️", x:260, y:438, cls:"" },
+  { name:"학생회관", icon:"🏛️", x:410, y:235, cls:"" },
+  { name:"식당",     icon:"🍽️", x:720, y:235, cls:"" },
+  { name:"도서관",   icon:"📚", x:780, y:438, cls:"" },
 ];
 
-/* ===== 대학 지도 배치(스샷 기준 보정) ===== */
+/* ===== 캠퍼스형 배치(대학지도 느낌) ===== */
 const NODE_LAYOUT = [
-  { idx:1,  x:155, y:135 },
-  { idx:2,  x:320, y:120 },
-  { idx:3,  x:500, y:140 },
-  { idx:4,  x:670, y:125 },
+  // 상단: 기록/관측/창작/전시
+  { idx:1,  x:170, y:140 },
+  { idx:2,  x:330, y:120 },
+  { idx:3,  x:500, y:145 },
+  { idx:4,  x:660, y:125 },
 
-  { idx:5,  x:170, y:265 },
-  { idx:6,  x:350, y:275 },
-  { idx:7,  x:520, y:295 },
-  { idx:8,  x:700, y:275 },
+  // 중앙: 분석/통계/전략/기록
+  { idx:5,  x:210, y:280 },
+  { idx:6,  x:360, y:290 },
+  { idx:7,  x:520, y:305 },
+  { idx:8,  x:690, y:290 },
 
-  { idx:9,  x:210, y:395 },
-  { idx:10, x:365, y:420 },
-  { idx:11, x:560, y:418 },
-  { idx:12, x:705, y:395 },
+  // 하단: 교류/경계/통신/시간
+  { idx:9,  x:260, y:395 },
+  { idx:10, x:380, y:430 },
+  { idx:11, x:560, y:430 },
+  { idx:12, x:720, y:395 },
 
-  { idx:13, x:845, y:170 },
+  // 우측 외곽: 증언/봉인/전환/사후
+  { idx:13, x:840, y:175 },
   { idx:14, x:875, y:285 },
-  { idx:16, x:805, y:345 },
+  { idx:16, x:805, y:340 },
   { idx:15, x:875, y:410 },
 ];
 
-/* 선 연결(동선 느낌) */
+/* 곡선 동선(지나가는 길) */
 const EDGES = [
   [1,2],[2,3],[3,4],
   [2,6],[3,7],[4,8],
   [5,6],[6,7],[7,8],
   [5,9],[6,10],[7,11],[8,12],
-  [4,13],[8,14],[12,15],[11,16],
+  [4,13],[8,14],[11,16],[12,15],
 ];
 
 /* ===== Firestore ===== */
@@ -155,11 +198,13 @@ window.addEventListener("keydown", (e) => {
 function openModal(){
   if (!selectedId) return;
   modalBackdrop.classList.remove("hidden");
+  puzzleLayer.classList.add("dim"); // ✅ 모달 중 배경 덜 보이게
   mAnswer.value = "";
   setTimeout(()=> mAnswer.focus(), 50);
 }
 function closeModal(){
   modalBackdrop.classList.add("hidden");
+  puzzleLayer.classList.remove("dim");
   selectedId = null;
   renderNodes();
 }
@@ -217,7 +262,7 @@ async function submitAnswer(slotId, input, correctAnswer){
 function renderAll(){
   renderStatus();
   renderPuzzleLayer();
-  renderLines();
+  renderPaths();
   renderLandmarks();
   renderNodes();
   renderFinalIfAllUnlocked();
@@ -246,7 +291,7 @@ function renderPuzzleLayer(){
   });
 }
 
-function renderLines(){
+function renderPaths(){
   linesSvg.innerHTML = "";
   EDGES.forEach(([a,b])=>{
     const A = NODE_LAYOUT.find(n=>n.idx===a);
@@ -256,17 +301,22 @@ function renderLines(){
     const meta = metaByIdx(a);
     const p = parseType(meta?.type || "IFAP");
 
-    const line = document.createElementNS("http://www.w3.org/2000/svg","line");
-    line.setAttribute("x1", String(A.x));
-    line.setAttribute("y1", String(A.y));
-    line.setAttribute("x2", String(B.x));
-    line.setAttribute("y2", String(B.y));
-    line.setAttribute("stroke-width", "2");
+    // 곡선: 중간 제어점(캠퍼스 길처럼 살짝 휘게)
+    const mx = (A.x + B.x) / 2;
+    const my = (A.y + B.y) / 2;
+    const bend = 28;
+    const cx = mx + (A.y - B.y) / 520 * bend;
+    const cy = my + (B.x - A.x) / 1000 * bend;
 
-    line.setAttribute("data-fe", p.fe);
-    line.setAttribute("data-io", p.io);
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d", `M ${A.x} ${A.y} Q ${cx} ${cy} ${B.x} ${B.y}`);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke-width", "2");
 
-    linesSvg.appendChild(line);
+    path.setAttribute("data-fe", p.fe);
+    path.setAttribute("data-io", p.io);
+
+    linesSvg.appendChild(path);
   });
 }
 
@@ -322,13 +372,12 @@ function renderFinalIfAllUnlocked(){
   const all = unlockedCount >= 16;
 
   if(all){
-    // 노드/지도는 숨기고, 최종 이미지 앞으로
     nodesEl.style.display = "none";
     linesSvg.style.display = "none";
     if(landmarksEl) landmarksEl.style.display = "none";
     finalReveal.classList.remove("hidden");
-    // 모달이 열려있다면 닫기
     modalBackdrop.classList.add("hidden");
+    puzzleLayer.classList.remove("dim");
     selectedId = null;
   }else{
     nodesEl.style.display = "";
