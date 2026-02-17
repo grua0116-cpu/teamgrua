@@ -3,17 +3,41 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GRUA WORLD</title>
+  <title>GRUA WORLD ARCHIVE</title>
   <link rel="stylesheet" href="./assets/styles.css" />
   <style>
     .worldWrap{ max-width:980px; margin:0 auto; padding:24px; }
-    .hero{
-      background: rgba(18,27,47,.75);
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:18px;
-      padding:18px;
-      overflow:hidden;
+    .blackIntro{
+      position:fixed; inset:0;
+      background:#000;
+      display:grid;
+      place-items:center;
+      z-index:300;
+      animation: fadeOut 2.2s ease 1.2s forwards;
     }
+    .blackIntro .title{
+      text-align:center;
+      color:#e8eefc;
+      letter-spacing:.22em;
+      font-weight:950;
+      opacity:.85;
+    }
+    .blackIntro .title .big{ font-size:20px; margin-bottom:10px; }
+    .blackIntro .title .small{ font-size:12px; opacity:.7; }
+
+    @keyframes fadeOut{ to{ opacity:0; pointer-events:none; } }
+
+    .hero{
+      margin-top:6px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(18,27,47,.75), rgba(8,12,22,.65));
+      padding:18px;
+      box-shadow: 0 18px 70px rgba(0,0,0,.45);
+    }
+    .hero h1{ margin:0 0 6px; font-size:22px; font-weight:950; }
+    .hero p{ margin:0; color:rgba(232,238,252,.75); }
+
     .hero img{
       width:100%;
       height:auto;
@@ -22,15 +46,25 @@
       display:block;
       margin-top:12px;
     }
-    .worldTitle{ font-size:22px; font-weight:950; margin:0 0 6px; }
-    .worldSub{ color:rgba(232,238,252,.75); margin:0 0 10px; }
-    .card{
+
+    .doc{
       margin-top:14px;
-      background: rgba(18,27,47,.65);
-      border:1px solid rgba(255,255,255,.08);
       border-radius:16px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.18);
       padding:16px;
-      line-height:1.7;
+      line-height:1.8;
+    }
+    .stamp{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,120,120,.08);
+      color:rgba(232,238,252,.9);
+      font-weight:900;
+      letter-spacing:.12em;
+      font-size:12px;
     }
     .btnRow{ margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
     .btn{
@@ -46,30 +80,35 @@
   </style>
 </head>
 <body>
-  <main class="worldWrap">
-    <div class="hero">
-      <div class="worldTitle">GRUA WORLD</div>
-      <p class="worldSub">16개의 노드가 모두 해금되었을 때만 열리는 기록.</p>
-      <img src="./images/puzzle.png" alt="GRUA World Image" />
+  <div class="blackIntro">
+    <div class="title">
+      <div class="big">GRUA WORLD ARCHIVE</div>
+      <div class="small">ACCESS GRANTED</div>
     </div>
+  </div>
 
-    <section class="card">
-      <h2 style="margin:0 0 8px;">세계관 설명</h2>
+  <main class="worldWrap">
+    <section class="hero">
+      <span class="stamp">CONFIDENTIAL</span>
+      <h1>세계관 기록 · GRUA CAMPUS</h1>
+      <p>16개의 해금이 완료되었습니다. 아래는 공개 가능한 범위의 문서입니다.</p>
+      <img src="./images/puzzle.png" alt="GRUA World Image" />
+    </section>
+
+    <section class="doc">
+      <h2 style="margin:0 0 8px;">Document 01 — 캠퍼스의 규칙</h2>
       <p style="margin:0 0 10px;">
-        여기에 네가 원하는 세계관 텍스트를 넣으면 돼.
-        (문단/규칙/기관/캠퍼스 설정/다음 미션 등)
+        GRUA 캠퍼스는 ‘신뢰’로만 작동한다. 증명은 최소화되고, 책임은 개별화된다.
+        퍼즐은 시험이 아니라, 관측 장치다.
       </p>
-
       <ul style="margin:0; padding-left:18px;">
-        <li>이 캠퍼스는 “신뢰”를 기반으로만 작동한다.</li>
-        <li>각 장소는 하나의 역할이 아니라 하나의 관측 지점이다.</li>
-        <li>16개의 열쇠가 모이면, 이미지가 더 이상 ‘가려진 정보’가 아니다.</li>
+        <li>각 노드는 하나의 관측 지점이며, 해금은 “통과”가 아니라 “개방”이다.</li>
+        <li>16개의 해금은 이미지의 복원이 아니라, 세계의 “가시화”다.</li>
+        <li>이후 기록은 순차 공개된다.</li>
       </ul>
 
       <div class="btnRow">
         <a class="btn" href="./index.html">퍼즐로 돌아가기</a>
-        <!-- 필요하면 다음 콘텐츠로 연결 -->
-        <!-- <a class="btn" href="./hint.html">다음 기록 보기</a> -->
       </div>
     </section>
   </main>
