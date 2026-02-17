@@ -1,230 +1,107 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GRUA PROJECT</title>
-
-<style>
-body{
-  margin:0;
-  font-family: "Pretendard", sans-serif;
-  background:#071021;
-  color:white;
-}
-
-h1{
-  margin:40px 60px 10px;
-  font-size:28px;
-}
-
-.subtitle{
-  margin:0 60px 20px;
-  color:#9bb4ff;
-}
-
-.map-wrap{
-  width:1200px;
-  height:700px;
-  margin:0 auto 60px;
-  background:#0c1b33;
-  border-radius:18px;
-  position:relative;
-  overflow:hidden;
-  border:1px solid rgba(255,255,255,0.08);
-}
-
-/* 퍼즐 이미지 */
-.puzzle-layer{
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:1;
-  opacity:.15;
-  transition:all .6s ease;
-}
-
-.puzzle-layer img{
-  width:900px;
-  cursor:pointer;
-  border-radius:12px;
-}
-
-/* 16개 노드 */
-.nodes{
-  position:absolute;
-  inset:0;
-  z-index:3;
-}
-
-.node{
-  position:absolute;
-  width:140px;
-  height:90px;
-  border-radius:16px;
-  background:rgba(15,25,50,.95);
-  border:1px solid rgba(255,255,255,.2);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  font-size:14px;
-  cursor:pointer;
-  transition:.3s;
-}
-
-.node:hover{
-  transform:scale(1.05);
-  box-shadow:0 0 15px rgba(255,0,120,.6);
-}
-
-/* 추가 장소 6개 */
-.landmarks{
-  position:absolute;
-  inset:0;
-  z-index:2;
-}
-
-.landmark{
-  position:absolute;
-  background:rgba(0,0,0,.6);
-  padding:8px 14px;
-  border-radius:20px;
-  font-size:14px;
-  border:1px solid rgba(255,255,255,.15);
-}
-
-/* 모달 */
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-
-.modal-box{
-  width:400px;
-  background:#0e1c38;
-  padding:30px;
-  border-radius:14px;
-}
-
-.modal input{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  background:#132347;
-  border:none;
-  color:white;
-  border-radius:8px;
-}
-
-.modal button{
-  margin-top:15px;
-  padding:10px 14px;
-  background:#ff3d7f;
-  border:none;
-  color:white;
-  border-radius:8px;
-  cursor:pointer;
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GRUA 16 공동 퍼즐</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
 </head>
-
 <body>
+  <!-- 🎬 영화 오프닝 -->
+  <div id="intro" class="intro">
+    <div class="introFilmGrain"></div>
+    <div class="introVignette"></div>
 
-<h1>GRUA PROJECT</h1>
-<div class="subtitle">16개 노드를 모두 해금하면 세계가 열립니다.</div>
+    <div class="introBox">
+      <div class="introKicker">CONFIDENTIAL · GRUA ARCHIVE</div>
+      <h1 class="introTitle">GRUA CAMPUS</h1>
+      <p class="introType" id="introType"></p>
 
-<div class="map-wrap">
+      <div class="introActions">
+        <button id="enterBtn" class="btnPrimary">ENTER</button>
+        <button id="skipBtn" class="btnGhost">SKIP</button>
+      </div>
 
-  <!-- 퍼즐 이미지 -->
-  <div class="puzzle-layer" id="puzzleLayer">
-    <img src="puzzle.png" id="puzzleImage">
+      <div class="introHint">클릭 또는 ENTER로 입장</div>
+    </div>
   </div>
 
-  <!-- 6개 추가 장소 -->
-  <div class="landmarks">
-    <div class="landmark" style="left:520px; top:350px;">🌿 광장</div>
-    <div class="landmark" style="left:520px; top:300px;">⛲ 분수</div>
-    <div class="landmark" style="left:250px; top:500px;">🛏️ 기숙사</div>
-    <div class="landmark" style="left:420px; top:200px;">🏛️ 학생회관</div>
-    <div class="landmark" style="left:820px; top:220px;">🍽️ 식당</div>
-    <div class="landmark" style="left:950px; top:500px;">📚 도서관</div>
+  <main class="wrap">
+    <header class="top">
+      <h1>GRUA 16 공동 퍼즐</h1>
+      <p id="statusText">로딩 중...</p>
+    </header>
+
+    <section class="panel">
+      <h2 class="sectionTitle">CAMPUS MAP</h2>
+
+      <div id="campus" class="campus">
+        <!-- 퍼즐(배경) -->
+        <div id="puzzleLayer" class="puzzleLayer"></div>
+
+        <!-- ✅ 올클리어 시, 퍼즐이 앞으로 나오는 레이어 -->
+        <div id="finalReveal" class="finalReveal hidden">
+          <div class="finalCard">
+            <div class="finalTitle">전체 해금 완료</div>
+            <div class="finalSub">이미지를 클릭하면, 세계관 기록으로 이동합니다.</div>
+
+            <a class="finalLink" href="./world.html" aria-label="세계관 기록으로 이동">
+              <img class="finalImg" src="./images/puzzle.png" alt="Final World Image" />
+            </a>
+          </div>
+        </div>
+
+        <!-- 캠퍼스 배경 -->
+        <div class="campusBg"></div>
+
+        <!-- 동선(곡선) -->
+        <svg id="campusLines" class="campusLines" viewBox="0 0 1000 520" preserveAspectRatio="none"></svg>
+
+        <!-- 랜드마크 6개 -->
+        <div id="landmarks" class="landmarks"></div>
+
+        <!-- 노드 16개 -->
+        <div id="nodes" class="nodes"></div>
+      </div>
+
+      <p class="muted">정답은 Firestore의 각 문서 answer 필드에서 관리됩니다.</p>
+    </section>
+  </main>
+
+  <!-- 모달 -->
+  <div id="modalBackdrop" class="modalBackdrop hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modalTop">
+        <h3 id="modalTitle" class="modalTitle">NODE</h3>
+        <button id="modalClose" class="modalClose" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="row">
+          <div class="label">Question</div>
+          <div id="mQuestion" class="box"></div>
+        </div>
+
+        <div class="row">
+          <div class="label">Hint</div>
+          <div id="mHint" class="box"></div>
+        </div>
+
+        <div class="row">
+          <div class="label">정답 입력</div>
+          <input id="mAnswer" placeholder="정답 입력" />
+          <button id="mSubmit">정답 제출 → 조각 열기</button>
+          <div class="muted">모달이 열리면 배경 퍼즐은 더 어둡게 처리됩니다.</div>
+        </div>
+
+        <div class="row">
+          <div class="label">Explanation</div>
+          <div id="mExplain" class="box"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- 16개 타입 노드 -->
-  <div class="nodes" id="nodes"></div>
-
-</div>
-
-<!-- 모달 -->
-<div class="modal" id="modal">
-  <div class="modal-box">
-    <div id="question">정답을 입력하세요</div>
-    <input type="text" id="answerInput" />
-    <button onclick="submitAnswer()">정답 제출</button>
-  </div>
-</div>
-
-<script>
-
-const answers = [
-  "IFAP","IFAB","IFLP","IFLB",
-  "IEAP","IEAB","IELP","IELB",
-  "OFAP","OFAB","OFLP","OFLB",
-  "OEAP","OEAB","OELP","OELB"
-];
-
-let unlockedCount = 0;
-let currentIndex = null;
-
-const nodesContainer = document.getElementById("nodes");
-
-for(let i=0;i<16;i++){
-  const div = document.createElement("div");
-  div.className="node";
-  div.innerText=answers[i];
-  div.style.left = (150 + (i%4)*220)+"px";
-  div.style.top  = (100 + Math.floor(i/4)*150)+"px";
-  div.onclick = () => openModal(i);
-  nodesContainer.appendChild(div);
-}
-
-function openModal(index){
-  currentIndex=index;
-  document.getElementById("modal").style.display="flex";
-}
-
-function submitAnswer(){
-  const input = document.getElementById("answerInput").value.trim();
-  if(input === answers[currentIndex]){
-    unlockedCount++;
-    document.getElementsByClassName("node")[currentIndex].style.opacity=.3;
-    document.getElementsByClassName("node")[currentIndex].style.pointerEvents="none";
-    document.getElementById("modal").style.display="none";
-    document.getElementById("answerInput").value="";
-
-    if(unlockedCount===16){
-      document.getElementById("puzzleLayer").style.opacity=1;
-      document.getElementById("puzzleLayer").style.zIndex=10;
-    }
-  }else{
-    alert("틀렸습니다.");
-  }
-}
-
-document.getElementById("puzzleImage").onclick = function(){
-  if(unlockedCount===16){
-    window.location.href="world.html";
-  }
-}
-
-</script>
-
+  <script type="module" src="./assets/app.js"></script>
 </body>
 </html>
