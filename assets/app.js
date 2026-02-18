@@ -1,11 +1,4 @@
-console.log("🔥 GRUA app.js running (design2 aligned / unlocked-only)");
-
-window.addEventListener("error", (e)=>{
-  alert("❌ JS 에러: " + (e?.message || e));
-});
-window.addEventListener("unhandledrejection", (e)=>{
-  alert("❌ Promise 에러: " + (e?.reason?.message || e?.reason || e));
-});
+console.log("🔥 GRUA app.js (NO MAP) running");
 
 const firebaseConfig = {
   apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
@@ -27,7 +20,6 @@ function roundId(n){ return `R${String(n).padStart(4,"0")}`; }
 function normalize(s){ return String(s ?? "").trim().toLowerCase().replace(/\s+/g," "); }
 function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
 
-// Firestore refs
 function metaRef(db){
   return db.collection("game").doc(SEASON).collection("meta").doc("meta");
 }
@@ -36,7 +28,6 @@ function slotRef(db, roundIdStr, slotId){
            .collection("slots").doc(slotId);
 }
 
-// 16 타입 (표시용) — Firestore 값이 있으면 그걸 우선 사용
 const FALLBACK_TYPE = {
   "01": ["IFAP","기록 보관 구역"],
   "02": ["IFAB","관측 구역"],
@@ -56,7 +47,7 @@ const FALLBACK_TYPE = {
   "16": ["OELB","사후 접근 가능 구역"],
 };
 
-// Nodes: 16 타입 + 5 랜드마크 (✅ 광장 제거)
+// ✅ 광장 랜드마크 없음 (타입 OFAP “중앙 광장”은 유지)
 function makeNodes(){
   const nodes = [];
   const ring = [
@@ -71,7 +62,7 @@ function makeNodes(){
     nodes.push({ kind:"node", slotId, x, y });
   }
 
-  // 랜드마크 5개 (광장 삭제)
+  // 랜드마크 5개
   nodes.push({ kind:"landmark", label:"분수", x:56, y:46 });
   nodes.push({ kind:"landmark", label:"기숙사", x:18, y:78 });
   nodes.push({ kind:"landmark", label:"학생회관", x:82, y:22 });
@@ -81,7 +72,6 @@ function makeNodes(){
   return nodes;
 }
 
-// Puzzle pieces 4x4 (puzzle.png)
 function buildPieces(layer){
   layer.innerHTML = "";
   const size = 25;
@@ -109,15 +99,7 @@ function updatePieces(layer, slotsMap){
     else p.classList.remove("unlocked");
   });
 }
-function pulsePiece(layer, slotId){
-  const p = layer.querySelector(`.piece[data-slot-id="${slotId}"]`);
-  if (!p) return;
-  p.classList.remove("pulse");
-  void p.offsetWidth;
-  p.classList.add("pulse");
-}
 
-// Load 16 slots
 async function fetchSlots(db, roundIdStr){
   const out = new Map();
   for(let i=1;i<=16;i++){
@@ -132,22 +114,19 @@ async function fetchSlots(db, roundIdStr){
   return out;
 }
 
-// unlocked-only submit
 async function submitAnswer(db, roundIdStr, slotId, answerInput){
   const ref = slotRef(db, roundIdStr, slotId);
   await db.runTransaction(async (tx)=>{
     const snap = await tx.get(ref);
     if (!snap.exists) throw new Error("slot missing");
     const data = snap.data();
-
     if (data.unlocked) return;
 
     const expected = normalize(data.answer || "");
     if (!expected) throw new Error("noanswer");
 
     const typed = normalize(answerInput);
-    const correct = (typed === expected);
-    if (!correct) throw new Error("wrong");
+    if (typed !== expected) throw new Error("wrong");
 
     tx.update(ref, {
       unlocked: true,
@@ -156,7 +135,6 @@ async function submitAnswer(db, roundIdStr, slotId, answerInput){
   });
 }
 
-// Final sequence (영화 오프닝 강) + 자동 이동
 async function playFinalSequence({ mapWrap, nodesLayer, puzzleLayer, finalOverlay, finalDim, finalTitle, finalSub }){
   nodesLayer.style.pointerEvents = "none";
 
@@ -183,29 +161,28 @@ async function playFinalSequence({ mapWrap, nodesLayer, puzzleLayer, finalOverla
 document.addEventListener("DOMContentLoaded", async ()=>{
   const db = ensureFirebase();
 
-  // Intro (ENTER)
+  // ENTER
   const intro = document.getElementById("intro");
   const enterBtn = document.getElementById("enterBtn");
-  if (enterBtn && intro){
-    enterBtn.onclick = ()=> intro.classList.add("off");
-  }
+  enterBtn.onclick = ()=> intro.classList.add("off");
 
   // HUD
   const roundBadge = document.getElementById("roundBadge");
   const progressBadge = document.getElementById("progressBadge");
-  const refreshBtn = document.getElementById("refreshBtn");
+  document.getElementById("refreshBtn").onclick = ()=> location.reload();
 
   // Help
-  const helpBtn = document.getElementById("helpBtn");
   const helpBackdrop = document.getElementById("helpBackdrop");
-  const helpCloseBtn = document.getElementById("helpCloseBtn");
+  document.getElementById("helpBtn").onclick = ()=> helpBackdrop.style.display = "flex";
+  document.getElementById("helpCloseBtn").onclick = ()=> helpBackdrop.style.display = "none";
+  helpBackdrop.addEventListener("click", (e)=>{ if (e.target === helpBackdrop) helpBackdrop.style.display = "none"; });
 
   // Stage
   const nodesLayer = document.getElementById("nodesLayer");
   const puzzleLayer = document.getElementById("puzzleLayer");
   const mapWrap = document.getElementById("mapWrap");
 
-  // Answer modal (design2)
+  // Modal
   const answerBackdrop = document.getElementById("answerBackdrop");
   const modalTitle = document.getElementById("modalTitle");
   const modalMeta = document.getElementById("modalMeta");
@@ -214,7 +191,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   const modalExplanation = document.getElementById("modalExplanation");
   const answerInput = document.getElementById("answerInput");
   const submitBtn = document.getElementById("submitBtn");
-  const closeBtn = document.getElementById("closeBtn");
+  document.getElementById("closeBtn").onclick = ()=> answerBackdrop.style.display = "none";
+  answerBackdrop.addEventListener("click", (e)=>{ if (e.target === answerBackdrop) answerBackdrop.style.display = "none"; });
 
   // Final
   const finalOverlay = document.getElementById("finalOverlay");
@@ -222,17 +200,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   const finalTitle = document.getElementById("finalTitle");
   const finalSub = document.getElementById("finalSub");
 
-  // Bindings
-  if (refreshBtn) refreshBtn.onclick = ()=> location.reload();
-
-  if (helpBtn && helpBackdrop) helpBtn.onclick = ()=> helpBackdrop.style.display = "flex";
-  if (helpCloseBtn && helpBackdrop) helpCloseBtn.onclick = ()=> helpBackdrop.style.display = "none";
-  if (helpBackdrop) helpBackdrop.addEventListener("click", (e)=>{ if (e.target === helpBackdrop) helpBackdrop.style.display = "none"; });
-
-  if (closeBtn && answerBackdrop) closeBtn.onclick = ()=> answerBackdrop.style.display = "none";
-  if (answerBackdrop) answerBackdrop.addEventListener("click", (e)=>{ if (e.target === answerBackdrop) answerBackdrop.style.display = "none"; });
-
-  // Build puzzle
   buildPieces(puzzleLayer);
   const NODES = makeNodes();
 
@@ -243,22 +210,18 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     const data = metaSnap.exists ? metaSnap.data() : null;
     const ar = data?.activeRound || 1;
     activeRoundStr = roundId(ar);
-  }catch(e){
-    console.warn("meta read failed, fallback R0001", e);
-  }
-  if (roundBadge) roundBadge.textContent = `ROUND: ${activeRoundStr}`;
+  }catch(e){}
+  roundBadge.textContent = `ROUND: ${activeRoundStr}`;
 
-  // data
   const slots = await fetchSlots(db, activeRoundStr);
 
-  // state
   let currentSlotId = null;
   let isFinalPlaying = false;
 
   function openModal(slotId){
     currentSlotId = slotId;
     const slot = slots.get(slotId) || {};
-    const fallback = FALLBACK_TYPE[slotId] || ["", ""];
+    const fallback = FALLBACK_TYPE[slotId] || ["",""];
     const tc = slot.typeCode || fallback[0];
     const pn = slot.positionName || fallback[1];
 
@@ -269,24 +232,20 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     modalExplanation.textContent = "";
     answerInput.value = "";
     submitBtn.disabled = !!slot.unlocked;
-
     answerBackdrop.style.display = "flex";
   }
 
-  async function handleSubmit(){
+  submitBtn.onclick = async ()=>{
     const ans = (answerInput.value || "").trim();
     if (!ans){ alert("정답을 입력해줘."); return; }
     if (!currentSlotId) return;
 
     try{
       await submitAnswer(db, activeRoundStr, currentSlotId, ans);
-
       const snap = await slotRef(db, activeRoundStr, currentSlotId).get();
       if (snap.exists) slots.set(currentSlotId, snap.data());
 
-      pulsePiece(puzzleLayer, currentSlotId);
       renderAll();
-
       answerBackdrop.style.display = "none";
 
       const unlockedCount = [...slots.values()].filter(s=>s.unlocked).length;
@@ -295,21 +254,15 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         await playFinalSequence({ mapWrap, nodesLayer, puzzleLayer, finalOverlay, finalDim, finalTitle, finalSub });
       }
     }catch(e){
-      console.error(e);
-      if ((e?.message || "") === "noanswer") {
-        alert("아직 이 노드의 정답(answer)이 Firestore에 설정되지 않았습니다.");
-      } else {
-        alert("오답이거나 제출 실패. 힌트를 다시 확인해줘.");
-      }
+      if ((e?.message||"") === "noanswer") alert("아직 이 노드의 정답(answer)이 설정되지 않았습니다.");
+      else alert("오답이거나 제출 실패.");
     }
-  }
-  submitBtn.onclick = handleSubmit;
+  };
 
   function renderAll(){
     nodesLayer.innerHTML = "";
-
     const unlockedCount = [...slots.values()].filter(s=>s.unlocked).length;
-    if (progressBadge) progressBadge.textContent = `UNLOCKED: ${unlockedCount}/16`;
+    progressBadge.textContent = `UNLOCKED: ${unlockedCount}/16`;
 
     for (const n of NODES){
       const el = document.createElement("div");
@@ -324,13 +277,13 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       }
 
       const slot = slots.get(n.slotId) || {};
-      const fallback = FALLBACK_TYPE[n.slotId] || ["", ""];
+      const fallback = FALLBACK_TYPE[n.slotId] || ["",""];
       const tc = slot.typeCode || fallback[0] || n.slotId;
       const pn = slot.positionName || fallback[1] || "";
 
       el.className = "node";
       el.dataset.state = slot.unlocked ? "unlocked" : "idle";
-      el.innerHTML = `<span class="tc mono">${tc}</span><span class="pn">${pn || "구역"}</span>`;
+      el.innerHTML = `<span class="tc">${tc}</span><span class="pn">${pn || "구역"}</span>`;
       el.onclick = ()=> openModal(n.slotId);
 
       nodesLayer.appendChild(el);
