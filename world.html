@@ -5,36 +5,70 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>GRUA | ACCESS GRANTED</title>
   <style>
-    :root{ --bg:#050b10; --panel:#0b1620; --text:#e8f1ff; --muted:#9bb0c8; --line:rgba(255,255,255,.12); }
-    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif}
-    .wrap{max-width:900px;margin:0 auto;padding:22px}
-    .card{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:18px;padding:18px}
-    .title{font-weight:1000;letter-spacing:.12em}
-    .muted{color:var(--muted);font-size:13px;line-height:1.6}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);cursor:pointer;text-decoration:none;font-size:13px}
-    .btn.primary{background:rgba(120,255,220,.10);border-color:rgba(120,255,220,.22)}
+    :root{
+      --bg:#050b10; --panel:rgba(10,20,30,.55);
+      --text:#e8f1ff; --muted:#9bb0c8; --line:rgba(255,255,255,.12);
+    }
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 600px at 50% 20%, rgba(0,255,200,.08), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+      min-height:100vh;
+    }
+    .wrap{max-width:920px;margin:0 auto;padding:22px}
+    .card{
+      border:1px solid var(--line);
+      background:var(--panel);
+      border-radius:18px;
+      padding:18px;
+      backdrop-filter: blur(12px);
+    }
+    .title{font-weight:1000;letter-spacing:.18em;font-size:14px}
+    .muted{color:var(--muted);font-size:13px;line-height:1.7}
+    .img{
+      width:100%;
+      border-radius:14px;
+      border:1px solid var(--line);
+      margin:14px 0;
+      display:block;
+    }
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:10px 12px;border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--text);cursor:pointer;text-decoration:none;font-size:13px;
+    }
+    .btn.primary{
+      background:rgba(120,255,220,.10);
+      border-color:rgba(120,255,220,.22);
+    }
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <div class="title">ACCESS GRANTED</div>
+      <div class="title mono">ACCESS GRANTED</div>
       <p class="muted" style="margin-top:10px">
         CONFIDENTIAL / GRUA INTERNAL BRIEFING<br/>
         16개의 조각이 모두 해금되었습니다.
       </p>
 
-      <img src="puzzle.png" alt="puzzle" style="width:100%;border-radius:14px;border:1px solid var(--line);margin:14px 0;display:block" />
+      <img src="puzzle.png" alt="puzzle" class="img" />
 
       <h3 style="margin:0 0 8px">기관 브리핑</h3>
       <p class="muted" style="margin:0 0 14px">
-        (여기에 브리핑/세계관 설명/운영 규정/합류 제안 CTA를 넣으면 됨)
+        (여기에 브리핑 오프닝 · 세계관 설명 · 합류 제안 문구를 넣으면 됨)
       </p>
 
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <!-- 구글폼 링크를 여기에 넣어 -->
+      <div class="row">
         <a class="btn primary" href="https://forms.gle/PUT_YOUR_FORM_LINK_HERE" target="_blank" rel="noopener">합류 신청 (Google Form)</a>
-        <a class="btn" href="index.html">퍼즐로 돌아가기</a>
+        <a class="btn" href="index.html">캠퍼스로 돌아가기</a>
       </div>
     </div>
   </div>
