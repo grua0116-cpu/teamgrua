@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GRUA | Campus Access</title>
+  <title>GRUA | 16인 공동 퍼즐</title>
   <style>
     :root{
       --bg:#050b10;
@@ -11,8 +11,6 @@
       --muted:rgba(200,215,235,.68);
       --stroke:rgba(255,255,255,.12);
       --chip:rgba(255,255,255,.06);
-      --panel:rgba(10,20,30,.82);
-      --glow:rgba(120,255,220,.18);
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -27,7 +25,6 @@
       overflow:hidden;
     }
 
-    /* Frame */
     .stage{position:relative;height:100%;width:100%;padding:14px}
     .frame{
       position:relative;height:100%;
@@ -53,6 +50,7 @@
       color:var(--muted);font-size:12px;
       backdrop-filter: blur(10px);
       user-select:none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
     .btn{
       pointer-events:auto;
@@ -63,10 +61,8 @@
       font-size:12px;cursor:pointer;user-select:none;
     }
     .btn:hover{background:rgba(255,255,255,.07)}
-    .btn:active{transform:translateY(1px)}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
 
-    /* Map stage */
+    /* Map-like stage (이미지 없이 지도 느낌) */
     .map-stage{
       position:absolute; inset:0;
       display:grid; place-items:center;
@@ -76,11 +72,30 @@
       position:relative;
       width:min(92vw, 900px);
       aspect-ratio:1/1;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:18px;
+      overflow:hidden;
+      background:
+        radial-gradient(900px 600px at 50% 35%, rgba(255,255,255,.05), transparent 60%),
+        radial-gradient(700px 500px at 30% 70%, rgba(0,255,200,.05), transparent 60%),
+        rgba(0,0,0,.18);
     }
-    .map-img,.map-svg,.nodes-layer,.puzzle-layer,.final-overlay{
+    .gridlines{
+      position:absolute; inset:0; pointer-events:none; opacity:.35;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mix-blend-mode: overlay;
+    }
+    .fog{
+      position:absolute; inset:0; pointer-events:none;
+      background: radial-gradient(800px 500px at 50% 40%, rgba(0,0,0,0), rgba(0,0,0,.35));
+    }
+
+    .map-svg,.nodes-layer,.puzzle-layer,.final-overlay{
       position:absolute; inset:0; width:100%; height:100%;
     }
-    .map-img{z-index:1;object-fit:contain;opacity:.92;pointer-events:none;filter:contrast(1.05) brightness(1.02)}
     .map-svg{z-index:2;pointer-events:none;opacity:.55}
     .nodes-layer{z-index:3}
     .puzzle-layer{z-index:4;pointer-events:none}
@@ -89,13 +104,13 @@
     /* Nodes & landmarks */
     .node,.landmark{
       position:absolute; transform:translate(-50%,-50%);
-      border:1px solid var(--stroke);
+      border:1px solid rgba(255,255,255,.14);
       border-radius:14px;
       padding:9px 11px;
       background:rgba(8,16,24,.72);
       backdrop-filter: blur(10px);
       user-select:none;
-      max-width: 240px;
+      max-width: 260px;
       overflow:hidden;text-overflow:ellipsis;
       transition: transform .18s ease, opacity .25s ease, box-shadow .25s ease, border-color .25s ease;
     }
@@ -107,11 +122,11 @@
     }
     .landmark{cursor:default; opacity:.78}
     .landmark:hover{transform:translate(-50%,-50%)}
-    .node .tc{display:block;font-size:11px;color:var(--muted);letter-spacing:.14em}
+    .node .tc{display:block;font-size:11px;color:var(--muted);letter-spacing:.14em;font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
     .node .pn{display:block;font-size:12px;font-weight:900;margin-top:2px;white-space:nowrap}
     .landmark .pn{display:block;font-size:12px;font-weight:900;white-space:nowrap}
 
-    /* Puzzle pieces */
+    /* Puzzle pieces (puzzle.png) */
     .piece{
       position:absolute;
       background-image:url("puzzle.png");
@@ -126,15 +141,9 @@
       opacity:1;
       box-shadow:0 0 18px rgba(120,255,220,.08);
     }
-    .pulse{animation:pulse .45s ease}
-    @keyframes pulse{
-      0%{box-shadow:0 0 0 rgba(120,255,220,0)}
-      50%{box-shadow:0 0 26px rgba(120,255,220,.18)}
-      100%{box-shadow:0 0 0 rgba(120,255,220,0)}
-    }
     .puzzle-sharpen{filter: contrast(1.15) brightness(1.08)}
 
-    /* Intro overlay */
+    /* Intro */
     .intro{
       position:absolute; inset:0; z-index:80;
       display:grid; place-items:center;
@@ -166,17 +175,17 @@
       background:rgba(0,0,0,.28);
       box-shadow:0 0 0 1px rgba(255,255,255,.06) inset;
     }
-    .intro-title{font-weight:1000; letter-spacing:.18em; font-size:13px}
+    .intro-title{font-weight:1000; letter-spacing:.18em; font-size:13px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
     .intro-body{margin-top:10px; color:var(--muted); font-size:13px; line-height:1.65}
     .intro-actions{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
 
-    /* Help modal */
-    .modal-backdrop{
+    /* Help */
+    .help-backdrop{
       position:fixed; inset:0; z-index:90;
       background:rgba(0,0,0,.55);
       display:none; align-items:center; justify-content:center;
     }
-    .modal{
+    .help-modal{
       width:min(92vw, 560px);
       background:rgba(10,20,30,.88);
       border:1px solid rgba(255,255,255,.14);
@@ -184,11 +193,11 @@
       padding:16px;
       backdrop-filter: blur(12px);
     }
-    .modal h3{margin:0 0 8px;font-size:14px}
-    .modal p{margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.6}
-    .modal .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+    .help-modal h3{margin:0 0 8px;font-size:14px}
+    .help-modal p{margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.6}
+    .help-modal .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
 
-    /* Answer modal (Q/A는 나중 채움, 지금은 입력 UI만) */
+    /* Answer modal */
     .answer-backdrop{
       position:fixed; inset:0; z-index:95;
       background:rgba(0,0,0,.55);
@@ -236,9 +245,8 @@
       max-width:min(92vw, 520px);
     }
     .final-overlay.on .final-card{opacity:1; transform:translateY(0)}
-    .final-title{font-weight:1000; letter-spacing:.18em; font-size:14px}
+    .final-title{font-weight:1000; letter-spacing:.18em; font-size:14px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
     .final-sub{margin-top:8px; color:var(--muted); font-size:12px; line-height:1.5}
-
     .fade-out{opacity:0; transition:opacity .2s ease}
   </style>
 </head>
@@ -248,21 +256,21 @@
       <!-- HUD -->
       <div class="hud">
         <div class="left">
-          <div class="chip mono" id="roundBadge">ROUND: -</div>
-          <div class="chip mono" id="progressBadge">UNLOCKED: 0/16</div>
+          <div class="chip" id="roundBadge">ROUND: -</div>
+          <div class="chip" id="progressBadge">UNLOCKED: 0/16</div>
         </div>
         <div class="right">
-          <button class="btn" id="helpBtn" aria-label="도움말">ℹ</button>
-          <button class="btn" id="refreshBtn" aria-label="새로고침">↻</button>
+          <button class="btn" id="helpBtn">ℹ</button>
+          <button class="btn" id="refreshBtn">↻</button>
         </div>
       </div>
 
-      <!-- Map -->
+      <!-- Map-like stage (이미지 없음) -->
       <div class="map-stage">
         <div class="map-wrap" id="mapWrap">
-          <img class="map-img" src="map.png" alt="GRUA Campus Map" />
+          <div class="gridlines"></div>
 
-          <!-- 연결선(샘플). 필요하면 app.js에서 더 그리거나 여기 교체 -->
+          <!-- 연결선(샘플) -->
           <svg class="map-svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
             <path d="M200 520 C 360 380, 520 380, 680 520" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3" />
           </svg>
@@ -270,14 +278,16 @@
           <div class="nodes-layer" id="nodesLayer"></div>
           <div class="puzzle-layer" id="puzzleLayer"></div>
 
-          <!-- 완료 오버레이 -->
+          <!-- 완료 -->
           <div class="final-overlay" id="finalOverlay" aria-hidden="true">
             <div class="final-dim" id="finalDim"></div>
             <div class="final-card">
-              <div class="final-title mono" id="finalTitle">ACCESS GRANTED</div>
-              <div class="final-sub mono" id="finalSub">CLEARANCE LEVEL: 01</div>
+              <div class="final-title" id="finalTitle">ACCESS GRANTED</div>
+              <div class="final-sub" id="finalSub">CLEARANCE LEVEL: 01</div>
             </div>
           </div>
+
+          <div class="fog"></div>
         </div>
       </div>
 
@@ -285,32 +295,31 @@
       <div class="intro" id="intro">
         <div class="scanline"></div>
         <div class="intro-card">
-          <div class="intro-title mono">GRUA / ENTRY PROTOCOL</div>
+          <div class="intro-title">GRUA / ENTRY PROTOCOL</div>
           <div class="intro-body">
             당신이 세계의 진실을 알고 싶다면 <b>16개의 열쇠</b>를 찾아야 합니다.<br/>
             <b>한 사람은 한 개의 열쇠만</b> 가질 수 있습니다.<br/>
             로그인 없음 · 닉네임 없음 · 점유/선착 기록 없음<br/>
-            시스템은 <span class="mono">unlocked</span>만 관리합니다.
+            시스템은 <b>unlocked</b>만 관리합니다.
           </div>
           <div class="intro-actions">
             <button class="btn" id="enterBtn">ENTER</button>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
   <!-- Help -->
-  <div class="modal-backdrop" id="helpBackdrop">
-    <div class="modal">
+  <div class="help-backdrop" id="helpBackdrop">
+    <div class="help-modal">
       <h3>규칙</h3>
       <p>
-        노드 16개는 각자 하나의 퍼즐 조각에 대응합니다.<br/>
+        노드 16개는 각각 하나의 퍼즐 조각에 대응합니다.<br/>
         정답이 맞으면 해당 조각이 선명해집니다.<br/>
         16개가 모두 해금되면 퍼즐이 전면 공개되고, 기관 브리핑으로 전환됩니다.
       </p>
-      <p class="mono" style="opacity:.85">
+      <p style="opacity:.85">
         로그인 없음 · 닉네임 없음 · 점유/선착 기록 없음<br/>
         시스템은 unlocked만 관리합니다.
       </p>
@@ -340,11 +349,10 @@
     </div>
   </div>
 
-  <!-- Firebase compat (필수) -->
+  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-  <!-- App -->
-  <script src="./assets/app.js?v=20260218_design2" defer></script>
+  <script src="./assets/app.js?v=final_nomap_20260218" defer></script>
 </body>
 </html>
