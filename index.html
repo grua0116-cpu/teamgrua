@@ -7,12 +7,12 @@
   <style>
     :root{
       --bg:#050b10;
-      --panel:rgba(10,20,30,.55);
-      --stroke:rgba(255,255,255,.10);
       --text:rgba(235,245,255,.92);
       --muted:rgba(200,215,235,.68);
-      --glow:rgba(120,255,220,.22);
+      --stroke:rgba(255,255,255,.12);
       --chip:rgba(255,255,255,.06);
+      --panel:rgba(10,20,30,.82);
+      --glow:rgba(120,255,220,.18);
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -21,22 +21,16 @@
       color:var(--text);
       font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
       background:
-        radial-gradient(1200px 700px at 50% 20%, rgba(0,255,200,.08), transparent 55%),
-        radial-gradient(900px 600px at 20% 75%, rgba(140,170,255,.07), transparent 60%),
+        radial-gradient(1200px 700px at 50% 15%, rgba(0,255,200,.08), transparent 55%),
+        radial-gradient(900px 600px at 20% 75%, rgba(140,170,255,.06), transparent 60%),
         var(--bg);
       overflow:hidden;
     }
 
-    /* ===== Stage ===== */
-    .stage{
-      position:relative;
-      height:100%;
-      width:100%;
-      padding:14px;
-    }
+    /* Frame */
+    .stage{position:relative;height:100%;width:100%;padding:14px}
     .frame{
-      position:relative;
-      height:100%;
+      position:relative;height:100%;
       border:1px solid var(--stroke);
       border-radius:18px;
       background:rgba(255,255,255,.02);
@@ -44,140 +38,113 @@
       backdrop-filter: blur(10px);
     }
 
-    /* ===== Minimal HUD ===== */
+    /* HUD */
     .hud{
-      position:absolute;
-      inset:12px 12px auto 12px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      z-index:40;
-      pointer-events:none;
+      position:absolute;inset:12px 12px auto 12px;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      z-index:40; pointer-events:none;
     }
-    .hud .left, .hud .right{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+    .hud .left,.hud .right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .chip{
       pointer-events:auto;
-      padding:7px 11px;
-      border-radius:999px;
+      padding:7px 11px;border-radius:999px;
       border:1px solid var(--stroke);
       background:var(--chip);
-      color:var(--muted);
-      font-size:12px;
-      letter-spacing:.2px;
-      user-select:none;
+      color:var(--muted);font-size:12px;
       backdrop-filter: blur(10px);
+      user-select:none;
     }
     .btn{
       pointer-events:auto;
       border:1px solid var(--stroke);
       background:rgba(255,255,255,.04);
       color:var(--text);
-      padding:8px 10px;
-      border-radius:12px;
-      font-size:12px;
-      cursor:pointer;
-      user-select:none;
+      padding:8px 10px;border-radius:12px;
+      font-size:12px;cursor:pointer;user-select:none;
     }
     .btn:hover{background:rgba(255,255,255,.07)}
     .btn:active{transform:translateY(1px)}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
 
-    /* ===== Map wrap (square, centered) ===== */
+    /* Map stage */
     .map-stage{
-      position:absolute;
-      inset:0;
-      display:grid;
-      place-items:center;
-      padding:56px 14px 14px; /* top space for HUD */
+      position:absolute; inset:0;
+      display:grid; place-items:center;
+      padding:56px 14px 14px;
     }
     .map-wrap{
       position:relative;
-      width:min(92vw, 860px);
-      aspect-ratio:1 / 1;
+      width:min(92vw, 900px);
+      aspect-ratio:1/1;
     }
-
     .map-img,.map-svg,.nodes-layer,.puzzle-layer,.final-overlay{
       position:absolute; inset:0; width:100%; height:100%;
     }
-    .map-img{z-index:1; object-fit:contain; opacity:.92; pointer-events:none; filter:contrast(1.05) brightness(1.02)}
-    .map-svg{z-index:2; pointer-events:none; opacity:.55}
+    .map-img{z-index:1;object-fit:contain;opacity:.92;pointer-events:none;filter:contrast(1.05) brightness(1.02)}
+    .map-svg{z-index:2;pointer-events:none;opacity:.55}
     .nodes-layer{z-index:3}
-    .puzzle-layer{z-index:4; pointer-events:none}
-    .final-overlay{z-index:6; display:none; place-items:center; cursor:pointer}
+    .puzzle-layer{z-index:4;pointer-events:none}
+    .final-overlay{z-index:6;display:none;place-items:center}
 
-    /* ===== Nodes / Landmarks ===== */
+    /* Nodes & landmarks */
     .node,.landmark{
       position:absolute; transform:translate(-50%,-50%);
       border:1px solid var(--stroke);
       border-radius:14px;
-      padding:8px 10px;
-      font-size:12px;
+      padding:9px 11px;
       background:rgba(8,16,24,.72);
       backdrop-filter: blur(10px);
-      cursor:pointer;
       user-select:none;
-      transition: transform .18s ease, opacity .25s ease, filter .25s ease, box-shadow .25s ease;
-      pointer-events:auto;
-      max-width: 220px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      max-width: 240px;
+      overflow:hidden;text-overflow:ellipsis;
+      transition: transform .18s ease, opacity .25s ease, box-shadow .25s ease, border-color .25s ease;
     }
-    .node:hover,.landmark:hover{transform:translate(-50%,-50%) scale(1.035)}
+    .node{cursor:pointer}
+    .node:hover{transform:translate(-50%,-50%) scale(1.035)}
     .node[data-state="unlocked"]{
       border-color:rgba(180,255,210,.60);
       box-shadow:0 0 22px rgba(120,255,190,.16);
     }
+    .landmark{cursor:default; opacity:.78}
+    .landmark:hover{transform:translate(-50%,-50%)}
+    .node .tc{display:block;font-size:11px;color:var(--muted);letter-spacing:.14em}
+    .node .pn{display:block;font-size:12px;font-weight:900;margin-top:2px;white-space:nowrap}
+    .landmark .pn{display:block;font-size:12px;font-weight:900;white-space:nowrap}
 
-    .tag{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      color:var(--muted);
-    }
-    .tag b{color:var(--text); font-weight:900}
-    .dot{
-      width:6px; height:6px; border-radius:999px; background:rgba(255,255,255,.22);
-      box-shadow:0 0 0 1px rgba(255,255,255,.12) inset;
-    }
-
-    /* ===== Puzzle pieces ===== */
+    /* Puzzle pieces */
     .piece{
       position:absolute;
       background-image:url("puzzle.png");
       background-size:400% 400%;
       filter: blur(18px) brightness(.84);
-      transition: filter .45s ease, opacity .25s ease;
+      transition: filter .45s ease, opacity .25s ease, box-shadow .25s ease;
       border:1px solid rgba(255,255,255,.06);
       opacity:.92;
     }
-    .piece.unlocked{filter: blur(0px) brightness(1.04); opacity:1}
-    .puzzle-sharpen{filter: contrast(1.10) brightness(1.08)}
+    .piece.unlocked{
+      filter: blur(0px) brightness(1.04);
+      opacity:1;
+      box-shadow:0 0 18px rgba(120,255,220,.08);
+    }
+    .pulse{animation:pulse .45s ease}
+    @keyframes pulse{
+      0%{box-shadow:0 0 0 rgba(120,255,220,0)}
+      50%{box-shadow:0 0 26px rgba(120,255,220,.18)}
+      100%{box-shadow:0 0 0 rgba(120,255,220,0)}
+    }
+    .puzzle-sharpen{filter: contrast(1.15) brightness(1.08)}
 
-    /* ===== Intro (movie opening) ===== */
+    /* Intro overlay */
     .intro{
-      position:absolute; inset:0;
-      z-index:80;
+      position:absolute; inset:0; z-index:80;
       display:grid; place-items:center;
       background:
         radial-gradient(900px 550px at 50% 35%, rgba(255,255,255,.06), transparent 55%),
-        rgba(0,0,0,.68);
+        rgba(0,0,0,.70);
       backdrop-filter: blur(8px);
       transition: opacity .35s ease;
     }
     .intro.off{opacity:0; pointer-events:none}
-    .intro-card{
-      width:min(92vw, 760px);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:18px;
-      padding:18px;
-      background:rgba(0,0,0,.28);
-      box-shadow:0 0 0 1px rgba(255,255,255,.06) inset;
-    }
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
-    .intro-title{font-weight:1000; letter-spacing:.18em; font-size:13px}
-    .intro-body{margin-top:10px; color:var(--muted); font-size:13px; line-height:1.65}
-    .intro-actions{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
     .scanline{
       position:absolute; inset:0;
       background: repeating-linear-gradient(
@@ -191,13 +158,23 @@
       opacity:.35;
       pointer-events:none;
     }
+    .intro-card{
+      width:min(92vw, 760px);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:18px;
+      padding:18px;
+      background:rgba(0,0,0,.28);
+      box-shadow:0 0 0 1px rgba(255,255,255,.06) inset;
+    }
+    .intro-title{font-weight:1000; letter-spacing:.18em; font-size:13px}
+    .intro-body{margin-top:10px; color:var(--muted); font-size:13px; line-height:1.65}
+    .intro-actions{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
 
-    /* ===== Help modal ===== */
+    /* Help modal */
     .modal-backdrop{
-      position:fixed; inset:0;
+      position:fixed; inset:0; z-index:90;
       background:rgba(0,0,0,.55);
       display:none; align-items:center; justify-content:center;
-      z-index:90;
     }
     .modal{
       width:min(92vw, 560px);
@@ -207,12 +184,16 @@
       padding:16px;
       backdrop-filter: blur(12px);
     }
-    .modal h3{margin:0 0 8px; font-size:14px}
-    .modal p{margin:0 0 10px; color:var(--muted); font-size:13px; line-height:1.6}
-    .modal .actions{display:flex; justify-content:flex-end; gap:10px; margin-top:12px}
+    .modal h3{margin:0 0 8px;font-size:14px}
+    .modal p{margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.6}
+    .modal .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
 
-    /* ===== Answer modal ===== */
-    .answer-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:95; }
+    /* Answer modal (Q/A는 나중 채움, 지금은 입력 UI만) */
+    .answer-backdrop{
+      position:fixed; inset:0; z-index:95;
+      background:rgba(0,0,0,.55);
+      display:none; align-items:center; justify-content:center;
+    }
     .answer-modal{
       width:min(92vw, 560px);
       background:rgba(10,20,30,.90);
@@ -221,23 +202,30 @@
       padding:16px;
       backdrop-filter: blur(12px);
     }
-    .answer-modal .title{font-weight:1000; margin:0 0 6px}
-    .answer-modal .meta{color:var(--muted); font-size:12px; margin:0 0 10px}
-    .answer-modal label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px}
+    .answer-modal .title{font-weight:1000;margin:0 0 6px}
+    .answer-modal .meta{color:var(--muted);font-size:12px;margin:0 0 10px}
+    .answer-modal .q{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 8px}
+    .answer-modal label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
     .answer-modal input{
-      width:100%; padding:10px 11px; border-radius:12px;
+      width:100%;
+      padding:10px 11px;
+      border-radius:12px;
       border:1px solid rgba(255,255,255,.14);
       background:rgba(255,255,255,.04);
       color:var(--text);
     }
 
-    /* ===== Final overlay ===== */
+    /* Final overlay */
     .final-overlay.on{display:grid}
-    .final-dim{position:absolute; inset:0; background:rgba(0,0,0,.20); opacity:0; transition:opacity .25s ease}
+    .final-dim{
+      position:absolute; inset:0;
+      background:rgba(0,0,0,.20);
+      opacity:0; transition:opacity .25s ease;
+    }
     .final-dim.on{opacity:1}
     .final-card{
       text-align:center;
-      padding:18px 18px;
+      padding:18px;
       border-radius:18px;
       border:1px solid rgba(255,255,255,.16);
       background:rgba(0,0,0,.32);
@@ -250,6 +238,7 @@
     .final-overlay.on .final-card{opacity:1; transform:translateY(0)}
     .final-title{font-weight:1000; letter-spacing:.18em; font-size:14px}
     .final-sub{margin-top:8px; color:var(--muted); font-size:12px; line-height:1.5}
+
     .fade-out{opacity:0; transition:opacity .2s ease}
   </style>
 </head>
@@ -264,7 +253,7 @@
         </div>
         <div class="right">
           <button class="btn" id="helpBtn" aria-label="도움말">ℹ</button>
-          <button class="btn" id="refreshBtn">↻</button>
+          <button class="btn" id="refreshBtn" aria-label="새로고침">↻</button>
         </div>
       </div>
 
@@ -273,7 +262,7 @@
         <div class="map-wrap" id="mapWrap">
           <img class="map-img" src="map.png" alt="GRUA Campus Map" />
 
-          <!-- 연결선 (예시, app.js에서 필요시 더 그려도 됨) -->
+          <!-- 연결선(샘플). 필요하면 app.js에서 더 그리거나 여기 교체 -->
           <svg class="map-svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
             <path d="M200 520 C 360 380, 520 380, 680 520" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3" />
           </svg>
@@ -281,14 +270,12 @@
           <div class="nodes-layer" id="nodesLayer"></div>
           <div class="puzzle-layer" id="puzzleLayer"></div>
 
-          <!-- 완료 오버레이 (클릭 → world.html) -->
+          <!-- 완료 오버레이 -->
           <div class="final-overlay" id="finalOverlay" aria-hidden="true">
             <div class="final-dim" id="finalDim"></div>
             <div class="final-card">
               <div class="final-title mono" id="finalTitle">ACCESS GRANTED</div>
-              <div class="final-sub" id="finalSub">
-                퍼즐이 전면 공개되었습니다.<br/>클릭하여 기관 브리핑으로 이동
-              </div>
+              <div class="final-sub mono" id="finalSub">CLEARANCE LEVEL: 01</div>
             </div>
           </div>
         </div>
@@ -303,7 +290,7 @@
             당신이 세계의 진실을 알고 싶다면 <b>16개의 열쇠</b>를 찾아야 합니다.<br/>
             <b>한 사람은 한 개의 열쇠만</b> 가질 수 있습니다.<br/>
             로그인 없음 · 닉네임 없음 · 점유/선착 기록 없음<br/>
-            <span class="mono">unlocked</span>만이 남습니다.
+            시스템은 <span class="mono">unlocked</span>만 관리합니다.
           </div>
           <div class="intro-actions">
             <button class="btn" id="enterBtn">ENTER</button>
@@ -314,13 +301,14 @@
     </div>
   </div>
 
-  <!-- Help modal -->
+  <!-- Help -->
   <div class="modal-backdrop" id="helpBackdrop">
     <div class="modal">
       <h3>규칙</h3>
       <p>
-        16개 노드의 정답을 맞히면 해당 조각이 선명해집니다.<br/>
-        모든 조각이 열리면 퍼즐이 전면 공개되고, 클릭하면 기관 브리핑으로 이동합니다.
+        노드 16개는 각자 하나의 퍼즐 조각에 대응합니다.<br/>
+        정답이 맞으면 해당 조각이 선명해집니다.<br/>
+        16개가 모두 해금되면 퍼즐이 전면 공개되고, 기관 브리핑으로 전환됩니다.
       </p>
       <p class="mono" style="opacity:.85">
         로그인 없음 · 닉네임 없음 · 점유/선착 기록 없음<br/>
@@ -337,27 +325,26 @@
     <div class="answer-modal">
       <p class="title" id="modalTitle">NODE</p>
       <p class="meta" id="modalMeta"></p>
-
-      <div id="modalQuestion" style="color:var(--muted); font-size:13px; line-height:1.6;"></div>
+      <p class="q" id="modalQuestion"></p>
 
       <label>정답</label>
       <input id="answerInput" placeholder="정답 입력" maxlength="60" />
 
-      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px;">
         <button class="btn" id="closeBtn">닫기</button>
         <button class="btn" id="submitBtn">제출</button>
       </div>
 
-      <div id="modalHint" style="margin-top:10px; color:var(--muted); font-size:12px; line-height:1.55;"></div>
-      <div id="modalExplanation" style="margin-top:8px; color:var(--muted); font-size:12px; line-height:1.55;"></div>
+      <div id="modalHint" style="margin-top:10px;color:var(--muted);font-size:12px;line-height:1.55;"></div>
+      <div id="modalExplanation" style="margin-top:8px;color:var(--muted);font-size:12px;line-height:1.55;"></div>
     </div>
   </div>
 
-  <!-- Firebase compat -->
+  <!-- Firebase compat (필수) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <!-- App -->
-  <script src="./assets/app.js?v=design2" defer></script>
+  <script src="./assets/app.js?v=20260218_design2" defer></script>
 </body>
 </html>
