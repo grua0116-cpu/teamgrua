@@ -1,12 +1,6 @@
-console.log("🔥 GRUA app.js running (design2 / unlocked-only)");
+console.log("🔥 GRUA FINAL BUILD running");
 
-window.addEventListener("error", (e)=>{
-  alert("❌ JS 에러: " + (e?.message || e));
-});
-window.addEventListener("unhandledrejection", (e)=>{
-  alert("❌ Promise 에러: " + (e?.reason?.message || e?.reason || e));
-});
-
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
   authDomain: "teamgrua-f465c.firebaseapp.com",
@@ -16,57 +10,59 @@ const firebaseConfig = {
   appId: "1:1019914743201:web:171550946aafb90ab96fe0"
 };
 
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 const SEASON = "season1";
+const ROUND = "R0001";
 
-function ensureFirebase(){
-  if (!window.firebase) throw new Error("firebase SDK not loaded (compat scripts missing)");
-  if (!firebase.apps || firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
-  return firebase.firestore();
+function normalize(s){
+  return String(s).trim().toLowerCase().replace(/\s+/g," ");
 }
 
-function roundId(n){ return `R${String(n).padStart(4,"0")}`; }
-function normalize(s){ return String(s ?? "").trim().toLowerCase().replace(/\s+/g," "); }
-function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
-
-// Firestore refs
-function metaRef(db){
-  return db.collection("game").doc(SEASON).collection("meta").doc("meta");
-}
-function slotRef(db, roundIdStr, slotId){
-  return db.collection("game").doc(SEASON).collection("rounds").doc(roundIdStr)
-           .collection("slots").doc(slotId);
+function slotRef(id){
+  return db.collection("game").doc(SEASON)
+    .collection("rounds").doc(ROUND)
+    .collection("slots").doc(id);
 }
 
-// Nodes: 16 타입 + 6 랜드마크 (좌표는 여기서만 관리)
+// ---------- 타입 정의 ----------
+const TYPE_MAP = {
+  "01": ["IFAP", "기록 보관 구역"],
+  "02": ["IFAB", "관측 구역"],
+  "03": ["IFLP", "창작 구역"],
+  "04": ["IFLB", "전시 구역"],
+  "05": ["IEAP", "분석실"],
+  "06": ["IEAB", "통제실"],
+  "07": ["IELP", "전략 회의실"],
+  "08": ["IELB", "사건 기록 구역"],
+  "09": ["OFAP", "중앙 광장"],
+  "10": ["OFAB", "접경 구역"],
+  "11": ["OFLP", "통신 구역"],
+  "12": ["OFLB", "시간 기록 구역"],
+  "13": ["OEAP", "증언실"],
+  "14": ["OEAB", "봉인 서고"],
+  "15": ["OELP", "전환 통로"],
+  "16": ["OELB", "사후 접근 가능 구역"]
+};
+
+// ---------- 노드 배치 ----------
 function makeNodes(){
   const nodes = [];
-
-  // 너가 필요하면 좌표만 여기서 수정(%) — map.png 기준
   const ring = [
-    [50,18],[66,22],[78,34],[82,50],
-    [78,66],[66,78],[50,82],[34,78],
-    [22,66],[18,50],[22,34],[34,22],
-    [50,30],[70,50],[50,70],[30,50]
+    [50,18],[66,22],[78,34],[82,50],[78,66],[66,78],[50,82],[34,78],
+    [22,66],[18,50],[22,34],[34,22],[50,30],[70,50],[50,70],[30,50]
   ];
-
   for (let i=1;i<=16;i++){
-    const slotId = String(i).padStart(2,"0");
+    const id = String(i).padStart(2,"0");
     const [x,y] = ring[i-1];
-    nodes.push({ kind:"node", slotId, x, y });
+    const [code,name] = TYPE_MAP[id];
+    nodes.push({ slotId:id, label:`${code}\n${name}`, x,y });
   }
-
-  // 랜드마크 6개 (타입 대체 아님)
-  nodes.push({ kind:"landmark", label:"광장", x:50, y:54 });
-  nodes.push({ kind:"landmark", label:"분수", x:56, y:46 });
-  nodes.push({ kind:"landmark", label:"기숙사", x:18, y:78 });
-  nodes.push({ kind:"landmark", label:"학생회관", x:82, y:22 });
-  nodes.push({ kind:"landmark", label:"식당", x:80, y:78 });
-  nodes.push({ kind:"landmark", label:"도서관", x:20, y:22 });
-
   return nodes;
 }
 
-// Puzzle pieces 4x4
+// ---------- 퍼즐 ----------
 function buildPieces(layer){
   layer.innerHTML = "";
   const size = 25;
@@ -81,240 +77,103 @@ function buildPieces(layer){
       el.style.top = `${r*size}%`;
       el.style.width = `${size}%`;
       el.style.height = `${size}%`;
-      el.style.backgroundPosition = `${c * (100/3)}% ${r * (100/3)}%`;
+      el.style.backgroundPosition = `${c*(100/3)}% ${r*(100/3)}%`;
       layer.appendChild(el);
     }
   }
 }
-function updatePieces(layer, slotsMap){
+
+function updatePieces(layer, slots){
   layer.querySelectorAll(".piece").forEach(p=>{
     const id = p.dataset.slotId;
-    const s = slotsMap.get(id);
-    if (s?.unlocked) p.classList.add("unlocked");
+    if (slots.get(id)?.unlocked) p.classList.add("unlocked");
     else p.classList.remove("unlocked");
   });
 }
-function pulsePiece(layer, slotId){
-  const p = layer.querySelector(`.piece[data-slot-id="${slotId}"]`);
-  if (!p) return;
-  p.classList.remove("pulse");
-  // reflow
-  void p.offsetWidth;
-  p.classList.add("pulse");
-}
 
-// Load 16 slots
-async function fetchSlots(db, roundIdStr){
-  const out = new Map();
-  for(let i=1;i<=16;i++){
+// ---------- 슬롯 불러오기 ----------
+async function fetchSlots(){
+  const map = new Map();
+  for (let i=1;i<=16;i++){
     const id = String(i).padStart(2,"0");
-    const snap = await slotRef(db, roundIdStr, id).get();
-    if (snap.exists) out.set(id, snap.data());
-    else out.set(id, { unlocked:false, typeCode:"", positionName:"" });
+    const snap = await slotRef(id).get();
+    map.set(id, snap.exists ? snap.data() : { unlocked:false });
   }
-  return out;
+  return map;
 }
 
-// unlocked-only submit
-async function submitAnswer(db, roundIdStr, slotId, answerInput){
-  const ref = slotRef(db, roundIdStr, slotId);
-  await db.runTransaction(async (tx)=>{
-    const snap = await tx.get(ref);
-    if (!snap.exists) throw new Error("slot missing");
-    const data = snap.data();
-
-    if (data.unlocked) return;
-
-    const correct = normalize(answerInput) === normalize(data.answer || "");
-    if (!correct) throw new Error("wrong");
-
-    tx.update(ref, {
-      unlocked: true,
-      unlockedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  });
-}
-
-// Final sequence (영화 오프닝 강) + 자동 이동
-async function playFinalSequence({ mapWrap, nodesLayer, puzzleLayer, finalOverlay, finalDim, finalTitle, finalSub }){
-  nodesLayer.style.pointerEvents = "none";
-
-  // T+200ms: 노드/연결선/랜드마크 페이드
-  await sleep(200);
-  nodesLayer.style.opacity = "0";
-  const svg = mapWrap.querySelector(".map-svg");
-  if (svg) svg.style.opacity = "0";
-
-  // T+700ms: 퍼즐 sharpen + 약한 딤
-  await sleep(500);
-  puzzleLayer.classList.add("puzzle-sharpen");
-
-  // T+1200ms: ACCESS GRANTED 카드
-  await sleep(500);
-  finalTitle.textContent = "ACCESS GRANTED";
-  finalSub.textContent = "CLEARANCE LEVEL: 01";
-  finalOverlay.classList.add("on");
-  finalDim.classList.add("on");
-
-  // HOLD 800ms
-  await sleep(800);
-
-  // Fade out + 이동
-  mapWrap.classList.add("fade-out");
-  await sleep(200);
-  location.href = "world.html";
-}
-
+// ---------- 메인 ----------
 document.addEventListener("DOMContentLoaded", async ()=>{
-  const db = ensureFirebase();
 
-  // UI
-  const roundBadge = document.getElementById("roundBadge");
-  const progressBadge = document.getElementById("progressBadge");
   const nodesLayer = document.getElementById("nodesLayer");
   const puzzleLayer = document.getElementById("puzzleLayer");
-  const mapWrap = document.getElementById("mapWrap");
-
-  const intro = document.getElementById("intro");
-  const enterBtn = document.getElementById("enterBtn");
-
-  const helpBtn = document.getElementById("helpBtn");
-  const helpBackdrop = document.getElementById("helpBackdrop");
-  const helpCloseBtn = document.getElementById("helpCloseBtn");
-
-  const refreshBtn = document.getElementById("refreshBtn");
-
-  const answerBackdrop = document.getElementById("answerBackdrop");
+  const progressBadge = document.getElementById("progressBadge");
+  const modalBackdrop = document.getElementById("modalBackdrop");
   const modalTitle = document.getElementById("modalTitle");
-  const modalMeta = document.getElementById("modalMeta");
-  const modalQuestion = document.getElementById("modalQuestion");
   const modalHint = document.getElementById("modalHint");
-  const modalExplanation = document.getElementById("modalExplanation");
   const answerInput = document.getElementById("answerInput");
   const submitBtn = document.getElementById("submitBtn");
   const closeBtn = document.getElementById("closeBtn");
 
-  const finalOverlay = document.getElementById("finalOverlay");
-  const finalDim = document.getElementById("finalDim");
-  const finalTitle = document.getElementById("finalTitle");
-  const finalSub = document.getElementById("finalSub");
-
-  // bindings
-  enterBtn.onclick = ()=> intro.classList.add("off");
-  refreshBtn.onclick = ()=> location.reload();
-
-  helpBtn.onclick = ()=> helpBackdrop.style.display = "flex";
-  helpCloseBtn.onclick = ()=> helpBackdrop.style.display = "none";
-  helpBackdrop.addEventListener("click", (e)=>{ if (e.target === helpBackdrop) helpBackdrop.style.display = "none"; });
-
-  closeBtn.onclick = ()=> answerBackdrop.style.display = "none";
-  answerBackdrop.addEventListener("click", (e)=>{ if (e.target === answerBackdrop) answerBackdrop.style.display = "none"; });
-
-  // stage
   buildPieces(puzzleLayer);
   const NODES = makeNodes();
+  let slots = await fetchSlots();
 
-  // active round
-  let activeRoundStr = "R0001";
-  try{
-    const metaSnap = await metaRef(db).get();
-    const data = metaSnap.exists ? metaSnap.data() : null;
-    const ar = data?.activeRound || 1;
-    activeRoundStr = roundId(ar);
-  }catch(e){
-    console.warn("meta read failed, fallback R0001", e);
-  }
-  roundBadge.textContent = `ROUND: ${activeRoundStr}`;
-
-  // data
-  const slots = await fetchSlots(db, activeRoundStr);
-
-  // modal state
-  let currentSlotId = null;
-  let isFinalPlaying = false;
-
-  function openModal(slotId){
-    currentSlotId = slotId;
-    const slot = slots.get(slotId) || {};
-
-    modalTitle.textContent = `NODE ${slotId}`;
-    modalMeta.textContent = `${slot.typeCode || ""}${slot.positionName ? ` · ${slot.positionName}` : ""}`;
-    modalQuestion.textContent = slot.question ? `Q. ${slot.question}` : "";
-    modalHint.textContent = slot.hint ? `HINT. ${slot.hint}` : "";
-    modalExplanation.textContent = ""; // 정답 후 출력은 나중에 원할 때 추가
-
-    answerInput.value = "";
-    submitBtn.disabled = !!slot.unlocked;
-
-    answerBackdrop.style.display = "flex";
-  }
-
-  async function handleSubmit(){
-    const ans = (answerInput.value || "").trim();
-    if (!ans){ alert("정답을 입력해줘."); return; }
-    if (!currentSlotId) return;
-
-    try{
-      await submitAnswer(db, activeRoundStr, currentSlotId, ans);
-
-      // refresh single slot
-      const snap = await slotRef(db, activeRoundStr, currentSlotId).get();
-      if (snap.exists) slots.set(currentSlotId, snap.data());
-
-      // pulse that piece
-      pulsePiece(puzzleLayer, currentSlotId);
-
-      // rerender
-      renderAll();
-
-      // close modal
-      answerBackdrop.style.display = "none";
-
-      const unlockedCount = [...slots.values()].filter(s=>s.unlocked).length;
-      if (unlockedCount === 16 && !isFinalPlaying){
-        isFinalPlaying = true;
-        await playFinalSequence({ mapWrap, nodesLayer, puzzleLayer, finalOverlay, finalDim, finalTitle, finalSub });
-      }
-    }catch(e){
-      console.error(e);
-      alert("오답이거나 제출 실패. 힌트를 다시 확인해줘.");
-    }
-  }
-
-  submitBtn.onclick = handleSubmit;
-
-  function renderAll(){
+  function render(){
     nodesLayer.innerHTML = "";
-
-    const unlockedCount = [...slots.values()].filter(s=>s.unlocked).length;
-    progressBadge.textContent = `UNLOCKED: ${unlockedCount}/16`;
+    let unlockedCount = 0;
 
     for (const n of NODES){
       const el = document.createElement("div");
+      el.className = "node";
       el.style.left = `${n.x}%`;
       el.style.top = `${n.y}%`;
+      el.style.whiteSpace = "pre-line";
+      el.textContent = n.label;
 
-      if (n.kind === "landmark"){
-        el.className = "landmark";
-        el.innerHTML = `<span class="pn">${n.label}</span>`;
-        nodesLayer.appendChild(el);
-        continue;
+      const slot = slots.get(n.slotId);
+      if (slot?.unlocked){
+        el.dataset.state = "unlocked";
+        unlockedCount++;
       }
 
-      const slot = slots.get(n.slotId) || {};
-      const tc = slot.typeCode || n.slotId;
-      const pn = slot.positionName || "";
+      el.onclick = ()=>{
+        modalTitle.textContent = n.label;
+        modalHint.textContent = slot?.hint ? `HINT: ${slot.hint}` : "";
+        answerInput.value = "";
+        modalBackdrop.style.display = "flex";
 
-      el.className = "node";
-      el.dataset.state = slot.unlocked ? "unlocked" : "idle";
-      el.innerHTML = `<span class="tc mono">${tc}</span><span class="pn">${pn || "구역"}</span>`;
-      el.onclick = ()=> openModal(n.slotId);
+        submitBtn.onclick = async ()=>{
+          const typed = normalize(answerInput.value);
+          if (!slot?.answer){
+            alert("아직 정답이 설정되지 않았습니다.");
+            return;
+          }
+          if (typed !== normalize(slot.answer)){
+            alert("오답입니다.");
+            return;
+          }
+          await slotRef(n.slotId).update({
+            unlocked:true,
+            unlockedAt:firebase.firestore.FieldValue.serverTimestamp()
+          });
+          slots = await fetchSlots();
+          render();
+          modalBackdrop.style.display = "none";
+
+          if ([...slots.values()].filter(s=>s.unlocked).length === 16){
+            location.href = "world.html";
+          }
+        };
+      };
 
       nodesLayer.appendChild(el);
     }
 
+    progressBadge.textContent = `UNLOCKED: ${unlockedCount}/16`;
     updatePieces(puzzleLayer, slots);
   }
 
-  renderAll();
+  closeBtn.onclick = ()=> modalBackdrop.style.display = "none";
+  render();
 });
