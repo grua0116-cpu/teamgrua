@@ -16,19 +16,19 @@ const firebaseConfig = {
   appId: "1:1019914743201:web:171550946aafb90ab96fe0"
 };
 
+const SEASON = "season1";
+
 function ensureFirebase(){
   if (!window.firebase) throw new Error("firebase SDK not loaded (compat scripts missing)");
   if (!firebase.apps || firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
   return firebase.firestore();
 }
 
-// ===== Helpers =====
-const SEASON = "season1";
 function roundId(n){ return `R${String(n).padStart(4,"0")}`; }
-function normalize(s){ return String(s).trim().toLowerCase().replace(/\s+/g," "); }
+function normalize(s){ return String(s ?? "").trim().toLowerCase().replace(/\s+/g," "); }
 function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
 
-// ===== Firestore paths =====
+// Firestore refs
 function metaRef(db){
   return db.collection("game").doc(SEASON).collection("meta").doc("meta");
 }
@@ -37,36 +37,22 @@ function slotRef(db, roundIdStr, slotId){
            .collection("slots").doc(slotId);
 }
 
-// ===== Node spec (16 타입 + 6 랜드마크) =====
-// slotId(01~16)는 퍼즐 조각 매핑용으로 유지.
-// label은 "타입코드 · 장소"로 표시.
-function makeNodesV2(){
-  // 임시 좌표(기존 링 유지) + v2 라벨/아이콘 형태
-  const ring = [
-    [50,18],[66,22],[78,34],[82,50],[78,66],[66,78],[50,82],[34,78],
-    [22,66],[18,50],[22,34],[34,22],[50,30],[70,50],[50,70],[30,50]
-  ];
-
-  // ⚠️ 여기 typeCode/positionName은 Firestore 값이 우선. (없을 때만 fallback)
-  const fallbackType = [
-    "IFAP","IFAL","IFBP","IFBL",
-    "OFAP","OFAL","OFBP","OFBL",
-    "IELP","IELB","IECP","IECB",
-    "OELP","OELB","OECP","OECB"
-  ];
-
+// Nodes: 16 타입 + 6 랜드마크 (좌표는 여기서만 관리)
+function makeNodes(){
   const nodes = [];
+
+  // 너가 필요하면 좌표만 여기서 수정(%) — map.png 기준
+  const ring = [
+    [50,18],[66,22],[78,34],[82,50],
+    [78,66],[66,78],[50,82],[34,78],
+    [22,66],[18,50],[22,34],[34,22],
+    [50,30],[70,50],[50,70],[30,50]
+  ];
+
   for (let i=1;i<=16;i++){
     const slotId = String(i).padStart(2,"0");
     const [x,y] = ring[i-1];
-    nodes.push({
-      kind:"node",
-      slotId,
-      x, y,
-      fallbackTypeCode: fallbackType[i-1] || ("T"+slotId),
-      fallbackPlace: `구역 ${slotId}`,
-      icon: "⌬"
-    });
+    nodes.push({ kind:"node", slotId, x, y });
   }
 
   // 랜드마크 6개 (타입 대체 아님)
@@ -80,7 +66,7 @@ function makeNodesV2(){
   return nodes;
 }
 
-// ===== Puzzle pieces (4x4) =====
+// Puzzle pieces 4x4
 function buildPieces(layer){
   layer.innerHTML = "";
   const size = 25;
@@ -108,43 +94,86 @@ function updatePieces(layer, slotsMap){
     else p.classList.remove("unlocked");
   });
 }
+function pulsePiece(layer, slotId){
+  const p = layer.querySelector(`.piece[data-slot-id="${slotId}"]`);
+  if (!p) return;
+  p.classList.remove("pulse");
+  // reflow
+  void p.offsetWidth;
+  p.classList.add("pulse");
+}
 
-// ===== 운영자 초기화 도구 (UI 노출 없음 / 콘솔에서 __initSlots()) =====
-window.__initSlots = async function(){
-  const db = ensureFirebase();
-  try{
-    const roundIdStr = "R0001";
-    for(let i=1;i<=16;i++){
-      const id = String(i).padStart(2,"0");
-      await slotRef(db, roundIdStr, id).set({
-        unlocked:false,
-        unlockedAt:null,
-        // 아래는 Firestore에서 운영자가 채우는 편집 가능 필드
-        typeCode:"",
-        positionName:"",
-        difficulty:"",
-        orderIndex:i,
-        question:"",
-        hint:"",
-        answer:"",
-        explanation:""
-      }, { merge:true });
-    }
-    alert("🔥 16개 슬롯 초기화 완료 (unlocked=false)");
-  }catch(e){
-    console.error(e);
-    alert("❌ 초기화 실패: " + (e?.message || e));
+// Load 16 slots
+async function fetchSlots(db, roundIdStr){
+  const out = new Map();
+  for(let i=1;i<=16;i++){
+    const id = String(i).padStart(2,"0");
+    const snap = await slotRef(db, roundIdStr, id).get();
+    if (snap.exists) out.set(id, snap.data());
+    else out.set(id, { unlocked:false, typeCode:"", positionName:"" });
   }
-};
+  return out;
+}
 
-// ===== Main =====
+// unlocked-only submit
+async function submitAnswer(db, roundIdStr, slotId, answerInput){
+  const ref = slotRef(db, roundIdStr, slotId);
+  await db.runTransaction(async (tx)=>{
+    const snap = await tx.get(ref);
+    if (!snap.exists) throw new Error("slot missing");
+    const data = snap.data();
+
+    if (data.unlocked) return;
+
+    const correct = normalize(answerInput) === normalize(data.answer || "");
+    if (!correct) throw new Error("wrong");
+
+    tx.update(ref, {
+      unlocked: true,
+      unlockedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  });
+}
+
+// Final sequence (영화 오프닝 강) + 자동 이동
+async function playFinalSequence({ mapWrap, nodesLayer, puzzleLayer, finalOverlay, finalDim, finalTitle, finalSub }){
+  nodesLayer.style.pointerEvents = "none";
+
+  // T+200ms: 노드/연결선/랜드마크 페이드
+  await sleep(200);
+  nodesLayer.style.opacity = "0";
+  const svg = mapWrap.querySelector(".map-svg");
+  if (svg) svg.style.opacity = "0";
+
+  // T+700ms: 퍼즐 sharpen + 약한 딤
+  await sleep(500);
+  puzzleLayer.classList.add("puzzle-sharpen");
+
+  // T+1200ms: ACCESS GRANTED 카드
+  await sleep(500);
+  finalTitle.textContent = "ACCESS GRANTED";
+  finalSub.textContent = "CLEARANCE LEVEL: 01";
+  finalOverlay.classList.add("on");
+  finalDim.classList.add("on");
+
+  // HOLD 800ms
+  await sleep(800);
+
+  // Fade out + 이동
+  mapWrap.classList.add("fade-out");
+  await sleep(200);
+  location.href = "world.html";
+}
+
 document.addEventListener("DOMContentLoaded", async ()=>{
   const db = ensureFirebase();
 
-  const nodesLayer = document.getElementById("nodesLayer");
-  const puzzleLayer = document.getElementById("puzzleLayer");
+  // UI
   const roundBadge = document.getElementById("roundBadge");
   const progressBadge = document.getElementById("progressBadge");
+  const nodesLayer = document.getElementById("nodesLayer");
+  const puzzleLayer = document.getElementById("puzzleLayer");
+  const mapWrap = document.getElementById("mapWrap");
 
   const intro = document.getElementById("intro");
   const enterBtn = document.getElementById("enterBtn");
@@ -169,9 +198,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   const finalDim = document.getElementById("finalDim");
   const finalTitle = document.getElementById("finalTitle");
   const finalSub = document.getElementById("finalSub");
-  const mapWrap = document.getElementById("mapWrap");
 
-  // UI bindings
+  // bindings
   enterBtn.onclick = ()=> intro.classList.add("off");
   refreshBtn.onclick = ()=> location.reload();
 
@@ -179,25 +207,12 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   helpCloseBtn.onclick = ()=> helpBackdrop.style.display = "none";
   helpBackdrop.addEventListener("click", (e)=>{ if (e.target === helpBackdrop) helpBackdrop.style.display = "none"; });
 
-  function openAnswerModal(slotId, slot){
-    modalTitle.textContent = `NODE ${slotId} · ${slot.typeCode || ""}`;
-    modalMeta.textContent = `${slot.positionName || ""}${slot.difficulty ? ` · 난이도: ${slot.difficulty}` : ""}`;
+  closeBtn.onclick = ()=> answerBackdrop.style.display = "none";
+  answerBackdrop.addEventListener("click", (e)=>{ if (e.target === answerBackdrop) answerBackdrop.style.display = "none"; });
 
-    // Firestore 편집 가능 필드 표시
-    modalQuestion.textContent = slot.question ? `Q. ${slot.question}` : "";
-    modalHint.textContent = slot.hint ? `HINT. ${slot.hint}` : "";
-    modalExplanation.textContent = ""; // 정답 후에만 보여주려면 여기 유지
-
-    answerInput.value = "";
-    submitBtn.disabled = !!slot.unlocked;
-
-    answerBackdrop.style.display = "flex";
-  }
-  function closeAnswerModal(){ answerBackdrop.style.display = "none"; }
-  closeBtn.onclick = closeAnswerModal;
-  answerBackdrop.addEventListener("click", (e)=>{ if (e.target === answerBackdrop) closeAnswerModal(); });
-
+  // stage
   buildPieces(puzzleLayer);
+  const NODES = makeNodes();
 
   // active round
   let activeRoundStr = "R0001";
@@ -211,17 +226,63 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   }
   roundBadge.textContent = `ROUND: ${activeRoundStr}`;
 
-  // load slots
+  // data
   const slots = await fetchSlots(db, activeRoundStr);
 
-  // nodes data
-  const NODES = makeNodesV2();
-
-  // state
+  // modal state
   let currentSlotId = null;
-  let isFinalReady = false;
+  let isFinalPlaying = false;
 
-  // render
+  function openModal(slotId){
+    currentSlotId = slotId;
+    const slot = slots.get(slotId) || {};
+
+    modalTitle.textContent = `NODE ${slotId}`;
+    modalMeta.textContent = `${slot.typeCode || ""}${slot.positionName ? ` · ${slot.positionName}` : ""}`;
+    modalQuestion.textContent = slot.question ? `Q. ${slot.question}` : "";
+    modalHint.textContent = slot.hint ? `HINT. ${slot.hint}` : "";
+    modalExplanation.textContent = ""; // 정답 후 출력은 나중에 원할 때 추가
+
+    answerInput.value = "";
+    submitBtn.disabled = !!slot.unlocked;
+
+    answerBackdrop.style.display = "flex";
+  }
+
+  async function handleSubmit(){
+    const ans = (answerInput.value || "").trim();
+    if (!ans){ alert("정답을 입력해줘."); return; }
+    if (!currentSlotId) return;
+
+    try{
+      await submitAnswer(db, activeRoundStr, currentSlotId, ans);
+
+      // refresh single slot
+      const snap = await slotRef(db, activeRoundStr, currentSlotId).get();
+      if (snap.exists) slots.set(currentSlotId, snap.data());
+
+      // pulse that piece
+      pulsePiece(puzzleLayer, currentSlotId);
+
+      // rerender
+      renderAll();
+
+      // close modal
+      answerBackdrop.style.display = "none";
+
+      const unlockedCount = [...slots.values()].filter(s=>s.unlocked).length;
+      if (unlockedCount === 16 && !isFinalPlaying){
+        isFinalPlaying = true;
+        await playFinalSequence({ mapWrap, nodesLayer, puzzleLayer, finalOverlay, finalDim, finalTitle, finalSub });
+      }
+    }catch(e){
+      console.error(e);
+      alert("오답이거나 제출 실패. 힌트를 다시 확인해줘.");
+    }
+  }
+
+  submitBtn.onclick = handleSubmit;
+
   function renderAll(){
     nodesLayer.innerHTML = "";
 
@@ -230,26 +291,25 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
     for (const n of NODES){
       const el = document.createElement("div");
-      el.className = (n.kind === "landmark") ? "landmark" : "node";
       el.style.left = `${n.x}%`;
       el.style.top = `${n.y}%`;
 
       if (n.kind === "landmark"){
-        el.innerHTML = `<span class="tag"><span class="dot"></span><b>${n.label}</b></span>`;
+        el.className = "landmark";
+        el.innerHTML = `<span class="pn">${n.label}</span>`;
         nodesLayer.appendChild(el);
         continue;
       }
 
       const slot = slots.get(n.slotId) || {};
-      const typeCode = slot.typeCode || n.fallbackTypeCode;
-      const place = slot.positionName || n.fallbackPlace;
+      const tc = slot.typeCode || n.slotId;
+      const pn = slot.positionName || "";
 
+      el.className = "node";
       el.dataset.state = slot.unlocked ? "unlocked" : "idle";
-      el.innerHTML = `<span class="tag"><span class="dot"></span><b>${typeCode}</b> · ${place}</span>`;
-      el.onclick = ()=>{
-        currentSlotId = n.slotId;
-        openAnswerModal(n.slotId, slot);
-      };
+      el.innerHTML = `<span class="tc mono">${tc}</span><span class="pn">${pn || "구역"}</span>`;
+      el.onclick = ()=> openModal(n.slotId);
+
       nodesLayer.appendChild(el);
     }
 
@@ -257,89 +317,4 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   }
 
   renderAll();
-
-  // submit (unlocked-only)
-  submitBtn.onclick = async ()=>{
-    const ans = (answerInput.value || "").trim();
-    if (!ans){ alert("정답을 입력해줘."); return; }
-    if (!currentSlotId) return;
-
-    try{
-      await submitAnswer(db, activeRoundStr, currentSlotId, ans);
-
-      const snap = await slotRef(db, activeRoundStr, currentSlotId).get();
-      if (snap.exists) slots.set(currentSlotId, snap.data());
-
-      renderAll();
-
-      // 잠깐 해설 보여주고 닫고 싶으면 여기서 처리 가능 (현재는 닫기만)
-      closeAnswerModal();
-
-      const unlockedCount = [...slots.values()].filter(s=>s.unlocked).length;
-      if (unlockedCount === 16 && !isFinalReady){
-        isFinalReady = true;
-        await playFinalSequence({ mapWrap, nodesLayer, finalOverlay, finalDim, finalTitle, finalSub, puzzleLayer });
-
-        // v2 합의: 클릭 시 world.html 이동
-        finalOverlay.addEventListener("click", ()=>{ location.href = "world.html"; }, { once:true });
-      }
-    }catch(e){
-      console.error(e);
-      alert("오답이거나 제출 실패. 힌트를 다시 확인해줘.");
-    }
-  };
 });
-
-// ===== data =====
-async function fetchSlots(db, roundIdStr){
-  const out = new Map();
-  for(let i=1;i<=16;i++){
-    const id = String(i).padStart(2,"0");
-    const snap = await slotRef(db, roundIdStr, id).get();
-    if (snap.exists) out.set(id, snap.data());
-    else out.set(id, { unlocked:false, question:"", hint:"", answer:"", explanation:"" });
-  }
-  return out;
-}
-
-// ===== transactions (unlocked-only) =====
-async function submitAnswer(db, roundIdStr, slotId, answerInput){
-  const ref = slotRef(db, roundIdStr, slotId);
-  await db.runTransaction(async (tx)=>{
-    const snap = await tx.get(ref);
-    if (!snap.exists) throw new Error("slot missing");
-    const data = snap.data();
-
-    if (data.unlocked) return;
-
-    const correct = normalize(answerInput) === normalize(data.answer || "");
-    if (!correct) throw new Error("wrong");
-
-    tx.update(ref, {
-      unlocked: true,
-      unlockedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  });
-}
-
-// ===== final sequence =====
-async function playFinalSequence({ mapWrap, nodesLayer, finalOverlay, finalDim, finalTitle, finalSub, puzzleLayer }){
-  nodesLayer.style.pointerEvents = "none";
-
-  await sleep(150);
-  nodesLayer.style.opacity = "0";
-  const svg = mapWrap.querySelector(".map-svg");
-  if (svg) svg.style.opacity = "0";
-  puzzleLayer.classList.add("puzzle-sharpen");
-
-  await sleep(650);
-  finalTitle.textContent = "ACCESS GRANTED";
-  finalSub.innerHTML = "퍼즐이 전면 공개되었습니다.<br/>클릭하여 기관 브리핑으로 이동";
-  finalOverlay.classList.add("on");
-  finalDim.classList.add("on");
-
-  // 자동 이동 없음
-}
-
-function normalize(s){ return String(s).trim().toLowerCase().replace(/\s+/g," "); }
-function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
