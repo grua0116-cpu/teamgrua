@@ -155,7 +155,6 @@ async function playFinalSequence({ mapWrap, nodesLayer, puzzleLayer, finalOverla
   await sleep(800);
   mapWrap.classList.add("fade-out");
   await sleep(200);
-  location.href = "world.html";
 }
 
 document.addEventListener("DOMContentLoaded", async ()=>{
@@ -249,15 +248,26 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       answerBackdrop.style.display = "none";
 
       const unlockedCount = [...slots.values()].filter(s=>s.unlocked).length;
-      if (unlockedCount === 16 && !isFinalPlaying){
-        isFinalPlaying = true;
-        await playFinalSequence({ mapWrap, nodesLayer, puzzleLayer, finalOverlay, finalDim, finalTitle, finalSub });
-      }
-    }catch(e){
-      if ((e?.message||"") === "noanswer") alert("아직 이 노드의 정답(answer)이 설정되지 않았습니다.");
-      else alert("오답이거나 제출 실패.");
-    }
-  };
+     if (unlockedCount === 16 && !isFinalPlaying){
+  isFinalPlaying = true;
+
+  // 연출 실행(노드/선/랜드마크 숨기고 퍼즐 선명하게)
+  await playFinalSequence({ mapWrap, nodesLayer, puzzleLayer, finalOverlay, finalDim, finalTitle, finalSub });
+
+  // ✅ 합의대로: 퍼즐 전체를 클릭하면 WORLD로 이동
+  puzzleLayer.style.pointerEvents = "auto";
+  puzzleLayer.style.cursor = "pointer";
+
+  // 혹시 퍼즐 조각 div들이 클릭을 먹는 경우 대비해서 "캡처"로 받기
+  const goWorld = () => { location.href = "world.html"; };
+
+  // 중복 등록 방지
+  puzzleLayer.onclick = goWorld;
+
+  // 안내(원하면 빼도 됨)
+  alert("퍼즐이 완성되었습니다. 퍼즐 이미지를 클릭하면 다음 단계로 이동합니다.");
+}
+
 
   function renderAll(){
     nodesLayer.innerHTML = "";
