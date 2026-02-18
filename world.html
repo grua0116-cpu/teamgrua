@@ -12,6 +12,7 @@
     .title{font-weight:1000;letter-spacing:.12em}
     .muted{color:var(--muted);font-size:13px;line-height:1.6}
     .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);cursor:pointer;text-decoration:none;font-size:13px}
+    .btn.primary{background:rgba(120,255,220,.10);border-color:rgba(120,255,220,.22)}
   </style>
 </head>
 <body>
@@ -27,10 +28,14 @@
 
       <h3 style="margin:0 0 8px">기관 브리핑</h3>
       <p class="muted" style="margin:0 0 14px">
-        (여기에 브리핑/운영 규정/다음 단계/합류 CTA를 넣으면 됨)
+        (여기에 브리핑/세계관 설명/운영 규정/합류 제안 CTA를 넣으면 됨)
       </p>
 
-      <a class="btn" href="index.html">돌아가기</a>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <!-- 구글폼 링크를 여기에 넣어 -->
+        <a class="btn primary" href="https://forms.gle/PUT_YOUR_FORM_LINK_HERE" target="_blank" rel="noopener">합류 신청 (Google Form)</a>
+        <a class="btn" href="index.html">퍼즐로 돌아가기</a>
+      </div>
     </div>
   </div>
 </body>
