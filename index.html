@@ -16,7 +16,6 @@
     .grid{display:grid;grid-template-columns:1fr 360px;gap:14px}
     @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
 
-    /* ✅ 오른쪽 쏠림 방지: 중앙정렬 + 정사각 stage */
     .map-stage{display:flex;justify-content:center;padding:10px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:16px}
     .map-wrap{
       position:relative;
@@ -33,7 +32,7 @@
     .map-svg{z-index:2;pointer-events:none;opacity:.9}
     .nodes-layer{z-index:3}
     .puzzle-layer{z-index:4;pointer-events:none}
-    .final-overlay{z-index:5;display:none;place-items:center}
+    .final-overlay{z-index:5;display:none;place-items:center;cursor:pointer}
 
     .node,.landmark{
       position:absolute;transform:translate(-50%,-50%);
@@ -49,9 +48,7 @@
       text-overflow:ellipsis;
     }
     .node:hover,.landmark:hover{transform:translate(-50%,-50%) scale(1.03)}
-    .node[data-state="claimed"]{filter:saturate(1.2);animation:pulse 1.2s infinite}
     .node[data-state="unlocked"]{border-color:rgba(180,255,210,.55);box-shadow:0 0 18px rgba(120,255,190,.18)}
-    @keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.04)}}
 
     /* 퍼즐 조각 */
     .piece{
@@ -129,19 +126,20 @@
         <div class="map-wrap" id="mapWrap">
           <img class="map-img" src="map.png" alt="GRUA Campus Map" />
 
-          <!-- 연결선(샘플). 너 좌표 확정되면 여기만 바꾸면 됨 -->
-          <svg class="map-svg map-svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
+          <!-- 연결선(샘플) -->
+          <svg class="map-svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
             <path d="M200 520 C 360 380, 520 380, 680 520" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3" />
           </svg>
 
           <div class="nodes-layer" id="nodesLayer"></div>
           <div class="puzzle-layer" id="puzzleLayer"></div>
 
-          <div class="final-overlay" id="finalOverlay" aria-hidden="true">
+          <!-- 완료 시: 클릭하면 world.html 이동 -->
+          <div class="final-overlay" id="finalOverlay" aria-hidden="true" title="클릭하여 입장">
             <div class="final-dim" id="finalDim"></div>
             <div class="final-card">
               <div class="final-title" id="finalTitle">ACCESS GRANTED</div>
-              <div class="final-sub" id="finalSub">CLEARANCE LEVEL: 01</div>
+              <div class="final-sub" id="finalSub">CLICK TO ENTER</div>
             </div>
           </div>
         </div>
@@ -150,18 +148,17 @@
       <div class="panel">
         <p class="h">GRUA 16인 공동 퍼즐</p>
         <p class="p">
-          16명이 각자 1개의 슬롯을 선착으로 점유하고 정답을 입력해 해금합니다.
-          16개가 모두 해금되면 “기관 브리핑”으로 전환됩니다.
+          16개의 노드가 해금되면 퍼즐 이미지가 전면 공개됩니다.<br/>
+          모든 조각이 열리면 퍼즐을 클릭해 다음 단계로 이동하세요.
         </p>
 
         <div class="row">
           <button class="btn" id="refreshBtn">새로고침</button>
-          <button class="btn" id="initSlotsBtn" onclick="window.__initSlots && window.__initSlots()">슬롯 16개 자동 생성</button>
         </div>
 
         <p class="small" style="margin-top:12px">
-          ⚠️ 개발 중엔 Rules가 write 허용 상태여야 생성됩니다.<br/>
-          ✅ 생성 후 Firestore에서 question/hint/answer/explanation만 채우면 됩니다.
+          로그인 없음 · 닉네임 없음 · 점유/선착 기록 없음<br/>
+          (한 사람 한 노드는 문화적 규칙)
         </p>
       </div>
     </div>
@@ -173,15 +170,11 @@
       <p class="title" id="modalTitle">SLOT</p>
       <div class="small" id="modalMeta"></div>
 
-      <label>이름(선착 점유용)</label>
-      <input id="nameInput" placeholder="닉네임" maxlength="20" />
-
       <label style="margin-top:10px">정답</label>
       <input id="answerInput" placeholder="정답 입력" maxlength="60" />
 
       <div class="actions">
         <button class="btn" id="closeBtn">닫기</button>
-        <button class="btn" id="claimBtn">점유하기</button>
         <button class="btn" id="submitBtn">정답 제출</button>
       </div>
       <p class="small" id="modalHint" style="margin-top:10px"></p>
@@ -193,6 +186,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <!-- App -->
-  <script src="./assets/app.js?v=stage1" defer></script>
+  <script src="./assets/app.js?v=v2" defer></script>
 </body>
 </html>
