@@ -1,4 +1,4 @@
-console.log("🔥 GRUA app.js running");
+console.log("🔥 GRUA app.js running (v2 unlocked-only)");
 
 // 에러를 무반응으로 숨기지 않게
 window.addEventListener("error", (e)=>{
@@ -25,12 +25,8 @@ function ensureFirebase(){
 
 // ---------- Helpers ----------
 const SEASON = "season1";
-function roundId(n){
-  return `R${String(n).padStart(4,"0")}`;
-}
-function normalize(s){
-  return String(s).trim().toLowerCase().replace(/\s+/g," ");
-}
+function roundId(n){ return `R${String(n).padStart(4,"0")}`; }
+function normalize(s){ return String(s).trim().toLowerCase().replace(/\s+/g," "); }
 function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
 
 // ---------- Nodes (예시 배치: 16 타입 + 6 랜드마크 = 22) ----------
@@ -86,7 +82,6 @@ function updatePieces(layer, slotsMap){
 
 // ---------- Firestore paths ----------
 function metaRef(db){
-  // game/season1/meta/meta
   return db.collection("game").doc(SEASON).collection("meta").doc("meta");
 }
 function slotRef(db, roundIdStr, slotId){
@@ -94,21 +89,15 @@ function slotRef(db, roundIdStr, slotId){
            .collection("slots").doc(slotId);
 }
 
-// ---------- Slot auto-create (복붙 대체) ----------
+// ---------- Slot auto-create (운영자 도구: UI 노출 없음 / 콘솔에서 __initSlots()로만 사용) ----------
 window.__initSlots = async function(){
   const db = ensureFirebase();
-  const btn = document.getElementById("initSlotsBtn");
-  if (btn){ btn.disabled = true; btn.textContent = "생성 중..."; }
-
   try{
-    const roundIdStr = "R0001"; // 1단계는 고정. 2단계에서 activeRound로 확장.
+    const roundIdStr = "R0001";
     for(let i=1;i<=16;i++){
       const id = String(i).padStart(2,"0");
       await slotRef(db, roundIdStr, id).set({
-        claimed:false,
         unlocked:false,
-        claimerName:"",
-        claimedAt:null,
         unlockedAt:null,
         typeCode:"T"+id,
         positionName:"Slot "+id,
@@ -120,13 +109,10 @@ window.__initSlots = async function(){
         explanation:""
       }, { merge:true });
     }
-    alert("🔥 16개 슬롯 생성 완료!");
-    location.reload();
+    alert("🔥 16개 슬롯 생성/초기화 완료!");
   }catch(e){
     console.error(e);
-    alert("❌ 생성 실패: " + (e?.message || e));
-  }finally{
-    if (btn){ btn.disabled = false; btn.textContent = "슬롯 16개 자동 생성"; }
+    alert("❌ 초기화 실패: " + (e?.message || e));
   }
 };
 
@@ -144,9 +130,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   const modalTitle = document.getElementById("modalTitle");
   const modalMeta = document.getElementById("modalMeta");
   const modalHint = document.getElementById("modalHint");
-  const nameInput = document.getElementById("nameInput");
   const answerInput = document.getElementById("answerInput");
-  const claimBtn = document.getElementById("claimBtn");
   const submitBtn = document.getElementById("submitBtn");
   const closeBtn = document.getElementById("closeBtn");
 
@@ -180,7 +164,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   // modal state
   let currentSlotId = null;
   let currentSlot = null;
-  let isFinalSequencePlaying = false;
+  let isFinalSequenceReady = false;
 
   function openModal(slotId){
     currentSlotId = slotId;
@@ -192,12 +176,9 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     modalHint.textContent = currentSlot.hint ? `HINT: ${currentSlot.hint}` : "";
 
     answerInput.value = "";
-    nameInput.value = (localStorage.getItem("grua_name") || "");
 
-    const claimed = !!currentSlot.claimed;
     const unlocked = !!currentSlot.unlocked;
-    claimBtn.disabled = unlocked || claimed;
-    submitBtn.disabled = unlocked || !claimed;
+    submitBtn.disabled = unlocked;
 
     modalBackdrop.style.display = "flex";
   }
@@ -205,26 +186,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   closeBtn.onclick = closeModal;
   modalBackdrop.addEventListener("click", (e)=>{ if (e.target === modalBackdrop) closeModal(); });
 
-  // claim
-  claimBtn.onclick = async ()=>{
-    const nm = (nameInput.value || "").trim();
-    if (!nm){ alert("닉네임을 입력해줘."); return; }
-    localStorage.setItem("grua_name", nm);
-
-    if (!currentSlotId) return;
-    try{
-      await claimSlot(db, activeRoundStr, currentSlotId, nm);
-      const snap = await slotRef(db, activeRoundStr, currentSlotId).get();
-      slots.set(currentSlotId, snap.data());
-      renderAll(slots);
-      openModal(currentSlotId);
-    }catch(e){
-      console.error(e);
-      alert("이미 누군가 점유했거나 오류가 발생했어.");
-    }
-  };
-
-  // submit
+  // submit (unlocked-only)
   submitBtn.onclick = async ()=>{
     const ans = (answerInput.value || "").trim();
     if (!ans){ alert("정답을 입력해줘."); return; }
@@ -238,11 +200,15 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       openModal(currentSlotId);
 
       const unlockedCount = [...slots.values()].filter(s=>s.unlocked).length;
-      if (unlockedCount === 16 && !isFinalSequencePlaying){
-        isFinalSequencePlaying = true;
+      if (unlockedCount === 16 && !isFinalSequenceReady){
+        isFinalSequenceReady = true;
         closeModal();
         await playFinalSequence({ mapWrap, nodesLayer, finalOverlay, finalDim, finalTitle, finalSub, puzzleLayer });
-        location.href = "world.html";
+
+        // v2.0: 자동 이동 금지. 퍼즐(오버레이) 클릭 시 world.html 이동.
+        finalOverlay.addEventListener("click", ()=>{ location.href = "world.html"; }, { once:true });
+        // 퍼즐 조각 위도 클릭되게(안전)
+        finalOverlay.style.pointerEvents = "auto";
       }
     }catch(e){
       console.error(e);
@@ -265,7 +231,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
       if (n.kind !== "landmark"){
         const slot = slotsMap.get(n.slotId);
-        const state = slot?.unlocked ? "unlocked" : slot?.claimed ? "claimed" : "idle";
+        const state = slot?.unlocked ? "unlocked" : "idle";
         el.dataset.state = state;
         el.onclick = ()=> openModal(n.slotId);
       }
@@ -282,30 +248,12 @@ async function fetchSlots(db, roundIdStr){
     const id = String(i).padStart(2,"0");
     const snap = await slotRef(db, roundIdStr, id).get();
     if (snap.exists) out.set(id, snap.data());
-    else out.set(id, { claimed:false, unlocked:false, positionName:`Slot ${id}` });
+    else out.set(id, { unlocked:false, positionName:`Slot ${id}` });
   }
   return out;
 }
 
-// ---------- Transactions ----------
-async function claimSlot(db, roundIdStr, slotId, claimerName){
-  const ref = slotRef(db, roundIdStr, slotId);
-  await db.runTransaction(async (tx)=>{
-    const snap = await tx.get(ref);
-    if (!snap.exists) throw new Error("slot missing");
-    const data = snap.data();
-
-    if (data.unlocked) throw new Error("already unlocked");
-    if (data.claimed) throw new Error("already claimed");
-
-    tx.update(ref, {
-      claimed: true,
-      claimerName,
-      claimedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  });
-}
-
+// ---------- Transactions (unlocked-only) ----------
 async function submitAnswer(db, roundIdStr, slotId, answerInput){
   const ref = slotRef(db, roundIdStr, slotId);
   await db.runTransaction(async (tx)=>{
@@ -313,7 +261,6 @@ async function submitAnswer(db, roundIdStr, slotId, answerInput){
     if (!snap.exists) throw new Error("slot missing");
     const data = snap.data();
 
-    if (!data.claimed) throw new Error("not claimed");
     if (data.unlocked) return;
 
     const correct = normalize(answerInput) === normalize(data.answer || "");
@@ -326,28 +273,22 @@ async function submitAnswer(db, roundIdStr, slotId, answerInput){
   });
 }
 
-// ---------- Final sequence (단계 연출 + 딜레이) ----------
+// ---------- Final sequence ----------
 async function playFinalSequence({ mapWrap, nodesLayer, finalOverlay, finalDim, finalTitle, finalSub, puzzleLayer }){
   nodesLayer.style.pointerEvents = "none";
 
-  // T+150: 지도 레이어 페이드
   await sleep(150);
   nodesLayer.style.opacity = "0";
   const svg = mapWrap.querySelector(".map-svg");
   if (svg) svg.style.opacity = "0";
   puzzleLayer.classList.add("puzzle-sharpen");
 
-  // T+800: ACCESS GRANTED
   await sleep(650);
   finalTitle.textContent = "ACCESS GRANTED";
-  finalSub.textContent = "CLEARANCE LEVEL: 01";
+  finalSub.textContent = "CLICK TO ENTER";
   finalOverlay.classList.add("on");
   finalDim.classList.add("on");
 
-  // HOLD 0.6s
   await sleep(600);
-
-  // fade out
-  mapWrap.classList.add("fade-out");
-  await sleep(200);
+  // 자동 이동 없음
 }
