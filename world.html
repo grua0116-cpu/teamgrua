@@ -8,7 +8,283 @@
     :root{
       --bg:#050b10; --panel:rgba(10,20,30,.55);
       --text:#e8f1ff; --muted:#9bb0c8; --line:rgba(255,255,255,.12);
+    }<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GRUA · WORLD</title>
+  <style>
+    :root{
+      --bg:#070b14;
+      --panel: rgba(255,255,255,.06);
+      --line: rgba(255,255,255,.16);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.65);
+      --accent: rgba(139,236,255,.95);
+      --ok: rgba(140,255,200,.95);
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --r: 28px;
+      --max: 980px;
     }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, "Apple SD Gothic Neo";
+      background:
+        radial-gradient(1200px 720px at 20% 10%, rgba(120,160,255,.14), transparent 58%),
+        radial-gradient(900px 650px at 82% 34%, rgba(140,255,200,.10), transparent 60%),
+        var(--bg);
+    }
+    a{ color: inherit; text-decoration: none; }
+    .wrap{ max-width: var(--max); margin: 0 auto; padding: 22px 14px 70px; }
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .brand{ display:flex; flex-direction:column; gap: 6px; }
+    .brand h1{ margin:0; font-size: 18px; letter-spacing:.3px; }
+    .brand p{ margin:0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+      user-select:none;
+      white-space:nowrap;
+    }
+
+    .panel{
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .banner{
+      padding: 16px 16px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 10px;
+    }
+    .banner .left{ display:flex; flex-direction:column; gap:4px; }
+    .banner b{ font-size: 13px; letter-spacing:.35px; }
+    .banner span{ font-size: 12px; color: var(--muted); }
+    .status{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(140,255,200,.30);
+      background: rgba(140,255,200,.10);
+      color: rgba(140,255,200,.95);
+      font-size: 12px;
+      white-space:nowrap;
+    }
+    .dot{
+      width:10px; height:10px;
+      border-radius: 999px;
+      background: rgba(140,255,200,.95);
+      box-shadow: 0 0 0 6px rgba(140,255,200,.12);
+    }
+
+    .content{
+      padding: 16px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .puzzleCard{
+      border-radius: 24px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.03);
+      box-shadow: 0 14px 40px rgba(0,0,0,.35);
+    }
+    .puzzleTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+    .puzzleTop b{ font-size: 13px; }
+    .puzzleTop span{ font-size: 12px; color: var(--muted); }
+
+    .puzzleImg{
+      width:100%;
+      aspect-ratio: 1/1;
+      background: rgba(0,0,0,.22);
+    }
+    .puzzleImg img{
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      display:block;
+    }
+
+    .block{
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 24px;
+      background: rgba(255,255,255,.04);
+      padding: 14px;
+    }
+    .k{ font-size: 11px; color: var(--muted); margin-bottom: 8px; letter-spacing:.2px; }
+    .v{ font-size: 13px; line-height: 1.7; color: rgba(255,255,255,.88); white-space: pre-wrap; word-break: break-word; }
+
+    .cta{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      padding: 11px 14px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-size: 13px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{ border-color: rgba(139,236,255,.35); }
+    .btn.primary{
+      border-color: rgba(139,236,255,.30);
+      background: rgba(139,236,255,.12);
+    }
+    .btn.ghost{
+      background: rgba(255,255,255,.03);
+    }
+
+    .footer{
+      margin-top: 12px;
+      color: rgba(255,255,255,.55);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    /* tiny terminal feel */
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      letter-spacing: .2px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <h1>GRUA · WORLD</h1>
+        <p>기관 브리핑이 개시됩니다. 접근 권한이 승인되었습니다.</p>
+      </div>
+      <div class="pill mono" id="timePill">SYNC: --:--:--</div>
+    </div>
+
+    <section class="panel">
+      <div class="banner">
+        <div class="left">
+          <b class="mono">ACCESS GRANTED</b>
+          <span>퍼즐 전체 해금 완료 · 다음 단계로 전환합니다</span>
+        </div>
+        <div class="status mono"><span class="dot"></span>AUTHORIZED</div>
+      </div>
+
+      <div class="content">
+        <!-- 퍼즐 전체 이미지 -->
+        <div class="puzzleCard">
+          <div class="puzzleTop">
+            <b>PUZZLE</b>
+            <span class="mono">SEASON ARTIFACT</span>
+          </div>
+          <div class="puzzleImg">
+            <!-- ✅ 레포 구조 기준: images/puzzle.png -->
+            <img src="images/puzzle.png" alt="puzzle" />
+          </div>
+        </div>
+
+        <!-- 세계관 설명 -->
+        <div class="block">
+          <div class="k mono">BRIEFING</div>
+          <div class="v">
+당신은 지금, GRUA의 ‘해금 상태’에 접근할 권한을 획득했습니다.
+
+이 기관은 기록을 수집하지 않습니다.
+대신, ‘해금’이 일어난 사실만 남깁니다.
+
+- 강제 인증 없음
+- 닉네임/랭킹/경쟁 없음
+- 공동 완성형 구조
+- 자율 신뢰 기반
+
+퍼즐은 목적이 아니라 “합류 조건”입니다.
+이 세계는 ‘완성한 사람’이 아니라,
+‘함께 완성한 사람’에게만 열립니다.
+          </div>
+        </div>
+
+        <!-- 합류 CTA -->
+        <div class="block">
+          <div class="k mono">JOIN</div>
+          <div class="v">
+합류를 원한다면, 아래 CTA를 실행하세요.
+(구글폼/신청 링크는 운영자가 시즌마다 교체할 수 있습니다.)
+          </div>
+          <div class="cta">
+            <!-- ✅ 너의 구글폼 링크로 교체 -->
+            <a class="btn primary" href="REPLACE_WITH_GOOGLE_FORM_LINK" target="_blank" rel="noopener">
+              합류 신청 (Google Form)
+            </a>
+
+            <a class="btn ghost" href="index.html">
+              캠퍼스로 돌아가기
+            </a>
+          </div>
+        </div>
+
+        <div class="footer mono">
+          NOTE: 본 페이지는 ‘해금 후 접근’ 전제입니다. 운영 정책에 따라 텍스트/링크는 시즌마다 변경될 수 있습니다.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 간단한 SYNC 타임 표시 (로컬 시간)
+    const pill = document.getElementById("timePill");
+    function tick(){
+      const d = new Date();
+      const hh = String(d.getHours()).padStart(2,"0");
+      const mm = String(d.getMinutes()).padStart(2,"0");
+      const ss = String(d.getSeconds()).padStart(2,"0");
+      pill.textContent = `SYNC: ${hh}:${mm}:${ss}`;
+    }
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
     body{
       margin:0;
       background:
