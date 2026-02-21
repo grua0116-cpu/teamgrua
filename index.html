@@ -16,7 +16,6 @@
       --danger: rgba(255,122,122,.95);
       --shadow: 0 20px 60px rgba(0,0,0,.45);
       --r: 26px;
-      --r2: 18px;
       --max: 1100px;
     }
     *{box-sizing:border-box}
@@ -83,20 +82,10 @@
         radial-gradient(700px 420px at 75% 55%, rgba(140,255,200,.08), transparent 60%),
         linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
     }
-    .campus::before{
-      content:"";
-      position:absolute; inset:0;
-      background-image: url("assets/campus-bg.jpg");
-      background-size: cover;
-      background-position: center;
-      opacity: .10;
-      filter: saturate(.85) contrast(1.05);
-      pointer-events:none;
-    }
     .campus svg{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
     .overlay{ position:absolute; inset:0; pointer-events:none; }
 
-    /* 겹침 완화: 노드 버튼을 더 작게 + 폭 줄이기 + 줄바꿈 허용 */
+    /* 겹침 완화 */
     .node, .landmark{
       position:absolute;
       transform: translate(-50%,-50%);
@@ -113,7 +102,7 @@
       cursor:pointer;
       transition: transform .12s ease, border-color .12s ease, opacity .12s ease;
       box-shadow: 0 10px 24px rgba(0,0,0,.25);
-      width: 138px;                /* ✅ 고정 폭 줄여 겹침 감소 */
+      width: 138px;
       text-align:left;
     }
     .nodeBtn:hover{ transform: translateY(-1px); border-color: rgba(139,236,255,.35); }
@@ -136,10 +125,10 @@
       font-size: 11px;
       color: var(--muted);
       line-height: 1.25;
-      white-space: normal;         /* ✅ 장소는 줄바꿈 허용 */
+      white-space: normal;
       overflow: hidden;
       display: -webkit-box;
-      -webkit-line-clamp: 2;       /* ✅ 2줄까지만 */
+      -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
     }
     .node.unlocked .nodeDot{
@@ -229,7 +218,7 @@
     .toast.ok{ border-color: rgba(140,255,200,.28); }
     .toast.bad{ border-color: rgba(255,122,122,.30); }
 
-    /* 인트로 오버레이 */
+    /* 인트로 */
     .introBack{
       position:fixed; inset:0;
       display:grid; place-items:center;
@@ -472,7 +461,8 @@
                 <span>퍼즐 클릭 → WORLD 진입</span>
               </div>
               <div class="puzzleImg">
-                <img src="assets/puzzle.png" alt="puzzle" />
+                <!-- ✅ 경로 수정: images/puzzle.png -->
+                <img src="images/puzzle.png" alt="puzzle" />
               </div>
             </div>
           </div>
@@ -480,7 +470,6 @@
           <!-- SVG lines -->
           <svg viewBox="0 0 1000 562.5" preserveAspectRatio="none" aria-hidden="true" id="lines">
             <g stroke="rgba(255,255,255,.20)" stroke-width="2" fill="none">
-              <!-- 연결선: 필요하면 마음껏 조정 -->
               <path d="M120 120 C240 70, 320 70, 420 120" />
               <path d="M420 120 C540 190, 610 230, 650 300" />
               <path d="M650 300 C690 380, 760 430, 880 460" />
@@ -567,7 +556,7 @@
     /***********************
      * 0) Firebase Config
      ************************/
-   const firebaseConfig = {
+ const firebaseConfig = {
   apiKey: "AIzaSyAqwSJ7nXC-AsHp5ifllDzzGA_UBCWQhJE",
   authDomain: "teamgrua-f465c.firebaseapp.com",
   projectId: "teamgrua-f465c",
@@ -576,25 +565,16 @@
   appId: "1:1019914743201:web:171550946aafb90ab96fe0"
 };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
 
     /***********************
-     * 1) Firestore Base Path (중요)
-     * rounds 구조:
+     * 1) Firestore Base Path
+     * rounds:
      *   BASE_PATH / rounds / {R0001} / slots / {01..16}
-     *
-     * meta 문서:
+     * meta:
      *   BASE_PATH / meta / meta
-     *
-     * ✅ 대부분 이게 정답:
-     *   ["game","season1"]  (game=컬렉션, season1=문서)
      ************************/
-    const BASE_PATH = ["game", "season1"];  // <-- 너 구조에 맞게 필요시 수정
+    const BASE_PATH = ["game", "season1"];  // 필요시 수정
 
-    /***********************
-     * UI refs
-     ************************/
     const connPill = document.getElementById("connPill");
     const pathPill = document.getElementById("pathPill");
     const roundText = document.getElementById("roundText");
@@ -611,6 +591,7 @@
     const puzzleBack = document.getElementById("puzzleBack");
     const puzzleCard = document.getElementById("puzzleCard");
     const linesSvg = document.getElementById("lines");
+    const overlay = document.getElementById("overlay");
 
     function toast(msg, kind=""){
       toastEl.textContent = msg;
@@ -620,8 +601,7 @@
     }
 
     /***********************
-     * 2) 노드/랜드마크 데이터
-     * - 겹침 완화 위해 좌표를 조금 더 분산해둠(원하면 더 수정 가능)
+     * 2) 노드/랜드마크
      ************************/
     const NODE_LIST = [
       { docId:"01", typeCode:"IFAP", place:"구역 A-1", x: 120, y: 120 },
@@ -657,17 +637,14 @@
     /***********************
      * 3) 지도 렌더
      ************************/
-    const overlay = document.getElementById("overlay");
     const nodeDom = new Map();
-
     function pctX(x){ return (x/1000)*100; }
-    function pctY(y){ return (y/562.5)*100; } // viewBox 높이와 맞춤
+    function pctY(y){ return (y/562.5)*100; }
 
     function renderMapSkeleton(){
       overlay.innerHTML = "";
       nodeDom.clear();
 
-      // 랜드마크
       for(const lm of LANDMARKS){
         const w = document.createElement("div");
         w.className = "landmark";
@@ -677,7 +654,6 @@
         overlay.appendChild(w);
       }
 
-      // 노드
       for(const n of NODE_LIST){
         const w = document.createElement("div");
         w.className = "node";
@@ -749,15 +725,12 @@
     /***********************
      * 5) Firestore refs
      ************************/
-    // meta: BASE_PATH/meta/meta
     const metaRef = doc(db, ...BASE_PATH, "meta", "meta");
 
     function slotsColRef(roundId){
-      // BASE_PATH/rounds/{roundId}/slots
       return collection(db, ...BASE_PATH, "rounds", roundId, "slots");
     }
     function slotDocRef(roundId, docId){
-      // BASE_PATH/rounds/{roundId}/slots/{01..16}
       return doc(db, ...BASE_PATH, "rounds", roundId, "slots", docId);
     }
     function roundDocRef(roundId){
@@ -779,13 +752,12 @@
     }
 
     /***********************
-     * 6) 완료 퍼즐 오버레이 & WORLD 게이트
+     * 6) 완료 UI & WORLD 게이트
      ************************/
     function setCompleteUI(isComplete){
       completedThisRound = isComplete;
 
       if(isComplete){
-        // 스펙: 완료 시 노드/연결선/랜드마크 숨김 + 퍼즐 전면 표시
         puzzleBack.classList.add("show");
         overlay.style.display = "none";
         linesSvg.style.display = "none";
@@ -796,19 +768,15 @@
       }
     }
 
-    // 퍼즐 클릭 시: (1) 다음 라운드 자동화 시도 (2) world.html 이동
     puzzleCard.addEventListener("click", async () => {
       if(!completedThisRound || !currentRoundId) return;
 
       toast("WORLD 진입 준비 중…", "ok");
 
-      // ✅ “다음 라운드 자동화”는 여기서 실행 (완료 직후 즉시 전환되면 퍼즐 화면이 사라지니까)
       try{
         await advanceRoundAndSwitch(currentRoundId);
       }catch(e){
         console.error(e);
-        // 전환 실패해도 world는 들어가게 할지?
-        // 여기선: 실패 토스트만 띄우고 world는 들어가게 함
         toast("다음 라운드 전환 실패(권한/경로 확인)", "bad");
       }
 
@@ -819,12 +787,11 @@
      * 7) 라운드 구독
      ************************/
     let unsubscribeSlots = null;
-    let completionAttemptedForRound = new Set();
+    let completionToastShown = new Set();
 
     function subscribeSlots(roundId){
       if(unsubscribeSlots) unsubscribeSlots();
       currentRoundId = roundId;
-      completionAttemptedForRound.delete(roundId);
       setCompleteUI(false);
 
       const pathStr = `${BASE_PATH.join("/")}/rounds/${roundId}/slots`;
@@ -833,7 +800,7 @@
       advText.textContent = "";
 
       const col = slotsColRef(roundId);
-      unsubscribeSlots = onSnapshot(col, async (qs) => {
+      unsubscribeSlots = onSnapshot(col, (qs) => {
         connPill.textContent = "Firestore 연결: 정상";
         connPill.style.borderColor = "rgba(140,255,200,.35)";
 
@@ -841,14 +808,11 @@
         qs.forEach(s => byId.set(s.id, s.data()));
 
         let unlockedCount = 0;
-
         for(const n of NODE_LIST){
           const d = byId.get(n.docId);
           const isUnlocked = !!d?.unlocked;
-
           const dom = nodeDom.get(n.docId);
           if(dom) dom.wrap.classList.toggle("unlocked", isUnlocked);
-
           if(isUnlocked) unlockedCount++;
         }
 
@@ -860,8 +824,8 @@
         const complete = (unlockedCount === 16);
         setCompleteUI(complete);
 
-        if(complete && !completionAttemptedForRound.has(roundId)){
-          completionAttemptedForRound.add(roundId);
+        if(complete && !completionToastShown.has(roundId)){
+          completionToastShown.add(roundId);
           toast("완료! 퍼즐이 열렸습니다. 퍼즐 클릭 → WORLD", "ok");
         }
       }, (err) => {
@@ -872,7 +836,6 @@
       });
     }
 
-    // meta 구독: activeRoundId 바뀌면 그 라운드로 붙음
     async function boot(){
       await ensureMeta();
       onSnapshot(metaRef, (snap) => {
@@ -884,7 +847,7 @@
         const rid = m.activeRoundId || "R0001";
         const adv = !!m.advancing;
 
-        roundText.textContent = adv ? `현재 라운드: ${rid}` : `현재 라운드: ${rid}`;
+        roundText.textContent = `현재 라운드: ${rid}`;
         advText.textContent = adv ? "라운드 전환 중…" : "";
 
         if(rid !== currentRoundId){
@@ -893,7 +856,6 @@
         }
       });
 
-      // 연결 확인 타임아웃
       setTimeout(() => {
         if(connPill.textContent.includes("대기")){
           connPill.textContent = "Firestore 연결: 확인 필요 (config/권한)";
@@ -990,7 +952,7 @@
         eText.textContent = d.explanation ?? "(explanation 없음)";
       }else{
         statusLine.className = "status bad";
-        statusLine.textContent = "오답. 다시 시도해줘.";
+        statusLine.textContent = "오답. 다시 시도해주세요.";
       }
     }
 
@@ -998,8 +960,7 @@
     answerInp.addEventListener("keydown", (e)=> { if(e.key === "Enter") trySubmit(); });
 
     /***********************
-     * 9) 다음 라운드 자동화 (트랜잭션, 중복 생성 방지)
-     * - 퍼즐 클릭할 때 실행
+     * 9) 다음 라운드 자동화
      ************************/
     async function advanceRoundAndSwitch(roundIdJustCompleted){
       await runTransaction(db, async (tx) => {
@@ -1016,21 +977,15 @@
         const meta = metaSnap.data();
         const active = meta.activeRoundId || "R0001";
 
-        // 이미 다른 라운드로 넘어갔으면 끝
         if(active !== roundIdJustCompleted) return;
-
-        // 이미 전환 중이면 끝
         if(meta.advancing) return;
 
-        // 락
         tx.update(metaRef, { advancing: true, updatedAt: serverTimestamp() });
 
         const next = numberToRoundId(roundIdToNumber(active) + 1);
 
-        // 다음 라운드 문서 생성(관리용)
         tx.set(roundDocRef(next), { createdAt: serverTimestamp() }, { merge: true });
 
-        // 16 slots 복사 + unlocked=false 초기화
         for(const n of NODE_LIST){
           const curRef = slotDocRef(active, n.docId);
           const curSnap = await tx.get(curRef);
@@ -1061,7 +1016,6 @@
           }, { merge: true });
         }
 
-        // activeRound 전환 + 락 해제
         tx.update(metaRef, {
           activeRoundId: next,
           advancing: false,
@@ -1073,7 +1027,7 @@
     }
 
     /***********************
-     * 10) 인트로 START 누르면 부트
+     * 10) 인트로 START
      ************************/
     function startApp(){
       introBack.style.display = "none";
@@ -1085,10 +1039,7 @@
     }
 
     introStart.addEventListener("click", startApp);
-    introClose.addEventListener("click", () => {
-      // 닫기 = 그냥 START와 동일하게 진입(사용자 경험상)
-      startApp();
-    });
+    introClose.addEventListener("click", startApp);
   </script>
 </body>
 </html>
