@@ -1,203 +1,542 @@
-<!-- Firebase (compat, non-module) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GRUA CAMPUS MAP</title>
+  <style>
+    * { box-sizing: border-box; }
 
-<script>
-  /***********************
-   * 0) Firebase Config
-   ************************/
-  const firebaseConfig = {
-    apiKey: "REPLACE_ME",
-    authDomain: "REPLACE_ME",
-    projectId: "REPLACE_ME",
-    storageBucket: "REPLACE_ME",
-    messagingSenderId: "REPLACE_ME",
-    appId: "REPLACE_ME",
-  };
-
-  // ✅ 1) START 버튼은 Firebase보다 먼저 살아있게
-  const introBack = document.getElementById("introBack");
-  const introStart = document.getElementById("introStart");
-  const introClose = document.getElementById("introClose");
-
-  function hardHideIntro(){
-    if(introBack) introBack.style.display = "none";
-  }
-
-  introStart?.addEventListener("click", () => {
-    hardHideIntro();
-    startApp();
-  });
-  introClose?.addEventListener("click", () => {
-    hardHideIntro();
-    startApp();
-  });
-
-  /***********************
-   * UI refs
-   ************************/
-  const connPill = document.getElementById("connPill");
-  const pathPill = document.getElementById("pathPill");
-  const roundText = document.getElementById("roundText");
-  const advText = document.getElementById("advText");
-  const progressText = document.getElementById("progressText");
-  const barFill = document.getElementById("barFill");
-  const pctEl = document.getElementById("pct");
-  const toastEl = document.getElementById("toast");
-
-  const puzzleBack = document.getElementById("puzzleBack");
-  const puzzleCard = document.getElementById("puzzleCard");
-  const linesSvg = document.getElementById("lines");
-  const overlay = document.getElementById("overlay");
-
-  function toast(msg, kind=""){
-    if(!toastEl) return;
-    toastEl.textContent = msg;
-    toastEl.className = "toast show " + (kind || "");
-    clearTimeout(toastEl._t);
-    toastEl._t = setTimeout(()=> toastEl.className = "toast", 2600);
-  }
-
-  /***********************
-   * 1) Firestore Base Path
-   ************************/
-  const BASE_PATH = ["game", "season1"]; // 필요시 수정
-
-  /***********************
-   * 2) 노드/랜드마크(네 기존 값 그대로 쓰면 됨)
-   ************************/
-  const NODE_LIST = [
-    { docId:"01", typeCode:"IFAP", place:"구역 A-1", x: 120, y: 120 },
-    { docId:"02", typeCode:"IFAB", place:"구역 A-2", x: 330, y: 210 },
-    { docId:"03", typeCode:"IFEP", place:"구역 A-3", x: 440, y: 115 },
-    { docId:"04", typeCode:"IFEB", place:"구역 A-4", x: 560, y: 170 },
-    { docId:"05", typeCode:"ILAP", place:"구역 B-1", x: 190, y: 360 },
-    { docId:"06", typeCode:"ILAB", place:"구역 B-2", x: 360, y: 325 },
-    { docId:"07", typeCode:"ILEP", place:"구역 B-3", x: 470, y: 420 },
-    { docId:"08", typeCode:"ILEB", place:"구역 B-4", x: 600, y: 400 },
-    { docId:"09", typeCode:"OFAP", place:"구역 C-1", x: 280, y: 495 },
-    { docId:"10", typeCode:"OFAB", place:"구역 C-2", x: 420, y: 515 },
-    { docId:"11", typeCode:"OFEP", place:"구역 C-3", x: 600, y: 520 },
-    { docId:"12", typeCode:"OFEB", place:"구역 C-4", x: 780, y: 380 },
-    { docId:"13", typeCode:"OLAP", place:"구역 D-1", x: 650, y: 300 },
-    { docId:"14", typeCode:"OLAB", place:"구역 D-2", x: 740, y: 300 },
-    { docId:"15", typeCode:"OLEP", place:"구역 D-3", x: 845, y: 470 },
-    { docId:"16", typeCode:"OELB", place:"구역 D-4", x: 880, y: 235 },
-  ];
-
-  /***********************
-   * 3) Firebase boot (compat)
-   ************************/
-  let db = null;
-  let currentRoundId = null;
-  let completedThisRound = false;
-  let unsubscribeSlots = null;
-
-  function pathDoc(...parts){
-    // compat은 문자열 경로가 필요
-    return parts.join("/");
-  }
-
-  function normalizeAnswer(s){
-    return (s ?? "").toString().trim().replace(/\s+/g, " ").toLowerCase();
-  }
-
-  function setCompleteUI(isComplete){
-    completedThisRound = isComplete;
-    if(isComplete){
-      puzzleBack?.classList.add("show");
-      if(overlay) overlay.style.display = "none";
-      if(linesSvg) linesSvg.style.display = "none";
-    }else{
-      puzzleBack?.classList.remove("show");
-      if(overlay) overlay.style.display = "";
-      if(linesSvg) linesSvg.style.display = "";
+    :root {
+      --bg: #f4eddc;
+      --paper: #f6f0e4;
+      --brown: #6f4a2d;
+      --red: #9f1d16;
+      --red-dark: #7f140f;
+      --line: #d7c8b4;
+      --text: #4b3d31;
+      --white: #ffffff;
+      --shadow: 0 12px 30px rgba(0,0,0,0.08);
     }
-  }
 
-  async function ensureMeta(){
-    const metaPath = pathDoc(...BASE_PATH, "meta", "meta");
-    const ref = db.doc(metaPath);
-    const snap = await ref.get();
-    if(!snap.exists){
-      await ref.set({ activeRoundId:"R0001", advancing:false, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    body {
+      margin: 0;
+      font-family: "Georgia", "Apple SD Gothic Neo", "Noto Sans KR", serif;
+      background: var(--bg);
+      color: var(--text);
     }
-  }
 
-  function subscribeSlots(roundId){
-    if(unsubscribeSlots) unsubscribeSlots();
-    currentRoundId = roundId;
-    setCompleteUI(false);
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-    const pathStr = `${BASE_PATH.join("/")}/rounds/${roundId}/slots`;
-    if(pathPill) pathPill.textContent = `경로: ${pathStr}`;
-    if(roundText) roundText.textContent = `현재 라운드: ${roundId}`;
-    if(advText) advText.textContent = "";
+    .intro {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
 
-    const colPath = pathDoc(...BASE_PATH, "rounds", roundId, "slots");
-    unsubscribeSlots = db.collection(colPath).onSnapshot((qs) => {
-      if(connPill){
-        connPill.textContent = "Firestore 연결: 정상";
-        connPill.style.borderColor = "rgba(140,255,200,.35)";
+    .intro-card {
+      width: min(680px, 100%);
+      background: rgba(255,255,255,0.45);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 40px 28px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(4px);
+    }
+
+    .intro-title {
+      margin: 0 0 12px;
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 700;
+      color: var(--red);
+      letter-spacing: 0.03em;
+    }
+
+    .intro-sub {
+      margin: 0 0 28px;
+      font-size: 16px;
+      line-height: 1.7;
+      color: #6a5748;
+    }
+
+    .start-btn {
+      border: none;
+      background: var(--red);
+      color: var(--white);
+      padding: 14px 28px;
+      border-radius: 999px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .start-btn:hover {
+      background: var(--red-dark);
+      transform: translateY(-1px);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .main {
+      width: 100%;
+      padding: 28px 16px 60px;
+    }
+
+    .main-inner {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+    }
+
+    .page-title {
+      text-align: center;
+      color: var(--red);
+      margin: 0 0 20px;
+      font-size: clamp(28px, 4vw, 44px);
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    .map-panel {
+      background: transparent;
+      border-radius: 24px;
+      overflow: visible;
+    }
+
+    .map-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .map-image {
+      display: block;
+      width: 100%;
+      height: auto;
+      user-select: none;
+      -webkit-user-drag: none;
+      border-radius: 20px;
+    }
+
+    .node-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .node {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.95);
+      background: rgba(70, 70, 70, 0.72);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+      transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .node:hover {
+      transform: translate(-50%, -50%) scale(1.08);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+    }
+
+    .node.active {
+      background: var(--red);
+    }
+
+    .node.done {
+      background: #1f7a45;
+    }
+
+    .info-grid {
+      width: min(1100px, 100%);
+      margin: 28px auto 0;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.5);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      color: var(--red);
+      font-size: 22px;
+    }
+
+    .selected-box {
+      min-height: 110px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .selected-code {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--red);
+      line-height: 1;
+    }
+
+    .selected-name {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .selected-desc {
+      font-size: 14px;
+      color: #6c5b4c;
+      line-height: 1.6;
+    }
+
+    .progress-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .progress-count {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--red);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 12px;
+      background: #eadfce;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--red);
+      transition: width 0.2s ease;
+    }
+
+    .legend {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px 12px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .legend-item {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .legend-code {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: rgba(70,70,70,0.72);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .legend-item.done .legend-code {
+      background: #1f7a45;
+    }
+
+    .bottom-note {
+      width: min(1100px, 100%);
+      margin: 18px auto 0;
+      text-align: center;
+      color: #7b6858;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 900px) {
+      .info-grid {
+        grid-template-columns: 1fr;
       }
 
-      const byId = new Map();
-      qs.forEach(doc => byId.set(doc.id, doc.data()));
-
-      let unlockedCount = 0;
-      for(const n of NODE_LIST){
-        const d = byId.get(n.docId);
-        if(d?.unlocked) unlockedCount++;
+      .legend {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      const pct = Math.round((unlockedCount/16)*100);
-      if(progressText) progressText.textContent = `${unlockedCount}/16 조각 해금`;
-      if(barFill) barFill.style.width = pct + "%";
-      if(pctEl) pctEl.textContent = pct + "%";
-
-      setCompleteUI(unlockedCount === 16);
-    }, (err) => {
-      console.error(err);
-      if(connPill){
-        connPill.textContent = "Firestore 연결: 오류";
-        connPill.style.borderColor = "rgba(255,122,122,.45)";
+      .node {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
       }
-      toast("Firestore 오류: 경로/규칙/firebaseConfig 확인", "bad");
+    }
+
+    @media (max-width: 560px) {
+      .main {
+        padding: 20px 10px 40px;
+      }
+
+      .legend {
+        grid-template-columns: 1fr;
+      }
+
+      .node {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+      }
+
+      .selected-code {
+        font-size: 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section id="introScreen" class="intro">
+      <div class="intro-card">
+        <h1 class="intro-title">GRUA CAMPUS MAP</h1>
+        <p class="intro-sub">
+          지도를 기반으로 각 구역을 탐색합니다.<br />
+          먼저 노드 위치와 동작을 안정적으로 맞춘 뒤, 다음 단계에서 퍼즐 시스템과 연동합니다.
+        </p>
+        <button id="startBtn" class="start-btn">캠퍼스 입장</button>
+      </div>
+    </section>
+
+    <main id="mainScreen" class="main hidden">
+      <div class="main-inner">
+        <h1 class="page-title">GRUA CAMPUS MAP</h1>
+
+        <section class="map-panel">
+          <div class="map-wrap">
+            <img
+              class="map-image"
+              src="assets/campus-map.png"
+              alt="GRUA 캠퍼스 지도"
+            />
+            <div id="nodeLayer" class="node-layer"></div>
+          </div>
+        </section>
+
+        <section class="info-grid">
+          <article class="card">
+            <h2>선택한 구역</h2>
+            <div id="selectedBox" class="selected-box">
+              <div class="selected-code">-</div>
+              <div class="selected-name">아직 선택된 노드가 없습니다.</div>
+              <div class="selected-desc">지도 위 원형 노드를 눌러 위치를 확인하세요.</div>
+            </div>
+          </article>
+
+          <article class="card">
+            <h2>진행 현황</h2>
+            <div class="progress-top">
+              <div class="progress-count">
+                완료 <span id="doneCount">0</span> / <span id="totalCount">0</span>
+              </div>
+            </div>
+            <div class="progress-bar">
+              <div id="progressFill" class="progress-fill"></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="card" style="width:min(1100px,100%); margin:16px auto 0;">
+          <h2>캠퍼스 구역 목록</h2>
+          <div id="legend" class="legend"></div>
+        </section>
+
+        <p class="bottom-note">
+          현재 버전은 지도/노드 좌표 검수용 프론트 1차본입니다.
+          다음 단계에서 정답 입력, 해금 상태, Firestore, 퍼즐 공개 화면을 연결하면 됩니다.
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const NODE_DATA = [
+      { code: "A", name: "본관", x: 30.2, y: 31.0 },
+      { code: "B", name: "추신관", x: 84.8, y: 22.6 },
+      { code: "C", name: "아름관", x: 68.0, y: 20.8 },
+      { code: "D", name: "창공관", x: 58.8, y: 18.0 },
+      { code: "E", name: "운동장", x: 58.0, y: 82.6 },
+      { code: "F", name: "학생 식당", x: 79.0, y: 58.8 },
+      { code: "G", name: "도서관", x: 74.8, y: 33.0 },
+      { code: "H", name: "도서관 II", x: 88.2, y: 36.7 },
+      { code: "I", name: "창작 스튜디오", x: 66.0, y: 27.8 },
+      { code: "J", name: "박물관", x: 67.2, y: 45.2 },
+      { code: "K", name: "분석실", x: 89.2, y: 49.2 },
+      { code: "L", name: "학생회관", x: 12.8, y: 47.2 },
+      { code: "M", name: "통제실", x: 63.0, y: 56.8 },
+      { code: "N", name: "역사관", x: 18.2, y: 59.3 },
+      { code: "O", name: "중앙 광장", x: 56.6, y: 41.3 },
+      { code: "P", name: "만남의 광장", x: 52.8, y: 55.3 },
+      { code: "Q", name: "교내 방송국", x: 25.8, y: 77.6 },
+      { code: "R", name: "시계탑", x: 52.6, y: 31.9 },
+      { code: "S", name: "고해실", x: 31.2, y: 61.5 },
+      { code: "T", name: "스카이뷰 라운지", x: 23.4, y: 14.8 },
+      { code: "U", name: "다리", x: 34.2, y: 48.0 },
+      { code: "V", name: "추모관", x: 39.2, y: 58.1 },
+      { code: "W", name: "기숙사", x: 31.8, y: 20.6 }
+    ];
+
+    const introScreen = document.getElementById("introScreen");
+    const mainScreen = document.getElementById("mainScreen");
+    const startBtn = document.getElementById("startBtn");
+    const nodeLayer = document.getElementById("nodeLayer");
+    const selectedBox = document.getElementById("selectedBox");
+    const legend = document.getElementById("legend");
+    const doneCountEl = document.getElementById("doneCount");
+    const totalCountEl = document.getElementById("totalCount");
+    const progressFill = document.getElementById("progressFill");
+
+    let selectedCode = null;
+    const completed = new Set();
+
+    startBtn.addEventListener("click", () => {
+      introScreen.classList.add("hidden");
+      mainScreen.classList.remove("hidden");
+      renderAll();
     });
-  }
 
-  async function boot(){
-    await ensureMeta();
-    const metaPath = pathDoc(...BASE_PATH, "meta", "meta");
-    db.doc(metaPath).onSnapshot((snap) => {
-      if(!snap.exists) return;
-      const m = snap.data() || {};
-      const rid = m.activeRoundId || "R0001";
-      subscribeSlots(rid);
-    });
-  }
+    function renderAll() {
+      renderNodes();
+      renderSelected();
+      renderLegend();
+      renderProgress();
+    }
 
-  function startApp(){
-    try{
-      connPill && (connPill.textContent = "Firestore 연결: 초기화 중…");
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.firestore();
-      boot().catch(e => {
-        console.error(e);
-        toast("부팅 실패: firebaseConfig/경로/권한", "bad");
+    function renderNodes() {
+      nodeLayer.innerHTML = "";
+
+      NODE_DATA.forEach((node) => {
+        const btn = document.createElement("button");
+        btn.className = "node";
+        btn.type = "button";
+        btn.textContent = node.code;
+        btn.style.left = node.x + "%";
+        btn.style.top = node.y + "%";
+        btn.setAttribute("aria-label", `${node.code} ${node.name}`);
+
+        if (selectedCode === node.code) {
+          btn.classList.add("active");
+        }
+
+        if (completed.has(node.code)) {
+          btn.classList.add("done");
+        }
+
+        btn.addEventListener("click", () => {
+          selectedCode = node.code;
+          renderNodes();
+          renderSelected();
+        });
+
+        btn.addEventListener("dblclick", () => {
+          if (completed.has(node.code)) {
+            completed.delete(node.code);
+          } else {
+            completed.add(node.code);
+          }
+          renderNodes();
+          renderLegend();
+          renderProgress();
+          renderSelected();
+        });
+
+        nodeLayer.appendChild(btn);
       });
-    }catch(e){
-      console.error(e);
-      toast("Firebase 로드/초기화 실패(차단/네트워크)", "bad");
     }
-  }
 
-  // 퍼즐 클릭 → world 이동 (라운드 자동화는 필요하면 여기 추가)
-  puzzleCard?.addEventListener("click", () => {
-    if(!completedThisRound) return;
-    window.location.href = "world.html";
-  });
+    function renderSelected() {
+      const node = NODE_DATA.find((item) => item.code === selectedCode);
 
-  // ✅ 혹시라도 intro가 없는 상황(디버그) 대비: 자동 시작 옵션
-  // startApp();
-</script>
+      if (!node) {
+        selectedBox.innerHTML = `
+          <div class="selected-code">-</div>
+          <div class="selected-name">아직 선택된 노드가 없습니다.</div>
+          <div class="selected-desc">지도 위 원형 노드를 눌러 위치를 확인하세요. 더블클릭하면 완료 상태 테스트도 가능합니다.</div>
+        `;
+        return;
+      }
+
+      const isDone = completed.has(node.code);
+
+      selectedBox.innerHTML = `
+        <div class="selected-code">${node.code}</div>
+        <div class="selected-name">${node.name}</div>
+        <div class="selected-desc">
+          현재 선택한 구역입니다.<br />
+          상태: <strong>${isDone ? "완료" : "미완료"}</strong><br />
+          테스트용으로 노드를 더블클릭하면 완료/해제가 전환됩니다.
+        </div>
+      `;
+    }
+
+    function renderLegend() {
+      legend.innerHTML = "";
+
+      NODE_DATA.forEach((node) => {
+        const item = document.createElement("div");
+        item.className = "legend-item";
+        if (completed.has(node.code)) {
+          item.classList.add("done");
+        }
+
+        item.innerHTML = `
+          <span class="legend-code">${node.code}</span>
+          <span>${node.name}</span>
+        `;
+
+        legend.appendChild(item);
+      });
+    }
+
+    function renderProgress() {
+      const total = NODE_DATA.length;
+      const done = completed.size;
+      const percent = total === 0 ? 0 : (done / total) * 100;
+
+      totalCountEl.textContent = total;
+      doneCountEl.textContent = done;
+      progressFill.style.width = percent + "%";
+    }
+  </script>
+</body>
+</html>
