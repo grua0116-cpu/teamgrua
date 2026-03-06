@@ -13,6 +13,7 @@
       --brown: #6f4a2d;
       --red: #9f1d16;
       --red-dark: #7f140f;
+      --green: #1f7a45;
       --line: #d7c8b4;
       --text: #4b3d31;
       --white: #ffffff;
@@ -66,21 +67,33 @@
       color: #6a5748;
     }
 
-    .start-btn {
+    .start-btn,
+    .submit-btn,
+    .hint-btn {
       border: none;
-      background: var(--red);
       color: var(--white);
       padding: 14px 28px;
       border-radius: 999px;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      transition: transform 0.15s ease, background 0.15s ease;
+      transition: transform 0.15s ease, background 0.15s ease, opacity 0.15s ease;
     }
 
-    .start-btn:hover {
-      background: var(--red-dark);
+    .start-btn,
+    .submit-btn {
+      background: var(--red);
+    }
+
+    .hint-btn {
+      background: #7b6858;
+    }
+
+    .start-btn:hover,
+    .submit-btn:hover,
+    .hint-btn:hover {
       transform: translateY(-1px);
+      opacity: 0.95;
     }
 
     .hidden {
@@ -104,12 +117,6 @@
       font-size: clamp(28px, 4vw, 44px);
       letter-spacing: 0.04em;
       font-weight: 700;
-    }
-
-    .map-panel {
-      background: transparent;
-      border-radius: 24px;
-      overflow: visible;
     }
 
     .map-wrap {
@@ -164,14 +171,20 @@
     }
 
     .node.done {
-      background: #1f7a45;
+      background: var(--green);
     }
 
-    .info-grid {
+    .layout-grid {
       width: min(1100px, 100%);
-      margin: 28px auto 0;
+      margin: 24px auto 0;
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .left-stack {
+      display: grid;
       gap: 16px;
     }
 
@@ -245,6 +258,96 @@
       transition: width 0.2s ease;
     }
 
+    .problem-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #efe5d6;
+      color: #6b5647;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .pill.done {
+      background: rgba(31, 122, 69, 0.12);
+      color: var(--green);
+    }
+
+    .problem-title {
+      margin: 0 0 10px;
+      color: var(--red);
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    .problem-place {
+      margin: 0 0 14px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .problem-text,
+    .hint-text,
+    .result-text {
+      font-size: 15px;
+      line-height: 1.7;
+      color: #5f4f43;
+      white-space: pre-line;
+    }
+
+    .field-label {
+      display: block;
+      margin: 18px 0 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #6b5647;
+    }
+
+    .answer-input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid #d9cdbd;
+      background: rgba(255,255,255,0.9);
+      font-size: 15px;
+      outline: none;
+    }
+
+    .answer-input:focus {
+      border-color: #bb8f87;
+      box-shadow: 0 0 0 3px rgba(159, 29, 22, 0.08);
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .result-text {
+      margin-top: 14px;
+      font-weight: 700;
+    }
+
+    .result-text.success {
+      color: var(--green);
+    }
+
+    .result-text.error {
+      color: var(--red);
+    }
+
     .legend {
       margin-top: 18px;
       display: grid;
@@ -276,7 +379,7 @@
     }
 
     .legend-item.done .legend-code {
-      background: #1f7a45;
+      background: var(--green);
     }
 
     .bottom-note {
@@ -288,8 +391,8 @@
       line-height: 1.6;
     }
 
-    @media (max-width: 900px) {
-      .info-grid {
+    @media (max-width: 980px) {
+      .layout-grid {
         grid-template-columns: 1fr;
       }
 
@@ -322,6 +425,10 @@
       .selected-code {
         font-size: 30px;
       }
+
+      .problem-title {
+        font-size: 24px;
+      }
     }
   </style>
 </head>
@@ -332,7 +439,7 @@
         <h1 class="intro-title">GRUA CAMPUS MAP</h1>
         <p class="intro-sub">
           지도를 기반으로 각 구역을 탐색합니다.<br />
-          먼저 노드 위치와 동작을 안정적으로 맞춘 뒤, 다음 단계에서 퍼즐 시스템과 연동합니다.
+          이번 단계에서는 노드별 설명과 문제, 정답 입력 기능을 연결합니다.
         </p>
         <button id="startBtn" class="start-btn">캠퍼스 입장</button>
       </div>
@@ -353,37 +460,40 @@
           </div>
         </section>
 
-        <section class="info-grid">
-          <article class="card">
-            <h2>선택한 구역</h2>
-            <div id="selectedBox" class="selected-box">
-              <div class="selected-code">-</div>
-              <div class="selected-name">아직 선택된 노드가 없습니다.</div>
-              <div class="selected-desc">지도 위 원형 노드를 눌러 위치를 확인하세요.</div>
-            </div>
-          </article>
+        <section class="layout-grid">
+          <div class="left-stack">
+            <article class="card">
+              <h2>선택한 구역</h2>
+              <div id="selectedBox" class="selected-box"></div>
+            </article>
 
-          <article class="card">
-            <h2>진행 현황</h2>
-            <div class="progress-top">
-              <div class="progress-count">
-                완료 <span id="doneCount">0</span> / <span id="totalCount">0</span>
+            <article class="card">
+              <h2>진행 현황</h2>
+              <div class="progress-top">
+                <div class="progress-count">
+                  완료 <span id="doneCount">0</span> / <span id="totalCount">0</span>
+                </div>
               </div>
-            </div>
-            <div class="progress-bar">
-              <div id="progressFill" class="progress-fill"></div>
-            </div>
-          </article>
-        </section>
+              <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+              </div>
+            </article>
 
-        <section class="card" style="width:min(1100px,100%); margin:16px auto 0;">
-          <h2>캠퍼스 구역 목록</h2>
-          <div id="legend" class="legend"></div>
+            <article class="card">
+              <h2>캠퍼스 구역 목록</h2>
+              <div id="legend" class="legend"></div>
+            </article>
+          </div>
+
+          <article class="card">
+            <h2>문제 패널</h2>
+            <div id="problemPanel"></div>
+          </article>
         </section>
 
         <p class="bottom-note">
-          현재 버전은 지도/노드 좌표 검수용 프론트 1차본입니다.
-          다음 단계에서 정답 입력, 해금 상태, Firestore, 퍼즐 공개 화면을 연결하면 됩니다.
+          현재 버전은 문제/정답 입력 연결용 로컬 테스트본입니다.
+          다음 단계에서 Firestore와 퍼즐 해금 로직을 연결합니다.
         </p>
       </div>
     </main>
@@ -391,29 +501,167 @@
 
   <script>
     const NODE_DATA = [
-      { code: "A", name: "본관", x: 30.2, y: 31.0 },
-      { code: "B", name: "추신관", x: 84.8, y: 22.6 },
-      { code: "C", name: "아름관", x: 68.0, y: 20.8 },
-      { code: "D", name: "창공관", x: 58.8, y: 18.0 },
-      { code: "E", name: "운동장", x: 58.0, y: 82.6 },
-      { code: "F", name: "학생 식당", x: 79.0, y: 58.8 },
-      { code: "G", name: "도서관", x: 74.8, y: 33.0 },
-      { code: "H", name: "도서관 II", x: 88.2, y: 36.7 },
-      { code: "I", name: "창작 스튜디오", x: 66.0, y: 27.8 },
-      { code: "J", name: "박물관", x: 67.2, y: 45.2 },
-      { code: "K", name: "분석실", x: 89.2, y: 49.2 },
-      { code: "L", name: "학생회관", x: 12.8, y: 47.2 },
-      { code: "M", name: "통제실", x: 63.0, y: 56.8 },
-      { code: "N", name: "역사관", x: 18.2, y: 59.3 },
-      { code: "O", name: "중앙 광장", x: 56.6, y: 41.3 },
-      { code: "P", name: "만남의 광장", x: 52.8, y: 55.3 },
-      { code: "Q", name: "교내 방송국", x: 25.8, y: 77.6 },
-      { code: "R", name: "시계탑", x: 52.6, y: 31.9 },
-      { code: "S", name: "고해실", x: 31.2, y: 61.5 },
-      { code: "T", name: "스카이뷰 라운지", x: 23.4, y: 14.8 },
-      { code: "U", name: "다리", x: 34.2, y: 48.0 },
-      { code: "V", name: "추모관", x: 39.2, y: 58.1 },
-      { code: "W", name: "기숙사", x: 31.8, y: 20.6 }
+      {
+        code: "A", name: "본관", x: 30.2, y: 31.0,
+        description: "GRUA의 주요 행정과 상징이 모이는 중심 건물입니다.",
+        question: "본관의 코드 알파벳은 무엇인가요?",
+        hint: "노드에 표시된 대문자 한 글자입니다.",
+        answer: "A"
+      },
+      {
+        code: "B", name: "추신관", x: 84.8, y: 22.6,
+        description: "캠퍼스 북동측에 위치한 구역입니다.",
+        question: "추신관의 코드 알파벳을 입력하세요.",
+        hint: "추신관 옆 회색 원을 보세요.",
+        answer: "B"
+      },
+      {
+        code: "C", name: "아름관", x: 68.0, y: 20.8,
+        description: "아름관 구역입니다.",
+        question: "아름관의 코드 알파벳은?",
+        hint: "A 다음, B 다음.",
+        answer: "C"
+      },
+      {
+        code: "D", name: "창공관", x: 58.8, y: 18.0,
+        description: "캠퍼스 상단 중앙에 가까운 건물입니다.",
+        question: "창공관 코드 한 글자를 입력하세요.",
+        hint: "알파벳 순서상 C 다음입니다.",
+        answer: "D"
+      },
+      {
+        code: "E", name: "운동장", x: 58.0, y: 82.6,
+        description: "캠퍼스 하단의 운동장입니다.",
+        question: "운동장의 코드 알파벳은?",
+        hint: "운동장 아래쪽 잔디 구역 옆입니다.",
+        answer: "E"
+      },
+      {
+        code: "F", name: "학생 식당", x: 79.0, y: 58.8,
+        description: "학생 식당 구역입니다.",
+        question: "학생 식당의 코드 알파벳은?",
+        hint: "E 다음입니다.",
+        answer: "F"
+      },
+      {
+        code: "G", name: "도서관", x: 74.8, y: 33.0,
+        description: "캠퍼스 우측 상단 도서관입니다.",
+        question: "도서관의 코드 알파벳은?",
+        hint: "F 다음입니다.",
+        answer: "G"
+      },
+      {
+        code: "H", name: "도서관 II", x: 88.2, y: 36.7,
+        description: "도서관 II 구역입니다.",
+        question: "도서관 II의 코드 알파벳은?",
+        hint: "G 다음입니다.",
+        answer: "H"
+      },
+      {
+        code: "I", name: "창작 스튜디오", x: 66.0, y: 27.8,
+        description: "창작과 실험의 중심이 되는 공간입니다.",
+        question: "창작 스튜디오 코드 알파벳은?",
+        hint: "H 다음입니다.",
+        answer: "I"
+      },
+      {
+        code: "J", name: "박물관", x: 67.2, y: 45.2,
+        description: "박물관 구역입니다.",
+        question: "박물관의 코드 알파벳은?",
+        hint: "I 다음입니다.",
+        answer: "J"
+      },
+      {
+        code: "K", name: "분석실", x: 89.2, y: 49.2,
+        description: "분석실 구역입니다.",
+        question: "분석실 코드 알파벳은?",
+        hint: "J 다음입니다.",
+        answer: "K"
+      },
+      {
+        code: "L", name: "학생회관", x: 12.8, y: 47.2,
+        description: "학생회관 구역입니다.",
+        question: "학생회관의 코드 알파벳은?",
+        hint: "K 다음입니다.",
+        answer: "L"
+      },
+      {
+        code: "M", name: "통제실", x: 63.0, y: 56.8,
+        description: "통제와 관리의 기능을 담당하는 구역입니다.",
+        question: "통제실의 코드 알파벳은?",
+        hint: "L 다음입니다.",
+        answer: "M"
+      },
+      {
+        code: "N", name: "역사관", x: 18.2, y: 59.3,
+        description: "역사관 구역입니다.",
+        question: "역사관의 코드 알파벳은?",
+        hint: "M 다음입니다.",
+        answer: "N"
+      },
+      {
+        code: "O", name: "중앙 광장", x: 56.6, y: 41.3,
+        description: "캠퍼스 중앙의 핵심 광장입니다.",
+        question: "중앙 광장의 코드 알파벳은?",
+        hint: "N 다음입니다.",
+        answer: "O"
+      },
+      {
+        code: "P", name: "만남의 광장", x: 52.8, y: 55.3,
+        description: "교류와 만남의 중심 공간입니다.",
+        question: "만남의 광장 코드 알파벳은?",
+        hint: "O 다음입니다.",
+        answer: "P"
+      },
+      {
+        code: "Q", name: "교내 방송국", x: 25.8, y: 77.6,
+        description: "방송 관련 기능이 모이는 공간입니다.",
+        question: "교내 방송국의 코드 알파벳은?",
+        hint: "P 다음입니다.",
+        answer: "Q"
+      },
+      {
+        code: "R", name: "시계탑", x: 52.6, y: 31.9,
+        description: "캠퍼스의 상징적인 시계탑입니다.",
+        question: "시계탑의 코드 알파벳은?",
+        hint: "Q 다음입니다.",
+        answer: "R"
+      },
+      {
+        code: "S", name: "고해실", x: 31.2, y: 61.5,
+        description: "조용하고 사적인 공간으로 설정된 구역입니다.",
+        question: "고해실의 코드 알파벳은?",
+        hint: "R 다음입니다.",
+        answer: "S"
+      },
+      {
+        code: "T", name: "스카이뷰 라운지", x: 23.4, y: 14.8,
+        description: "전망이 좋은 라운지 공간입니다.",
+        question: "스카이뷰 라운지 코드 알파벳은?",
+        hint: "S 다음입니다.",
+        answer: "T"
+      },
+      {
+        code: "U", name: "다리", x: 34.2, y: 48.0,
+        description: "두 공간을 연결하는 다리입니다.",
+        question: "다리의 코드 알파벳은?",
+        hint: "T 다음입니다.",
+        answer: "U"
+      },
+      {
+        code: "V", name: "추모관", x: 39.2, y: 58.1,
+        description: "기억과 기념의 의미를 가진 공간입니다.",
+        question: "추모관의 코드 알파벳은?",
+        hint: "U 다음입니다.",
+        answer: "V"
+      },
+      {
+        code: "W", name: "기숙사", x: 31.8, y: 20.6,
+        description: "캠퍼스 생활의 거점이 되는 기숙사입니다.",
+        question: "기숙사의 코드 알파벳은?",
+        hint: "마지막 코드입니다.",
+        answer: "W"
+      }
     ];
 
     const introScreen = document.getElementById("introScreen");
@@ -425,8 +673,9 @@
     const doneCountEl = document.getElementById("doneCount");
     const totalCountEl = document.getElementById("totalCount");
     const progressFill = document.getElementById("progressFill");
+    const problemPanel = document.getElementById("problemPanel");
 
-    let selectedCode = null;
+    let selectedCode = "A";
     const completed = new Set();
 
     startBtn.addEventListener("click", () => {
@@ -440,6 +689,11 @@
       renderSelected();
       renderLegend();
       renderProgress();
+      renderProblemPanel();
+    }
+
+    function getSelectedNode() {
+      return NODE_DATA.find(item => item.code === selectedCode) || null;
     }
 
     function renderNodes() {
@@ -454,30 +708,14 @@
         btn.style.top = node.y + "%";
         btn.setAttribute("aria-label", `${node.code} ${node.name}`);
 
-        if (selectedCode === node.code) {
-          btn.classList.add("active");
-        }
-
-        if (completed.has(node.code)) {
-          btn.classList.add("done");
-        }
+        if (selectedCode === node.code) btn.classList.add("active");
+        if (completed.has(node.code)) btn.classList.add("done");
 
         btn.addEventListener("click", () => {
           selectedCode = node.code;
           renderNodes();
           renderSelected();
-        });
-
-        btn.addEventListener("dblclick", () => {
-          if (completed.has(node.code)) {
-            completed.delete(node.code);
-          } else {
-            completed.add(node.code);
-          }
-          renderNodes();
-          renderLegend();
-          renderProgress();
-          renderSelected();
+          renderProblemPanel();
         });
 
         nodeLayer.appendChild(btn);
@@ -485,13 +723,13 @@
     }
 
     function renderSelected() {
-      const node = NODE_DATA.find((item) => item.code === selectedCode);
+      const node = getSelectedNode();
 
       if (!node) {
         selectedBox.innerHTML = `
           <div class="selected-code">-</div>
-          <div class="selected-name">아직 선택된 노드가 없습니다.</div>
-          <div class="selected-desc">지도 위 원형 노드를 눌러 위치를 확인하세요. 더블클릭하면 완료 상태 테스트도 가능합니다.</div>
+          <div class="selected-name">선택된 노드가 없습니다.</div>
+          <div class="selected-desc">지도 위 노드를 눌러 구역을 선택하세요.</div>
         `;
         return;
       }
@@ -502,9 +740,8 @@
         <div class="selected-code">${node.code}</div>
         <div class="selected-name">${node.name}</div>
         <div class="selected-desc">
-          현재 선택한 구역입니다.<br />
-          상태: <strong>${isDone ? "완료" : "미완료"}</strong><br />
-          테스트용으로 노드를 더블클릭하면 완료/해제가 전환됩니다.
+          ${node.description}<br />
+          상태: <strong>${isDone ? "완료" : "미완료"}</strong>
         </div>
       `;
     }
@@ -515,9 +752,7 @@
       NODE_DATA.forEach((node) => {
         const item = document.createElement("div");
         item.className = "legend-item";
-        if (completed.has(node.code)) {
-          item.classList.add("done");
-        }
+        if (completed.has(node.code)) item.classList.add("done");
 
         item.innerHTML = `
           <span class="legend-code">${node.code}</span>
@@ -536,6 +771,99 @@
       totalCountEl.textContent = total;
       doneCountEl.textContent = done;
       progressFill.style.width = percent + "%";
+    }
+
+    function renderProblemPanel() {
+      const node = getSelectedNode();
+
+      if (!node) {
+        problemPanel.innerHTML = `
+          <div class="problem-text">먼저 노드를 선택하세요.</div>
+        `;
+        return;
+      }
+
+      const isDone = completed.has(node.code);
+
+      problemPanel.innerHTML = `
+        <div class="problem-meta">
+          <span class="pill">노드 ${node.code}</span>
+          <span class="pill">${node.name}</span>
+          <span class="pill ${isDone ? "done" : ""}">${isDone ? "완료됨" : "진행 중"}</span>
+        </div>
+
+        <h3 class="problem-title">${node.code}</h3>
+        <div class="problem-place">${node.name}</div>
+
+        <div class="problem-text">${node.description}</div>
+
+        <label class="field-label">문제</label>
+        <div class="problem-text">${node.question}</div>
+
+        <label class="field-label">정답 입력</label>
+        <input
+          id="answerInput"
+          class="answer-input"
+          type="text"
+          placeholder="정답을 입력하세요"
+          autocomplete="off"
+          ${isDone ? "disabled" : ""}
+        />
+
+        <div class="action-row">
+          <button id="submitBtn" class="submit-btn" ${isDone ? "disabled" : ""}>정답 제출</button>
+          <button id="hintBtn" class="hint-btn" type="button">힌트 보기</button>
+        </div>
+
+        <div id="hintArea" class="hint-text hidden"></div>
+        <div id="resultArea" class="result-text"></div>
+      `;
+
+      const answerInput = document.getElementById("answerInput");
+      const submitBtn = document.getElementById("submitBtn");
+      const hintBtn = document.getElementById("hintBtn");
+      const hintArea = document.getElementById("hintArea");
+      const resultArea = document.getElementById("resultArea");
+
+      hintBtn.addEventListener("click", () => {
+        hintArea.classList.remove("hidden");
+        hintArea.textContent = `힌트: ${node.hint}`;
+      });
+
+      const submitAnswer = () => {
+        const userAnswer = (answerInput.value || "").trim().toUpperCase();
+        const correctAnswer = String(node.answer).trim().toUpperCase();
+
+        if (!userAnswer) {
+          resultArea.className = "result-text error";
+          resultArea.textContent = "정답을 입력해 주세요.";
+          return;
+        }
+
+        if (userAnswer === correctAnswer) {
+          completed.add(node.code);
+          resultArea.className = "result-text success";
+          resultArea.textContent = "정답입니다. 해당 노드가 완료 처리되었습니다.";
+          renderNodes();
+          renderSelected();
+          renderLegend();
+          renderProgress();
+          setTimeout(() => {
+            renderProblemPanel();
+          }, 250);
+        } else {
+          resultArea.className = "result-text error";
+          resultArea.textContent = "오답입니다. 다시 시도해 주세요.";
+        }
+      };
+
+      submitBtn.addEventListener("click", submitAnswer);
+
+      answerInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          submitAnswer();
+        }
+      });
     }
   </script>
 </body>
