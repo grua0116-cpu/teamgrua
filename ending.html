@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ENDING</title>
+<style>
+:root{
+  --bg-1:#040712;
+  --bg-2:#071021;
+  --bg-3:#02040b;
+  --line:#6ff6ff;
+  --line-soft:rgba(111,246,255,.38);
+  --violet:#8d7cff;
+  --text:#dffcff;
+  --muted:#9fc2cf;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--text);
+  font-family:"Pretendard","Noto Sans KR",system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(105,246,255,.14), transparent 32%),
+    radial-gradient(circle at 80% 0%, rgba(141,124,255,.16), transparent 34%),
+    radial-gradient(circle at 50% 100%, rgba(73,96,255,.10), transparent 36%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 52%, var(--bg-3) 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  opacity:0;
+  transition:opacity 1s ease;
+  position:relative;
+  overflow:hidden;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:36px 36px, 36px 36px;
+  opacity:.18;
+}
+
+.panel{
+  width:min(92vw, 760px);
+  background:linear-gradient(180deg, rgba(8,18,38,.72), rgba(4,10,21,.76));
+  border:1px solid var(--line-soft);
+  border-radius:22px;
+  box-shadow:
+    0 0 0 1px rgba(111,246,255,.08) inset,
+    0 0 28px rgba(111,246,255,.08),
+    0 0 64px rgba(141,124,255,.08);
+  backdrop-filter: blur(14px);
+  padding:34px 28px;
+  text-align:center;
+}
+
+.title{
+  font-size:14px;
+  letter-spacing:.32em;
+  text-transform:uppercase;
+  color:#bdfcff;
+  opacity:.78;
+  margin-bottom:18px;
+}
+
+.big{
+  font-size:clamp(28px, 5vw, 48px);
+  font-weight:700;
+  line-height:1.15;
+  margin:0 0 20px;
+}
+
+.text{
+  color:var(--muted);
+  line-height:1.95;
+  font-size:17px;
+}
+
+.line{
+  width:100%;
+  height:1px;
+  background:rgba(111,246,255,.28);
+  margin:28px 0;
+}
+
+.card{
+  border:1px solid rgba(111,246,255,.36);
+  border-radius:18px;
+  padding:20px;
+  margin-top:24px;
+  background:rgba(5,11,23,.42);
+  box-shadow:0 0 18px rgba(111,246,255,.08) inset;
+}
+
+.card p{
+  margin:8px 0;
+}
+
+button{
+  appearance:none;
+  border:none;
+  border-radius:16px;
+  padding:14px 20px;
+  min-width:180px;
+  background:linear-gradient(90deg, rgba(111,246,255,.16), rgba(141,124,255,.18));
+  color:var(--text);
+  border:1px solid rgba(111,246,255,.5);
+  cursor:pointer;
+  font-weight:700;
+  letter-spacing:.02em;
+  box-shadow:0 0 18px rgba(111,246,255,.12);
+  margin-top:24px;
+}
+button:hover{
+  transform:translateY(-1px);
+  box-shadow:0 0 28px rgba(111,246,255,.18);
+}
+</style>
+</head>
+<body>
+  <div class="panel">
+    <div class="title">CONTINUUM AUTHORITY // DIRECTIVE COUNCIL</div>
+    <h1 class="big">ACCESS GRANTED</h1>
+
+    <div class="text">
+      모든 조각이 회수되었습니다.<br>
+      정상 궤도로 편입을 시도합니다.
+    </div>
+
+    <div class="line"></div>
+
+    <div class="text">
+     당신은 해당 기록의 전부를 열람한 뒤 
+     평의회원으로써 역할과 기능을 다할 수 있습니다. 
+     우리 세계의 진실을 확인하시겠습니까?
+    </div>
+
+    <div class="card">
+      <p>ID : CONTINUUM AUTHORITY / DIRECTIVE COUNCIL</p>
+      <p>STATUS : COUNCIL MEMBER</p>
+    </div>
+
+    <button type="button" onclick="location.href='index.html'">기록 종료</button>
+  </div>
+
+<script>
+window.addEventListener('load', () => {
+  document.body.style.opacity = '1';
+});
+</script>
+</body>
+</html>
