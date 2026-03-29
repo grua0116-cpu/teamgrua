@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Quiz</title>
+</head>
+
+<body style="background:black;color:white;text-align:center;padding-top:100px;">
+
+<h2 id="question"></h2>
+<p id="hint"></p>
+
+<input id="answerInput">
+<br><br>
+<button onclick="submitAnswer()">제출</button>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "teamgrua-2d9b9.firebaseapp.com",
+  projectId: "teamgrua-2d9b9"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const type=new URLSearchParams(location.search).get("type");
+let data;
+
+async function load(){
+  const doc=await db.collection("game").doc("season1")
+  .collection("rounds").doc("R0001")
+  .collection("slots").doc(type).get();
+
+  data=doc.data();
+  document.getElementById("question").innerText=data.question;
+  document.getElementById("hint").innerText=data.hint;
+}
+
+async function submitAnswer(){
+  const input=document.getElementById("answerInput").value.trim();
+
+  if(data.answers.includes(input)){
+    await db.collection("game").doc("season1")
+    .collection("rounds").doc("R0001")
+    .collection("slots").doc(type)
+    .update({unlocked:true});
+
+    location.href="world.html";
+  }else{
+    alert("오답");
+  }
+}
+
+load();
+</script>
+
+</body>
+</html>
