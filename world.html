@@ -358,13 +358,13 @@ async function loadProjectState() {
   document.getElementById('projectBar').style.width = percent + '%';
   document.getElementById('projectText').textContent = `L-AFFECT PROJECT 진행률 ${percent}% · ${count} / ${target}`;
 
- if (count >= target) {
-  document.getElementById('endingBlock').classList.remove('hide');
-  document.getElementById('cardId').textContent = 'CARD ID // ' + makeCardId();
+if (count >= target) {
+  document.body.style.transition = 'opacity 1s ease';
+  document.body.style.opacity = '0';
 
   setTimeout(() => {
     location.href = 'ending.html';
-  }, 1200);
+  }, 1000);
 }
 }
 
