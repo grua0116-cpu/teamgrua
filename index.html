@@ -132,35 +132,3 @@ function enterSystem() {
 </body>
 </html>
 
-<script>
-const types = [
-"IFAP","IFAB","IFLP","IFLB",
-"IEAP","IEAB","IELP","IELB",
-"OFAP","OFAB","OFLP","OFLB",
-"OEAP","OEAB","OELP","OELB"
-];
-
-async function createSlots() {
-  const base = db
-    .collection("game")
-    .doc("season1")
-    .collection("rounds")
-    .doc("R0001")
-    .collection("slots");
-
-  for (const type of types) {
-    await base.doc(type).set({
-      typeCode: type,
-      question: "",
-      answers: [],
-      hint: "",
-      unlocked: false
-    });
-    console.log(type + " 생성 완료");
-  }
-
-  alert("16개 슬롯 생성 완료");
-}
-
-createSlots();
-</script>
