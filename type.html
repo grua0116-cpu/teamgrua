@@ -4,19 +4,20 @@
 <meta charset="UTF-8">
 <title>TYPE</title>
 </head>
-<body style="background:black;color:white;text-align:center;padding-top:150px;">
+
+<body style="background:black;color:#9efcff;text-align:center;padding-top:150px;">
 
 <h2>당신의 궤도를 입력하십시오</h2>
 
-<input id="typeInput" placeholder="예: IFAP">
+<input id="typeInput">
 <br><br>
 <button onclick="go()">입장</button>
 
 <script>
 function go(){
-  const type=document.getElementById("typeInput").value.trim().toUpperCase();
-  if(!type) return alert("입력하세요");
-  location.href="quiz.html?type="+type;
+  const t=document.getElementById("typeInput").value.trim().toUpperCase();
+  if(!t) return alert("입력");
+  location.href="quiz.html?type="+t;
 }
 </script>
 
