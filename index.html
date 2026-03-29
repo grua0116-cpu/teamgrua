@@ -283,7 +283,7 @@ function typeLine() {
   if (idx < introText.length) {
     target.innerHTML = introText.slice(0, idx + 1).replace(/\n/g, "<br>") + '<span class="cursor">▮</span>';
     idx++;
-    setTimeout(typeLine, 90);
+    setTimeout(typeLine, 120);
   } else {
     target.innerHTML = introText.replace(/\n/g, "<br>");
   }
