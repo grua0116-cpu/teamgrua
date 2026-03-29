@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WORLD</title>
+<style>
+:root{
+  --bg-1:#040712;
+  --bg-2:#071021;
+  --bg-3:#02040b;
+  --line:#6ff6ff;
+  --line-soft:rgba(111,246,255,.38);
+  --violet:#8d7cff;
+  --text:#dffcff;
+  --muted:#9fc2cf;
+  --panel:rgba(7,16,33,.56);
+  --panel-2:rgba(6,12,24,.72);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--text);
+  font-family: "Pretendard","Noto Sans KR",system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(105,246,255,.14), transparent 32%),
+    radial-gradient(circle at 80% 0%, rgba(141,124,255,.16), transparent 34%),
+    radial-gradient(circle at 50% 100%, rgba(73,96,255,.10), transparent 36%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 52%, var(--bg-3) 100%);
+  overflow-x:hidden;
+  position:relative;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background-image:
+    radial-gradient(2px 2px at 5% 12%, rgba(255,255,255,.88) 42%, transparent 45%),
+    radial-gradient(1px 1px at 9% 31%, rgba(255,255,255,.54) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 14% 54%, rgba(105,246,255,.62) 42%, transparent 45%),
+    radial-gradient(2px 2px at 18% 77%, rgba(255,255,255,.74) 42%, transparent 45%),
+    radial-gradient(1px 1px at 23% 20%, rgba(255,255,255,.44) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 27% 42%, rgba(141,124,255,.60) 42%, transparent 45%),
+    radial-gradient(2px 2px at 32% 63%, rgba(255,255,255,.72) 42%, transparent 45%),
+    radial-gradient(1px 1px at 36% 85%, rgba(255,255,255,.42) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 41% 14%, rgba(105,246,255,.68) 42%, transparent 45%),
+    radial-gradient(2px 2px at 46% 36%, rgba(255,255,255,.78) 42%, transparent 45%),
+    radial-gradient(1px 1px at 51% 57%, rgba(255,255,255,.46) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 56% 79%, rgba(141,124,255,.58) 42%, transparent 45%),
+    radial-gradient(2px 2px at 61% 24%, rgba(105,246,255,.64) 42%, transparent 45%),
+    radial-gradient(1px 1px at 66% 46%, rgba(255,255,255,.48) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 71% 68%, rgba(255,255,255,.58) 42%, transparent 45%),
+    radial-gradient(2px 2px at 76% 88%, rgba(105,246,255,.60) 42%, transparent 45%),
+    radial-gradient(1px 1px at 81% 19%, rgba(255,255,255,.42) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 85% 39%, rgba(255,255,255,.56) 42%, transparent 45%),
+    radial-gradient(2px 2px at 90% 61%, rgba(141,124,255,.60) 42%, transparent 45%),
+    radial-gradient(1px 1px at 94% 83%, rgba(255,255,255,.48) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 97% 27%, rgba(105,246,255,.62) 42%, transparent 45%),
+    radial-gradient(1px 1px at 11% 92%, rgba(255,255,255,.50) 42%, transparent 45%),
+    radial-gradient(1px 1px at 28% 8%, rgba(255,255,255,.50) 42%, transparent 45%),
+    radial-gradient(1px 1px at 44% 91%, rgba(255,255,255,.44) 42%, transparent 45%),
+    radial-gradient(1px 1px at 63% 6%, rgba(255,255,255,.42) 42%, transparent 45%),
+    radial-gradient(1px 1px at 74% 11%, rgba(255,255,255,.46) 42%, transparent 45%);
+  opacity:.98;
+  animation: starsFloat 18s linear infinite;
+}
+
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at center, rgba(111,246,255,.06), transparent 40%),
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:auto, 36px 36px, 36px 36px;
+  opacity:.22;
+  mask-image: radial-gradient(circle at center, rgba(0,0,0,1), rgba(0,0,0,.18));
+}
+
+@keyframes starsFloat{
+  from { transform: translateY(0px); }
+  50% { transform: translateY(6px); }
+  to { transform: translateY(0px); }
+}
+
+.wrap{
+  width:min(92vw, 980px);
+  margin:0 auto;
+  position:relative;
+  z-index:2;
+}
+
+.center-screen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px 0;
+}
+
+.panel{
+  width:min(92vw, 760px);
+  background:linear-gradient(180deg, rgba(8,18,38,.72), rgba(4,10,21,.76));
+  border:1px solid var(--line-soft);
+  border-radius:22px;
+  box-shadow:
+    0 0 0 1px rgba(111,246,255,.08) inset,
+    0 0 28px rgba(111,246,255,.08),
+    0 0 64px rgba(141,124,255,.08);
+  backdrop-filter: blur(14px);
+  padding:30px 26px;
+}
+
+.title{
+  font-size:14px;
+  letter-spacing:.32em;
+  text-transform:uppercase;
+  color:#bdfcff;
+  opacity:.78;
+  margin-bottom:18px;
+}
+
+.big{
+  font-size:clamp(24px, 4vw, 40px);
+  font-weight:700;
+  line-height:1.15;
+  margin:0 0 12px;
+}
+
+.muted{
+  color:var(--muted);
+  line-height:1.8;
+}
+
+input, textarea{
+  width:100%;
+  border-radius:16px;
+  border:1px solid rgba(111,246,255,.45);
+  background:rgba(5,11,23,.72);
+  color:var(--text);
+  padding:15px 16px;
+  outline:none;
+  font-size:16px;
+  box-shadow:
+    0 0 0 1px rgba(111,246,255,.06) inset,
+    0 0 16px rgba(111,246,255,.08);
+}
+
+input::placeholder, textarea::placeholder{
+  color:rgba(223,252,255,.42);
+}
+
+input:focus, textarea:focus{
+  border-color:rgba(111,246,255,.82);
+  box-shadow:
+    0 0 0 1px rgba(111,246,255,.14) inset,
+    0 0 6px #00eaff,
+    0 0 18px rgba(0,234,255,.42),
+    0 0 36px rgba(141,124,255,.16);
+}
+
+button{
+  appearance:none;
+  border:none;
+  border-radius:16px;
+  padding:14px 20px;
+  min-width:180px;
+  background:linear-gradient(90deg, rgba(111,246,255,.16), rgba(141,124,255,.18));
+  color:var(--text);
+  border:1px solid rgba(111,246,255,.5);
+  cursor:pointer;
+  font-weight:700;
+  letter-spacing:.02em;
+  box-shadow:0 0 18px rgba(111,246,255,.12);
+}
+button:hover{
+  transform:translateY(-1px);
+  box-shadow:0 0 28px rgba(111,246,255,.18);
+}
+
+.row{display:flex; gap:12px; flex-wrap:wrap; justify-content:center}
+.center{text-align:center}
+.hide{display:none}
+
+.percent{
+  font-size:clamp(36px, 8vw, 72px);
+  font-weight:800;
+  color:#c9ffff;
+  text-shadow:0 0 10px rgba(111,246,255,.42), 0 0 26px rgba(111,246,255,.22);
+  margin:0;
+}
+
+.progress-shell{
+  margin:14px auto 10px;
+  width:min(560px, 100%);
+  height:14px;
+  border-radius:999px;
+  border:1px solid rgba(111,246,255,.3);
+  background:rgba(2,6,14,.72);
+  overflow:hidden;
+  box-shadow:inset 0 0 18px rgba(111,246,255,.06);
+}
+
+.progress-bar{
+  height:100%;
+  width:0%;
+  border-radius:999px;
+  background:linear-gradient(90deg, #6ff6ff, #8d7cff);
+  box-shadow:0 0 18px rgba(111,246,255,.38);
+  transition:width .35s ease;
+}
+
+.status{
+  min-height:24px;
+  margin-top:14px;
+  color:#c9eff6;
+  font-size:14px;
+}
+
+.small{
+  font-size:13px;
+  color:var(--muted);
+}
+
+@media (max-width:640px){
+  .panel{padding:24px 18px;border-radius:18px}
+  .title{font-size:12px}
+  input,textarea{font-size:15px}
+}
+</style>
+</head>
+<body>
+<div class="center-screen">
+  <div class="panel center">
+    <div class="title">CONTINUUM AUTHORITY // L-AFFECT PROJECT</div>
+
+    <p class="percent" id="unlockPercent">0%</p>
+    <div class="small" id="unlockMeta" style="margin-top:6px;">서사 해금률 확인 중...</div>
+
+    <div id="lockedBlock" style="margin-top:26px;">
+      <p class="muted">모든 타입이 해금되기 전에는 평의회 단계에 진입할 수 없습니다.</p>
+    </div>
+
+    <div id="openedBlock" class="hide" style="margin-top:26px;">
+      <div class="muted" id="councilPrompt" style="white-space:normal; line-height:1.95; margin-bottom:28px; text-align:center;">
+        당신은 CONTINUUM AUTHORITY의 평의회 입회 자격을 갖추었습니다.<br><br>
+        이제 당신은 L-AFFECT PROJECT의 마지막 평의만을 남겨두고 있습니다.<br><br>
+        당신은 어떤 사랑을 할 준비가 되어 있습니까?<br><br>
+        이 세계에서 발생한 사랑은 유지되어야 한다고 생각합니까?<br><br>
+        당신에게 발생한 사랑의 언어를 입력하면 평의에 참가하게 됩니다.
+      </div>
+
+      <div class="progress-shell">
+        <div class="progress-bar" id="projectBar"></div>
+      </div>
+      <div class="small" id="projectText" style="margin-bottom:18px;">L-AFFECT PROJECT 진행률 확인 중...</div>
+
+      <textarea id="councilInput" rows="4" placeholder="당신에게 발생한 사랑의 언어를 입력하세요." style="margin-top:8px;"></textarea>
+
+      <div class="row" style="margin-top:18px;">
+        <button onclick="submitCouncil()">평의 참가</button>
+      </div>
+
+      <div class="status center" id="councilStatus"></div>
+
+      <div id="endingBlock" class="hide" style="margin-top:28px;">
+        <h2 class="big" style="font-size:clamp(22px,4vw,30px);">최종 단계 도달</h2>
+        <p class="muted">엔딩 문구 + 카드 발급 영역입니다.</p>
+        <div class="small" id="cardId"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBR7ogWqmI1osv45YUY7YI_hFcIfjTlk7s4",
+  authDomain: "teamgrua-2d9b9.firebaseapp.com",
+  projectId: "teamgrua-2d9b9",
+  storageBucket: "teamgrua-2d9b9.firebasestorage.app",
+  messagingSenderId: "195186066793",
+  appId: "1:195186066793:web:14eb2976f5f1b7304c69f8"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
+
+<script>
+const slotsRef = db.collection("game")
+  .doc("season1")
+  .collection("rounds")
+  .doc("R0001")
+  .collection("slots");
+
+const metaRef = db.collection("game")
+  .doc("season1")
+  .collection("rounds")
+  .doc("R0001")
+  .collection("meta")
+  .doc("worldSettings");
+
+const councilRef = db.collection("game")
+  .doc("season1")
+  .collection("rounds")
+  .doc("R0001")
+  .collection("councilEntries");
+
+function makeCardId() {
+  const now = Date.now().toString().slice(-6);
+  const rand = Math.floor(Math.random() * 9000 + 1000);
+  return `CA-LA-${now}-${rand}`;
+}
+
+async function loadUnlockState() {
+  const snap = await slotsRef.get();
+  let total = 0, done = 0;
+  snap.forEach(doc => {
+    total++;
+    if (doc.data().unlocked === true) done++;
+  });
+  const percent = total ? Math.floor((done / total) * 100) : 0;
+  document.getElementById('unlockPercent').textContent = percent + '%';
+  document.getElementById('unlockMeta').textContent = `서사 해금률 ${percent}% · ${done} / ${total}`;
+
+  if (done === total && total > 0) {
+    document.getElementById('lockedBlock').classList.add('hide');
+    document.getElementById('openedBlock').classList.remove('hide');
+    return true;
+  }
+  return false;
+}
+
+async function loadProjectState() {
+  let target = 30;
+  try {
+    const settings = await metaRef.get();
+    if (settings.exists) {
+      const s = settings.data();
+      if (s.projectTarget) target = s.projectTarget;
+      if (s.councilPrompt) {
+        document.getElementById('councilPrompt').innerHTML = String(s.councilPrompt).replace(/\n/g, '<br>');
+      }
+    }
+  } catch(e) {}
+
+  const snap = await councilRef.get();
+  const count = snap.size || 0;
+  const percent = Math.min(100, Math.floor((count / target) * 100));
+  document.getElementById('projectBar').style.width = percent + '%';
+  document.getElementById('projectText').textContent = `L-AFFECT PROJECT 진행률 ${percent}% · ${count} / ${target}`;
+
+  if (count >= target) {
+    document.getElementById('endingBlock').classList.remove('hide');
+    document.getElementById('cardId').textContent = 'CARD ID // ' + makeCardId();
+  }
+}
+
+async function submitCouncil() {
+  const input = document.getElementById('councilInput').value.trim();
+  const status = document.getElementById('councilStatus');
+  if (!input) {
+    status.textContent = '입력 후 참가할 수 있습니다.';
+    return;
+  }
+  try {
+    await councilRef.add({
+      message: input,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('councilInput').value = '';
+    status.textContent = '평의 참가가 기록되었습니다.';
+    await loadProjectState();
+  } catch (e) {
+    status.textContent = '기록 중 오류가 발생했습니다.';
+  }
+}
+
+(async function init() {
+  const opened = await loadUnlockState();
+  if (opened) {
+    await loadProjectState();
+  }
+})();
+</script>
+</body>
+</html>
