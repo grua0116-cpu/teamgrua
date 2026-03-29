@@ -42,16 +42,54 @@ body::before{
   position:fixed;
   inset:0;
   pointer-events:none;
+  background-image:
+    radial-gradient(2px 2px at 5% 12%, rgba(255,255,255,.88) 42%, transparent 45%),
+    radial-gradient(1px 1px at 9% 31%, rgba(255,255,255,.54) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 14% 54%, rgba(105,246,255,.62) 42%, transparent 45%),
+    radial-gradient(2px 2px at 18% 77%, rgba(255,255,255,.74) 42%, transparent 45%),
+    radial-gradient(1px 1px at 23% 20%, rgba(255,255,255,.44) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 27% 42%, rgba(141,124,255,.60) 42%, transparent 45%),
+    radial-gradient(2px 2px at 32% 63%, rgba(255,255,255,.72) 42%, transparent 45%),
+    radial-gradient(1px 1px at 36% 85%, rgba(255,255,255,.42) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 41% 14%, rgba(105,246,255,.68) 42%, transparent 45%),
+    radial-gradient(2px 2px at 46% 36%, rgba(255,255,255,.78) 42%, transparent 45%),
+    radial-gradient(1px 1px at 51% 57%, rgba(255,255,255,.46) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 56% 79%, rgba(141,124,255,.58) 42%, transparent 45%),
+    radial-gradient(2px 2px at 61% 24%, rgba(105,246,255,.64) 42%, transparent 45%),
+    radial-gradient(1px 1px at 66% 46%, rgba(255,255,255,.48) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 71% 68%, rgba(255,255,255,.58) 42%, transparent 45%),
+    radial-gradient(2px 2px at 76% 88%, rgba(105,246,255,.60) 42%, transparent 45%),
+    radial-gradient(1px 1px at 81% 19%, rgba(255,255,255,.42) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 85% 39%, rgba(255,255,255,.56) 42%, transparent 45%),
+    radial-gradient(2px 2px at 90% 61%, rgba(141,124,255,.60) 42%, transparent 45%),
+    radial-gradient(1px 1px at 94% 83%, rgba(255,255,255,.48) 42%, transparent 45%);
+  opacity:.98;
+  animation: starsFloat 18s linear infinite;
+}
+
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
   background:
+    radial-gradient(circle at center, rgba(111,246,255,.06), transparent 40%),
     linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
-  background-size:36px 36px, 36px 36px;
+  background-size:auto, 36px 36px, 36px 36px;
   opacity:.18;
+  mask-image: radial-gradient(circle at center, rgba(0,0,0,1), rgba(0,0,0,.18));
+}
+
+@keyframes starsFloat{
+  from { transform: translateY(0px); }
+  50% { transform: translateY(6px); }
+  to { transform: translateY(0px); }
 }
 
 .panel{
   width:min(92vw, 760px);
-  background:linear-gradient(180deg, rgba(8,18,38,.72), rgba(4,10,21,.76));
+  background:linear-gradient(180deg, rgba(8,18,38,.74), rgba(4,10,21,.80));
   border:1px solid var(--line-soft);
   border-radius:22px;
   box-shadow:
@@ -61,6 +99,8 @@ body::before{
   backdrop-filter: blur(14px);
   padding:34px 28px;
   text-align:center;
+  position:relative;
+  z-index:2;
 }
 
 .title{
@@ -99,36 +139,71 @@ body::before{
   margin-top:24px;
   background:rgba(5,11,23,.42);
   box-shadow:0 0 18px rgba(111,246,255,.08) inset;
+  text-align:left;
 }
 
 .card p{
   margin:8px 0;
+  font-size:16px;
 }
 
 button{
   appearance:none;
   border:none;
   border-radius:16px;
-  padding:14px 20px;
+  padding:14px 24px;
   min-width:180px;
   background:linear-gradient(90deg, rgba(111,246,255,.16), rgba(141,124,255,.18));
   color:var(--text);
   border:1px solid rgba(111,246,255,.5);
   cursor:pointer;
   font-weight:700;
-  letter-spacing:.02em;
+  letter-spacing:.08em;
   box-shadow:0 0 18px rgba(111,246,255,.12);
   margin-top:24px;
+  transition:transform .2s ease, box-shadow .2s ease, opacity .2s ease;
 }
 button:hover{
   transform:translateY(-1px);
   box-shadow:0 0 28px rgba(111,246,255,.18);
+}
+button:disabled{
+  opacity:.5;
+  cursor:default;
+}
+
+.status-log{
+  margin-top:18px;
+  min-height:24px;
+  color:#c9eff6;
+  font-size:14px;
+}
+
+.overlay{
+  position:fixed;
+  inset:0;
+  background:#02040b;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .9s ease;
+  z-index:5;
+}
+
+.overlay.show{
+  opacity:1;
+}
+
+@media (max-width:640px){
+  .panel{padding:26px 18px}
+  .text{font-size:15px}
+  .card p{font-size:14px}
 }
 </style>
 </head>
 <body>
   <div class="panel">
     <div class="title">CONTINUUM AUTHORITY // DIRECTIVE COUNCIL</div>
+
     <h1 class="big">ACCESS GRANTED</h1>
 
     <div class="text">
@@ -139,23 +214,56 @@ button:hover{
     <div class="line"></div>
 
     <div class="text">
-     당신은 해당 기록의 전부를 열람한 뒤 
-     평의회원으로써 역할과 기능을 다할 수 있습니다. 
-     우리 세계의 진실을 확인하시겠습니까?
+      당신은 해당 기록의 전부를 열람한 뒤<br>
+      평의회원으로써 역할과 기능을 다할 수 있습니다.
     </div>
 
     <div class="card">
       <p>ID : CONTINUUM AUTHORITY / DIRECTIVE COUNCIL</p>
-      <p>STATUS : COUNCIL MEMBER</p>
+      <p id="statusText">STATUS : COUNCIL MEMBER</p>
     </div>
 
-    <button type="button" onclick="location.href='index.html'">기록 종료</button>
+    <button id="proceedBtn" type="button">PROCEED</button>
+    <div class="status-log" id="statusLog"></div>
   </div>
+
+  <div class="overlay" id="fadeOverlay"></div>
 
 <script>
 window.addEventListener('load', () => {
   document.body.style.opacity = '1';
+
+  const type = localStorage.getItem('gruaType');
+  if (type) {
+    document.getElementById('statusText').textContent =
+      'STATUS : ' + type + ' / COUNCIL MEMBER';
+  }
 });
+
+const proceedBtn = document.getElementById('proceedBtn');
+const statusLog = document.getElementById('statusLog');
+const fadeOverlay = document.getElementById('fadeOverlay');
+
+proceedBtn.addEventListener('click', async () => {
+  proceedBtn.disabled = true;
+  statusLog.textContent = '기록 확인 중...';
+
+  await wait(700);
+  statusLog.textContent = '평의회 승인 로그를 갱신합니다...';
+
+  await wait(900);
+  statusLog.textContent = '확인 완료';
+
+  await wait(500);
+  fadeOverlay.classList.add('show');
+
+  await wait(1000);
+  location.href = 'index.html';
+});
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 </script>
 </body>
 </html>
