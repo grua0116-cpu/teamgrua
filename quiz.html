@@ -4,284 +4,68 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>QUIZ</title>
-<style>
-:root{
-  --bg-1:#040712;
-  --bg-2:#071021;
-  --bg-3:#02040b;
-  --line:#6ff6ff;
-  --line-soft:rgba(111,246,255,.38);
-  --violet:#8d7cff;
-  --text:#dffcff;
-  --muted:#9fc2cf;
-  --panel:rgba(7,16,33,.56);
-  --panel-2:rgba(6,12,24,.72);
-}
 
-*{box-sizing:border-box}
-html,body{height:100%}
+<style>
 body{
   margin:0;
-  color:var(--text);
-  font-family: "Pretendard","Noto Sans KR",system-ui,-apple-system,sans-serif;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(105,246,255,.14), transparent 32%),
-    radial-gradient(circle at 80% 0%, rgba(141,124,255,.16), transparent 34%),
-    radial-gradient(circle at 50% 100%, rgba(73,96,255,.10), transparent 36%),
-    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 52%, var(--bg-3) 100%);
-  overflow-x:hidden;
-  position:relative;
-}
-
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  background-image:
-    radial-gradient(2px 2px at 5% 12%, rgba(255,255,255,.88) 42%, transparent 45%),
-    radial-gradient(1px 1px at 9% 31%, rgba(255,255,255,.54) 42%, transparent 45%),
-    radial-gradient(1.5px 1.5px at 14% 54%, rgba(105,246,255,.62) 42%, transparent 45%),
-    radial-gradient(2px 2px at 18% 77%, rgba(255,255,255,.74) 42%, transparent 45%),
-    radial-gradient(1px 1px at 23% 20%, rgba(255,255,255,.44) 42%, transparent 45%),
-    radial-gradient(1.5px 1.5px at 27% 42%, rgba(141,124,255,.60) 42%, transparent 45%),
-    radial-gradient(2px 2px at 32% 63%, rgba(255,255,255,.72) 42%, transparent 45%),
-    radial-gradient(1px 1px at 36% 85%, rgba(255,255,255,.42) 42%, transparent 45%),
-    radial-gradient(1.5px 1.5px at 41% 14%, rgba(105,246,255,.68) 42%, transparent 45%),
-    radial-gradient(2px 2px at 46% 36%, rgba(255,255,255,.78) 42%, transparent 45%),
-    radial-gradient(1px 1px at 51% 57%, rgba(255,255,255,.46) 42%, transparent 45%),
-    radial-gradient(1.5px 1.5px at 56% 79%, rgba(141,124,255,.58) 42%, transparent 45%),
-    radial-gradient(2px 2px at 61% 24%, rgba(105,246,255,.64) 42%, transparent 45%),
-    radial-gradient(1px 1px at 66% 46%, rgba(255,255,255,.48) 42%, transparent 45%),
-    radial-gradient(1.5px 1.5px at 71% 68%, rgba(255,255,255,.58) 42%, transparent 45%),
-    radial-gradient(2px 2px at 76% 88%, rgba(105,246,255,.60) 42%, transparent 45%),
-    radial-gradient(1px 1px at 81% 19%, rgba(255,255,255,.42) 42%, transparent 45%),
-    radial-gradient(1.5px 1.5px at 85% 39%, rgba(255,255,255,.56) 42%, transparent 45%),
-    radial-gradient(2px 2px at 90% 61%, rgba(141,124,255,.60) 42%, transparent 45%),
-    radial-gradient(1px 1px at 94% 83%, rgba(255,255,255,.48) 42%, transparent 45%),
-    radial-gradient(1.5px 1.5px at 97% 27%, rgba(105,246,255,.62) 42%, transparent 45%),
-    radial-gradient(1px 1px at 11% 92%, rgba(255,255,255,.50) 42%, transparent 45%),
-    radial-gradient(1px 1px at 28% 8%, rgba(255,255,255,.50) 42%, transparent 45%),
-    radial-gradient(1px 1px at 44% 91%, rgba(255,255,255,.44) 42%, transparent 45%),
-    radial-gradient(1px 1px at 63% 6%, rgba(255,255,255,.42) 42%, transparent 45%),
-    radial-gradient(1px 1px at 74% 11%, rgba(255,255,255,.46) 42%, transparent 45%);
-  opacity:.98;
-  animation: starsFloat 18s linear infinite;
-}
-
-body::after{
-  content:"";
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  background:
-    radial-gradient(circle at center, rgba(111,246,255,.06), transparent 40%),
-    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
-  background-size:auto, 36px 36px, 36px 36px;
-  opacity:.22;
-  mask-image: radial-gradient(circle at center, rgba(0,0,0,1), rgba(0,0,0,.18));
-}
-
-@keyframes starsFloat{
-  from { transform: translateY(0px); }
-  50% { transform: translateY(6px); }
-  to { transform: translateY(0px); }
-}
-
-.wrap{
-  width:min(92vw, 980px);
-  margin:0 auto;
-  position:relative;
-  z-index:2;
-}
-
-.center-screen{
-  min-height:100vh;
+  background:#040712;
+  color:#dffcff;
+  font-family:'Pretendard',sans-serif;
   display:flex;
-  align-items:center;
   justify-content:center;
-  padding:32px 0;
+  align-items:center;
+  height:100vh;
 }
 
 .panel{
-  width:min(92vw, 760px);
-  background:linear-gradient(180deg, rgba(8,18,38,.72), rgba(4,10,21,.76));
-  border:1px solid var(--line-soft);
-  border-radius:22px;
-  box-shadow:
-    0 0 0 1px rgba(111,246,255,.08) inset,
-    0 0 28px rgba(111,246,255,.08),
-    0 0 64px rgba(141,124,255,.08);
-  backdrop-filter: blur(14px);
-  padding:30px 26px;
-}
-
-.title{
-  font-size:12px;
-  letter-spacing:.32em;
-  text-transform:uppercase;
-  color:#bdfcff;
-  opacity:.78;
-  margin-bottom:18px;
-}
-
-.big{
-  font-size:clamp(18px, 4vw, 40px);
-  font-weight:700;
-  line-height:1.15;
-  margin:0 0 12px;
-}
-
-.muted{
-  color:#9fc2cf;
-  line-height:1.7;
-  font-size:12px;
+  width:600px;
   text-align:center;
 }
 
-input, textarea{
+input{
   width:100%;
-  border-radius:16px;
-  border:1px solid rgba(111,246,255,.45);
-  background:rgba(5,11,23,.72);
-  color:var(--text);
-  padding:15px 16px;
-  outline:none;
-  font-size:16px;
-  box-shadow:
-    0 0 0 1px rgba(111,246,255,.06) inset,
-    0 0 16px rgba(111,246,255,.08);
-}
-
-input::placeholder, textarea::placeholder{
-  color:rgba(223,252,255,.42);
-}
-
-input:focus, textarea:focus{
-  border-color:rgba(111,246,255,.82);
-  box-shadow:
-    0 0 0 1px rgba(111,246,255,.14) inset,
-    0 0 6px #00eaff,
-    0 0 18px rgba(0,234,255,.42),
-    0 0 36px rgba(141,124,255,.16);
+  padding:15px;
+  margin-top:20px;
+  background:#071021;
+  border:1px solid #6ff6ff;
+  color:white;
 }
 
 button{
-  appearance:none;
-  border:none;
-  border-radius:16px;
+  margin-top:20px;
   padding:14px 20px;
-  min-width:180px;
-  background:linear-gradient(90deg, rgba(111,246,255,.16), rgba(141,124,255,.18));
-  color:var(--text);
-  border:1px solid rgba(111,246,255,.5);
+  background:#6ff6ff;
+  border:none;
   cursor:pointer;
-  font-weight:700;
-  letter-spacing:.02em;
-  box-shadow:0 0 18px rgba(111,246,255,.12);
-}
-button:hover{
-  transform:translateY(-1px);
-  box-shadow:0 0 28px rgba(111,246,255,.18);
-}
-
-.row{display:flex; gap:12px; flex-wrap:wrap; justify-content:center}
-.center{text-align:center}
-.hide{display:none}
-
-.percent{
-  font-size:clamp(36px, 8vw, 72px);
-  font-weight:800;
-  color:#c9ffff;
-  text-shadow:0 0 10px rgba(111,246,255,.42), 0 0 26px rgba(111,246,255,.22);
-  margin:0;
-}
-
-.progress-shell{
-  margin:14px auto 10px;
-  width:min(560px, 100%);
-  height:14px;
-  border-radius:999px;
-  border:1px solid rgba(111,246,255,.3);
-  background:rgba(2,6,14,.72);
-  overflow:hidden;
-  box-shadow:inset 0 0 18px rgba(111,246,255,.06);
-}
-
-.progress-bar{
-  height:100%;
-  width:0%;
-  border-radius:999px;
-  background:linear-gradient(90deg, #6ff6ff, #8d7cff);
-  box-shadow:0 0 18px rgba(111,246,255,.38);
-  transition:width .35s ease;
-}
-
-.status{
-  min-height:24px;
-  margin-top:14px;
-  color:#c9eff6;
-  font-size:14px;
-}
-
-.small{
-  font-size:13px;
-  color:var(--muted);
-}
-
-@media (max-width:640px){
-  .panel{padding:24px 18px;border-radius:18px}
-  .title{font-size:12px}
-  input,textarea{font-size:15px}
 }
 </style>
 </head>
+
 <body>
-<div class="center-screen">
-  <div class="panel">
-    <div class="title center">CONTINUUM AUTHORITY // QUESTION NODE</div>
-    <div class="center small" id="typeBadge" style="margin-bottom:8px;"></div>
-    <h1 class="big center" id="question">질문을 불러오는 중입니다.</h1>
-    <p class="muted center" id="hint" style="min-height:32px;"></p>
 
-    <div style="margin-top:22px;">
-      <input id="answerInput" placeholder="정답을 입력하세요." />
-    </div>
+<div class="panel">
+  <h2 id="question">문제 불러오는 중...</h2>
+  <p id="hint"></p>
 
-    <div class="row" style="margin-top:18px;">
-      <button onclick="submitAnswer()">제출</button>
-      <button type="button" onclick="location.href='type.html'">타입 다시 입력</button>
-    </div>
-
-    <div class="progress-shell" style="margin-top:28px;">
-      <div class="progress-bar" id="progressBar"></div>
-    </div>
-    <div class="center small" id="progressText">해금률 불러오는 중...</div>
-
-    <div class="status center" id="status"></div>
-  </div>
+  <input id="input" placeholder="정답 입력" />
+  <button onclick="submit()">제출</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script>
-const firebaseConfig = {
-apiKey: "AIzaSyBR7ogWqmI1osy45YU7YI_hFcIfjTlk7s4",
-  authDomain: "teamgrua-2d9b9.firebaseapp.com",
-  projectId: "teamgrua-2d9b9",
-  storageBucket: "teamgrua-2d9b9.firebasestorage.app",
-  messagingSenderId: "195186066793",
-  appId: "1:195186066793:web:14eb2976f5f1b7304c69f8"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-</script>
 
 <script>
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "teamgrua-2d9b9.firebaseapp.com",
+  projectId: "teamgrua-2d9b9"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 const params = new URLSearchParams(location.search);
-const currentType = (params.get('type') || localStorage.getItem('gruaType') || '').toUpperCase();
-let currentData = null;
+const type = (params.get('type') || localStorage.getItem('gruaType') || '').toUpperCase();
 
 const baseRef = db.collection("game")
   .doc("season1")
@@ -289,87 +73,47 @@ const baseRef = db.collection("game")
   .doc("R0001")
   .collection("slots");
 
-function normalize(v) {
-  return String(v || '').trim();
-}
+let currentData = null;
 
-async function loadProgress() {
-  const snap = await baseRef.get();
-  let total = 0;
-  let unlocked = 0;
-  snap.forEach(doc => {
-    total++;
-    if (doc.data().unlocked === true) unlocked++;
-  });
-  const percent = total ? Math.floor((unlocked / total) * 100) : 0;
-  document.getElementById('progressBar').style.width = percent + '%';
-  document.getElementById('progressText').textContent = `현재 해금률 ${percent}% · ${unlocked} / ${total}`;
-  return { percent, total, unlocked };
-}
-
-async function loadQuestion() {
-  if (!currentType) {
-    document.getElementById('status').textContent = '타입 정보가 없습니다. 다시 입력 페이지로 이동하십시오.';
+async function load(){
+  if(!type){
+    alert("타입 없음");
     return;
   }
 
-  document.getElementById('typeBadge').textContent = 'TYPE // ' + currentType;
+  const doc = await baseRef.doc(type).get();
 
-  const doc = await baseRef.doc(currentType).get();
-  if (!doc.exists) {
-    document.getElementById('question').textContent = '존재하지 않는 타입입니다.';
-    document.getElementById('hint').textContent = '';
-    document.getElementById('status').textContent = '타입 코드를 다시 확인하십시오.';
+  if(!doc.exists){
+    document.getElementById('question').textContent = "잘못된 타입";
     return;
   }
 
   currentData = doc.data();
 
-  if (currentData.unlocked === true) {
-    document.getElementById('status').textContent = '이 타입은 이미 해금되었습니다.';
-  }
-
-  document.getElementById('question').textContent = currentData.question || '질문이 아직 등록되지 않았습니다.';
-  document.getElementById('hint').textContent = currentData.hint || '';
-  await loadProgress();
+  document.getElementById('question').textContent = currentData.question || "";
+  document.getElementById('hint').textContent = currentData.hint || "";
 }
 
-async function submitAnswer() {
-  const status = document.getElementById('status');
-  status.textContent = '';
+async function submit(){
+  const val = document.getElementById('input').value.trim();
 
-  if (!currentData) {
-    status.textContent = '질문 데이터를 먼저 불러와야 합니다.';
-    return;
-  }
+  if(!val) return;
 
-  const input = normalize(document.getElementById('answerInput').value);
-  if (!input) {
-    status.textContent = '정답을 입력하십시오.';
-    return;
-  }
+  const answers = currentData.answers || [];
 
-  const answers = Array.isArray(currentData.answers) ? currentData.answers.map(normalize) : [];
-  if (answers.includes(input)) {
-    await baseRef.doc(currentType).update({
-      unlocked: true
+  if(answers.includes(val)){
+    await baseRef.doc(type).update({
+      unlocked:true
     });
-    currentData.unlocked = true;
-    status.textContent = '정답입니다. 해금 상태를 반영했습니다.';
-    await loadProgress();
-    setTimeout(() => {
-      location.href = 'world.html';
-    }, 450);
-  } else {
-    status.textContent = '오답입니다. 같은 입력창에서 계속 다시 입력할 수 있습니다.';
+
+    location.href = "world.html";
+  }else{
+    alert("오답");
   }
 }
 
-document.getElementById('answerInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') submitAnswer();
-});
-
-loadQuestion();
+load();
 </script>
+
 </body>
 </html>
