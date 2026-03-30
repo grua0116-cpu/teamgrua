@@ -1,51 +1,20 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
 <title>WORLD</title>
-
-<style>
-body{
-  margin:0;
-  background:#040712;
-  color:#dffcff;
-  font-family:'Pretendard',sans-serif;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-}
-
-.panel{
-  width:700px;
-  text-align:center;
-}
-
-.percent{
-  font-size:60px;
-  margin-bottom:20px;
-}
-
-.small{
-  color:#9fc2cf;
-}
-</style>
 </head>
 
 <body>
 
-<div class="panel">
-  <div class="percent" id="percent">0%</div>
-  <div class="small">해금 상태 확인 중...</div>
-</div>
+<h1 id="percent">0%</h1>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
+  apiKey: "AIzaSyBR7ogWqmI1osy45YU7YI_hFcIfjTlk7s4",
   authDomain: "teamgrua-2d9b9.firebaseapp.com",
   projectId: "teamgrua-2d9b9"
 };
@@ -53,13 +22,11 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const TOTAL = 16;
-
 const baseRef = db.collection("game")
-  .doc("season1")
-  .collection("rounds")
-  .doc("R0001")
-  .collection("slots");
+.doc("season1")
+.collection("rounds")
+.doc("R0001")
+.collection("slots");
 
 async function load(){
   const snap = await baseRef.get();
@@ -69,17 +36,15 @@ async function load(){
 
   snap.forEach(doc=>{
     total++;
-    if(doc.data().unlocked === true) unlocked++;
+    if(doc.data().unlocked) unlocked++;
   });
 
-  const percent = Math.floor((unlocked / TOTAL) * 100);
-  document.getElementById('percent').textContent = percent + "%";
+  document.getElementById('percent').textContent =
+    Math.floor((unlocked/16)*100) + "%";
 
-  // ✅ 핵심: 전체 해금 시 이동
-  if(unlocked === TOTAL){
-    setTimeout(()=>{
-      location.href = "ending.html";
-    },800);
+  // 👉 이거 하나만 추가된 상태
+  if(unlocked === 16){
+    location.href = "ending.html";
   }
 }
 
