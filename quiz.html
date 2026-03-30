@@ -1,62 +1,22 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
 <title>QUIZ</title>
-
-<style>
-body{
-  margin:0;
-  background:#040712;
-  color:#dffcff;
-  font-family:'Pretendard',sans-serif;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-}
-
-.panel{
-  width:600px;
-  text-align:center;
-}
-
-input{
-  width:100%;
-  padding:15px;
-  margin-top:20px;
-  background:#071021;
-  border:1px solid #6ff6ff;
-  color:white;
-}
-
-button{
-  margin-top:20px;
-  padding:14px 20px;
-  background:#6ff6ff;
-  border:none;
-  cursor:pointer;
-}
-</style>
 </head>
 
 <body>
 
-<div class="panel">
-  <h2 id="question">문제 불러오는 중...</h2>
-  <p id="hint"></p>
-
-  <input id="input" placeholder="정답 입력" />
-  <button onclick="submit()">제출</button>
-</div>
+<h2 id="question">로딩중</h2>
+<input id="input">
+<button onclick="submit()">제출</button>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
+  apiKey: "AIzaSyBR7ogWqmI1osy45YU7YI_hFcIfjTlk7s4",
   authDomain: "teamgrua-2d9b9.firebaseapp.com",
   projectId: "teamgrua-2d9b9"
 };
@@ -68,44 +28,24 @@ const params = new URLSearchParams(location.search);
 const type = (params.get('type') || localStorage.getItem('gruaType') || '').toUpperCase();
 
 const baseRef = db.collection("game")
-  .doc("season1")
-  .collection("rounds")
-  .doc("R0001")
-  .collection("slots");
+.doc("season1")
+.collection("rounds")
+.doc("R0001")
+.collection("slots");
 
-let currentData = null;
+let data = null;
 
 async function load(){
-  if(!type){
-    alert("타입 없음");
-    return;
-  }
-
   const doc = await baseRef.doc(type).get();
-
-  if(!doc.exists){
-    document.getElementById('question').textContent = "잘못된 타입";
-    return;
-  }
-
-  currentData = doc.data();
-
-  document.getElementById('question').textContent = currentData.question || "";
-  document.getElementById('hint').textContent = currentData.hint || "";
+  data = doc.data();
+  document.getElementById('question').textContent = data.question;
 }
 
 async function submit(){
   const val = document.getElementById('input').value.trim();
 
-  if(!val) return;
-
-  const answers = currentData.answers || [];
-
-  if(answers.includes(val)){
-    await baseRef.doc(type).update({
-      unlocked:true
-    });
-
+  if(data.answers.includes(val)){
+    await baseRef.doc(type).update({ unlocked:true });
     location.href = "world.html";
   }else{
     alert("오답");
