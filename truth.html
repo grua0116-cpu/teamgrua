@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>truth_final_complete</title>
+<style>
+:root{
+  --bg-1:#040712;
+  --bg-2:#071021;
+  --bg-3:#02040b;
+  --line:#6ff6ff;
+  --line-soft:rgba(111,246,255,.26);
+  --text:#dffcff;
+  --muted:#9fc2cf;
+  --violet:#8d7cff;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--text);
+  font-family:"Pretendard","Noto Sans KR",system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(105,246,255,.12), transparent 32%),
+    radial-gradient(circle at 80% 0%, rgba(141,124,255,.12), transparent 34%),
+    radial-gradient(circle at 50% 100%, rgba(73,96,255,.08), transparent 36%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 52%, var(--bg-3) 100%);
+  opacity:0;
+  transition:opacity 1s ease;
+  position:relative;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background-image:
+    radial-gradient(2px 2px at 5% 12%, rgba(255,255,255,.84) 42%, transparent 45%),
+    radial-gradient(1px 1px at 9% 31%, rgba(255,255,255,.54) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 14% 54%, rgba(105,246,255,.62) 42%, transparent 45%),
+    radial-gradient(2px 2px at 18% 77%, rgba(255,255,255,.72) 42%, transparent 45%),
+    radial-gradient(1px 1px at 23% 20%, rgba(255,255,255,.40) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 27% 42%, rgba(141,124,255,.54) 42%, transparent 45%),
+    radial-gradient(2px 2px at 32% 63%, rgba(255,255,255,.68) 42%, transparent 45%),
+    radial-gradient(1px 1px at 36% 85%, rgba(255,255,255,.36) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 41% 14%, rgba(105,246,255,.64) 42%, transparent 45%),
+    radial-gradient(2px 2px at 46% 36%, rgba(255,255,255,.72) 42%, transparent 45%),
+    radial-gradient(1px 1px at 51% 57%, rgba(255,255,255,.42) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 56% 79%, rgba(141,124,255,.48) 42%, transparent 45%),
+    radial-gradient(2px 2px at 61% 24%, rgba(105,246,255,.60) 42%, transparent 45%),
+    radial-gradient(1px 1px at 66% 46%, rgba(255,255,255,.40) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 71% 68%, rgba(255,255,255,.52) 42%, transparent 45%),
+    radial-gradient(2px 2px at 76% 88%, rgba(105,246,255,.56) 42%, transparent 45%);
+  opacity:.9;
+}
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at center, rgba(111,246,255,.05), transparent 40%),
+    linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
+  background-size:auto, 36px 36px, 36px 36px;
+  opacity:.18;
+  mask-image: radial-gradient(circle at center, rgba(0,0,0,1), rgba(0,0,0,.18));
+}
+.wrap{
+  width:min(94vw, 1080px);
+  margin:0 auto;
+  padding:44px 0 80px;
+  position:relative;
+  z-index:2;
+}
+.hero,.section{
+  border:1px solid var(--line-soft);
+  border-radius:20px;
+  background:linear-gradient(180deg, rgba(8,18,38,.72), rgba(4,10,21,.76));
+  box-shadow:
+    0 0 0 1px rgba(111,246,255,.06) inset,
+    0 0 28px rgba(111,246,255,.08),
+    0 0 56px rgba(141,124,255,.06);
+  backdrop-filter:blur(14px);
+}
+.hero{
+  margin:0 auto 24px;
+  padding:22px 20px 18px;
+}
+.eyebrow,.section-title{
+  font-size:12px;
+  letter-spacing:.34em;
+  text-transform:uppercase;
+  color:#bdfcff;
+  opacity:.82;
+  font-weight:800;
+}
+.hero h1{
+  margin:10px 0 12px;
+  font-size:clamp(30px, 5vw, 54px);
+  line-height:1.08;
+}
+.hero p,.muted{
+  color:var(--muted);
+  line-height:1.88;
+}
+.section{
+  overflow:hidden;
+  margin-bottom:18px;
+  opacity:0;
+  transform:translateY(24px);
+  transition:opacity .75s ease, transform .75s ease;
+}
+.section.visible{
+  opacity:1;
+  transform:translateY(0);
+}
+.section-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:16px 18px;
+  border-bottom:1px solid rgba(111,246,255,.14);
+  background:linear-gradient(90deg, rgba(111,246,255,.06), rgba(141,124,255,.04));
+}
+.section-index{
+  font-size:12px;
+  color:#7edee8;
+  opacity:.84;
+  font-weight:700;
+}
+.section-body{
+  padding:20px 18px 22px;
+}
+.block{
+  padding:16px;
+  border:1px solid rgba(111,246,255,.12);
+  border-radius:16px;
+  background:rgba(5,11,23,.28);
+}
+.block + .block{ margin-top:12px; }
+.kicker{
+  font-size:12px;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:#89edf6;
+  margin-bottom:10px;
+  font-weight:800;
+}
+.text{
+  white-space:pre-line;
+  line-height:1.92;
+  color:var(--text);
+}
+.text strong{
+  color:#c9ffff;
+  font-weight:800;
+}
+.grade-grid,.principles-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:12px;
+  margin-top:14px;
+}
+.grade,.principle{
+  padding:14px;
+  border-radius:14px;
+  border:1px solid rgba(111,246,255,.12);
+  background:rgba(5,11,23,.26);
+}
+.grade strong{
+  display:block;
+  margin-bottom:8px;
+  color:#c9ffff;
+  font-weight:800;
+}
+.principle .name,.phase,.log-title{
+  font-size:12px;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:#89edf6;
+  margin-bottom:8px;
+  font-weight:800;
+}
+.timeline{
+  display:grid;
+  gap:12px;
+}
+.timeline-item{
+  padding:14px 14px 14px 18px;
+  border-left:2px solid rgba(111,246,255,.36);
+  border-radius:0 14px 14px 0;
+  background:rgba(5,11,23,.26);
+}
+.log-list{
+  display:grid;
+  gap:12px;
+}
+.log{
+  border:1px solid rgba(111,246,255,.12);
+  border-radius:16px;
+  overflow:hidden;
+  background:rgba(5,11,23,.26);
+}
+.log-head{
+  padding:12px 14px;
+  border-bottom:1px solid rgba(111,246,255,.12);
+  background:rgba(111,246,255,.04);
+}
+.log-body{
+  padding:14px;
+  white-space:pre-line;
+  line-height:1.9;
+}
+.cta{
+  margin-top:20px;
+  padding:20px;
+  border:1px solid rgba(111,246,255,.16);
+  border-radius:16px;
+  background:rgba(5,11,23,.34);
+}
+.input{
+  width:100%;
+  border-radius:16px;
+  border:1px solid rgba(111,246,255,.42);
+  background:rgba(5,11,23,.72);
+  color:var(--text);
+  padding:14px 16px;
+  outline:none;
+  font-size:15px;
+  margin-top:14px;
+}
+.actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:22px;
+}
+.button{
+  appearance:none;
+  border:none;
+  border-radius:16px;
+  padding:13px 18px;
+  min-width:180px;
+  background:linear-gradient(90deg, rgba(111,246,255,.16), rgba(141,124,255,.18));
+  color:var(--text);
+  border:1px solid rgba(111,246,255,.5);
+  cursor:pointer;
+  font-weight:700;
+  letter-spacing:.04em;
+  box-shadow:0 0 18px rgba(111,246,255,.12);
+}
+.button:hover{
+  box-shadow:0 0 28px rgba(111,246,255,.18);
+}
+.status{
+  min-height:24px;
+  margin-top:16px;
+  color:#c9eff6;
+  font-size:14px;
+}
+.fade{
+  position:fixed;
+  inset:0;
+  background:#02040b;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .9s ease;
+  z-index:10;
+}
+.fade.show{opacity:1}
+@media (max-width:840px){
+  .grade-grid,.principles-grid{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .wrap{padding:24px 0 56px}
+  .hero,.section-body{padding-left:14px;padding-right:14px}
+  .section-head{padding-left:14px;padding-right:14px}
+  .hero h1{font-size:32px}
+  .actions{justify-content:stretch}
+  .button{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Continuum Authority // Truth Archive</div>
+    <h1>진실 열람 기록</h1>
+    <p>지금까지 확보된 내부 기록을 기반으로 정리된 열람 문서입니다. 아래로 자연스럽게 내려가며 내용을 확인할 수 있도록 구성했습니다.</p>
+  </section>
+
+  <section class="section reveal">
+    <div class="section-head">
+      <div class="section-title">Declaration</div>
+      <div class="section-index">01</div>
+    </div>
+    <div class="section-body">
+      <div class="block">
+        <div class="text"><strong>1. 세계관 선언문</strong>
+
+<strong>CONTINUUM AUTHORITY</strong>
+
+우리는 연속체를 관리한다.
+
+연속체란,
+개별 사건이 아닌
+서로 연결된 모든 선택과 결과의 흐름을 의미한다.
+
+우리는 그 흐름의 붕괴를 방지하고,
+예측 불가능한 변화를 최소화하기 위해 존재한다.
+이를 통해 세계의 붕괴를 막고 모든 인류와 생명체의 안정적 궤도 유지를 목적한다.
+
+우리는 다음을 원칙으로 한다:
+
+- 모든 변칙은 식별되어야 한다
+- 모든 변칙은 기록되어야 한다
+- 모든 변칙은 통제 가능 상태로 유지되어야 한다
+- 모든 변칙은 세계와 모든 생명체의 존속과 궤도 유지에 방해되어서는 안된다
+
+
+우리는 질서를 유지한다.
+
+질서는 선택의 자유보다 우선한다.
+질서는 예측 가능성을 보장한다.
+질서는 연속체를 유지하는 유일한 방식으로 채택하고 있다.
+
+이에 따라 평의회를 통해 우리 세계에 개입한다.
+개입의 형태는 다양하며
+필요할 경우,
+제거·억제·격리·삭제·말소 조치를 취할 수 있다.
+
+우리 세계의 모든 개체는 각 등급을 부여받으며
+위험도에 따라 해당 조치를 적용한다.</div>
+      </div>
+
+      <div class="grade-grid">
+        <div class="grade">
+          <strong>G : GENERAL STABLE</strong>
+          <div class="text">연속체에 영향을 미치지 않는 안정 상태
+관찰만 수행되며 개입은 필요하지 않다</div>
+        </div>
+
+        <div class="grade">
+          <strong>R : REGULATED VARIABLE</strong>
+          <div class="text">제한적 변칙 요소
+연속체에 미세한 영향을 주며 통제 가능 상태 유지
+필요 시 억제 및 관리 대상</div>
+        </div>
+
+        <div class="grade">
+          <strong>U : UNSTABLE ANOMALY</strong>
+          <div class="text">연속체 구조에 변화를 유발하는 변칙
+예측 불가능성이 존재하며
+격리 및 삭제 대상</div>
+        </div>
+
+        <div class="grade">
+          <strong>A : ABSOLUTE EXCEPTION</strong>
+          <div class="text">연속체 법칙을 초월하는 예외적 현상
+필요 시 삭제·말소 대상이나 완전 제거 불가능
+복합 조치를 통한 간접 조정 대상
+
+현재까지 확인된 유일한 A등급 개체: NAR-LA-01(개념형 이상 개체)
+코드명 : L-AFFECT
+관리체 : NULL DIVISION</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section reveal">
+    <div class="section-head">
+      <div class="section-title">Organization</div>
+      <div class="section-index">02</div>
+    </div>
+    <div class="section-body">
+      <div class="block">
+        <div class="text"><strong>2. 조직도</strong>
+
+<strong>[ORGANIZATION]</strong>
+CONTINUUM AUTHORITY
+└ Directive Council (평의회)
+   ├ Observation Division (관측부)
+   ├ Control Division (통제부)
+   ├ Archive Division (기록보관부)
+   ├ NULL Division (예외 관리부/독립 실행 단위)
+   └ GRUA (독립 연구 단위)</div>
+      </div>
+
+      <div class="principles-grid">
+        <div class="principle">
+          <div class="name">CONTINUUM AUTHORITY</div>
+          <div class="text">"모든 생명체의 안정적 궤도 지속을 통한 연속체 유지를 위하여"</div>
+        </div>
+
+        <div class="principle">
+          <div class="name">Directive Council</div>
+          <div class="text">"진실과 사실은 연속체의 안정화보다 앞서지 않는다"</div>
+        </div>
+
+        <div class="principle">
+          <div class="name">Control Division</div>
+          <div class="text">"수단과 방법을 가리지 않는다"</div>
+        </div>
+
+        <div class="principle">
+          <div class="name">Archive Division</div>
+          <div class="text">"해답은 축적된다"</div>
+        </div>
+
+        <div class="principle">
+          <div class="name">NULL Division</div>
+          <div class="text">"통제되지 않는 변칙은 존재할 수 없다."</div>
+        </div>
+
+        <div class="principle">
+          <div class="name">GRUA</div>
+          <div class="text">"연속체에서 발생한 모든 변칙은 보호되어야 한다"</div>
+        </div>
+      </div>
+
+      <div class="block" style="margin-top:14px;">
+        <div class="text"><strong>[GRUA PROTOCOL]</strong>
+GRUA는 Authority 내부에 존재하지만
+기존 통제 프로토콜을 따르지 않는 독립 연구 단위다.
+이에 따라 Authority 본부가 아닌 별도 개체 단위에서의 연구가 허용된다.
+
+GRUA는 다음 원칙을 따른다:
+- 연속체에서 발생한 모든 변칙을 연구한다
+- 연속체에서 발생한 모든 변칙을 보호한다
+- 연속체의 지속 가능성과 유지를 위한 연구를 진행한다
+- 연속체의 유지를 위해 여타 부서와의 충돌을 두려워하지 않는다
+- GRUA의 연구 권한이 우선되는 바는 없으나 평의회를 통해 변칙을 규칙으로 흡수할 수 있다</div>
+      </div>
+
+      <div class="block">
+        <div class="text"><strong>[GRUA PROTOCOL – TYPE ASSIGNMENT]</strong>
+관측 → 기록 → 분석 → 해석 → 통제 설계 → 위험 평가 → 정책 결정 → 유지/억제 → 진행 → 사후 검증
+
+1. 관측 (OBSERVATION)
+IFAB – 증인
+→ 관측 / 거리 유지 / 관계 변화 포착
+
+IELB – 기준관찰자-알파
+→ 초기 징후 감지 / 임계 전 상태 추적
+
+2. 기록 (RECORDING)
+IFAP – 기록보관자
+→ 데이터 축적 / 사건 기록
+
+3. 분석 (ANALYSIS)
+IEAP – 분석가
+→ 조건 / 구조 / 변수 분석
+
+IFLB – 정리자
+→ 패턴 정리 / 구조화
+
+4. 해석 (INTERPRETATION)
+OEAP – 고해자
+→ 내면 데이터 해석 / 의미 추출
+
+OELP – 호환자
+→ 상태 전이 해석 / 구조 변환 이해
+
+5. 통제 설계 (CONTROL DESIGN)
+IEAB – 기준 관찰자
+→ 기준값 설정 / 임계 조건 정의
+
+IFLP – 저자
+→ 조건 재구성 / 상황 설계
+
+6. 위험 평가 (RISK ASSESSMENT)
+OFAB – 파수
+→ 확산 경로 감시 / 위험 탐지
+
+OEAB – 종결 기록자-오메가
+→ 붕괴 가능성 판단 / 종료 시나리오 검토
+
+7. 정책 결정 (POLICY DECISION)
+IELP – 전략가
+→ 유지 vs 억제 결정 / 정책 설계
+
+8. 유지 / 억제 (MAINTENANCE / SUPPRESSION)
+OFAP – 애호가
+→ 반복 선택 / 지속 유지
+
+IEAB – 기준 관찰자 (재투입)
+→ 기준 유지 / 조건 관리
+
+9. 진행 (EXECUTION)
+OFLP – 공명자
+→ 확산 / 전달 / 구조 전파
+
+10. 사후 검증 (POST-VERIFICATION)
+OELB – 목격자
+→ 결과 관측 / 여파 확인
+
+OFLB – 기록을 기억하는 자
+→ 시간 흐름 기반 장기 기록 / 변화 축적</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section reveal">
+    <div class="section-head">
+      <div class="section-title">Timeline</div>
+      <div class="section-index">03</div>
+    </div>
+    <div class="section-body">
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="phase">[TIMELINE]</div>
+          <div class="text">[NAR-LA-01 최초 발생]
+최초 개념형 이상 개체 발생 사례 보고
+→ 특정 조건에서 선택 패턴 붕괴 확인</div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="phase">확산 단계</div>
+          <div class="text">유사 사례 다수 발생
+→ NAR-LA-01의 비국소적 확산 가능성 확인</div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="phase">위험 판정 단계</div>
+          <div class="text">CONTINUUM AUTHORITY
+→ 제거 및 격리 대상 지정
+
+GRUA
+→ 제거 불가 및 연구 필요 주장
+
+NULL DIVISION
+→ 지속 관찰 및 개체 관리 필요 주장
+
+
+CONTINUUM AUTHORITY
+→ A등급 재분류 결정
+→ NULL DIVISION 관리 이관</div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="phase">충돌 단계</div>
+          <div class="text">NULL DIVISION의 전체 말소 시도 수행
+→ 효과 미미
+→ 개체 영향 잔존 확인
+→ 비합의 관리 주장에 따른 평의회 소집
+→ 관리 체계 보고 및 단계 수정</div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="phase">전환 단계</div>
+          <div class="text">GRUA 별도 연구 체계 수립
+→ NAR-LA-01 다수 발생 보유 사례 발견
+→ 관측 위치로 별도 연구 시설 설립</div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="phase">현재</div>
+          <div class="text">GRUA 주도 속 관리 이관을 위한 연구 진행
+→ 외부 참여자 기반 데이터 수집 활성화</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section reveal">
+    <div class="section-head">
+      <div class="section-title">GRUA Log</div>
+      <div class="section-index">04</div>
+    </div>
+    <div class="section-body">
+      <div class="log-list">
+        <div class="log">
+          <div class="log-head"><div class="log-title">LOG-01</div></div>
+          <div class="log-body">-인간 사회 내 관측 효율이 높은 지역으로 연구 거점 설정
+-관리 체계 정리 및 사례 수집</div>
+        </div>
+
+        <div class="log">
+          <div class="log-head"><div class="log-title">LOG-02</div></div>
+          <div class="log-body">-인간의 성장 과정을 통한 발생 사례 수집 시작
+-성장 단계를 근접하게 관찰할 수 있는 '교육시설' 형태로 변경</div>
+        </div>
+
+        <div class="log">
+          <div class="log-head"><div class="log-title">LOG-03</div></div>
+          <div class="log-body">-지정학적 리스크 지속 발생
+-연구 유지 난항
+-NULL DIVISION 전체 말소 시도 수행 여파</div>
+        </div>
+
+        <div class="log">
+          <div class="log-head"><div class="log-title">LOG-04</div></div>
+          <div class="log-body">-연구 도중 변칙 개체 ■■■와 접촉
+-일반 인간보다 월등히 많은 양의 NAR-LA-01 보유
+- ■■■와의; 접촉 이후 연구원 전원 개체 전이 (해당 내용은 보고 시 삭제 요망)
+- ■■■을 메인 연구 대상으로 설정 및 합의</div>
+        </div>
+
+        <div class="log">
+          <div class="log-head"><div class="log-title">LOG-05</div></div>
+          <div class="log-body">-개체 전이 이후 발생 및 유지 조건의 형태 변형 확인
+-상황 및 조건에 따라 유지 기간 및 강도 차이 확인
+-사건으로 인한 ■■■ 내부의 일부 개체 소실 및 말소 사례 확인</div>
+        </div>
+
+        <div class="log">
+          <div class="log-head"><div class="log-title">LOG-06</div></div>
+          <div class="log-body">대상은 손실 이후에도 동일한 선택 패턴을 반복함
+→ 비합리적 지속성 확인</div>
+        </div>
+
+        <div class="log">
+          <div class="log-head"><div class="log-title">LOG-07</div></div>
+          <div class="log-body">해당 개체는 단일 개체가 아닌
+“조건 기반 연속/영구 발생 구조”일 가능성 제기됨</div>
+        </div>
+
+        <div class="log">
+          <div class="log-head"><div class="log-title">LOG-08</div></div>
+          <div class="log-body">-메인 연구 대상, 실험 중 예상 외 반응 발생
+→ 개체 간 상호 영향 가능성 확인
+-신체 접촉을 통한 확산 가능성 확인</div>
+        </div>
+
+        <div class="log">
+          <div class="log-head"><div class="log-title">LOG-09</div></div>
+          <div class="log-body">일부 사례에서 제거 이후에도
+유사 현상이 재발됨
+→ 완전 제거 불가능성 재확인</div>
+        </div>
+
+        <div class="log">
+          <div class="log-head"><div class="log-title">LOG-10</div></div>
+          <div class="log-body">NULL DIVISION의 전체 말소 요구
+→ 평의회 확보를 통한 변칙의 규칙화 시도
+L-AFFECT PROJECT 시도
+→ 2026 GRUA 신입생 연구로 참여 가능성 평가
+→ 2026 GRUA 신입생 포지션 확인을 통한 프로토콜 전략 구성
+→ 2026 GRUA 신입생을 통해 평의회 장악 유도</div>
+        </div>
+      </div>
+
+      <div class="cta">
+        <div class="text">후속 연구를 위한 동의가 요구됩니다. 당신이 인지한 사랑의 언어를 기록하십시오. 입력된 데이터는 후속 관측 및 변칙 발생 구조 분석에 사용됩니다.</div>
+        <input id="consentInput" class="input" placeholder="당신의 사랑의 언어를 입력하세요.">
+        <div class="actions">
+          <button id="submitBtn" class="button" type="button">SUBMIT CONSENT</button>
+        </div>
+        <div id="status" class="status"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="fade" class="fade"></div>
+
+<script>
+window.addEventListener('load', () => {
+  document.body.style.opacity = '1';
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+});
+
+const submitBtn = document.getElementById('submitBtn');
+const statusEl = document.getElementById('status');
+const fadeEl = document.getElementById('fade');
+
+submitBtn.addEventListener('click', async () => {
+  const value = document.getElementById('consentInput').value.trim();
+
+  if (!value) {
+    statusEl.textContent = '입력 후 제출할 수 있습니다.';
+    return;
+  }
+
+  localStorage.setItem('gruaConsent', value);
+  submitBtn.disabled = true;
+  statusEl.textContent = '연구 동의 기록 중...';
+
+  await wait(700);
+  statusEl.textContent = '후속 연구 접근 권한 확인 중...';
+
+  await wait(800);
+  statusEl.textContent = '기록 완료';
+
+  await wait(500);
+  fadeEl.classList.add('show');
+
+  setTimeout(()=>{
+    location.href = 'archive.html';
+  },900);
+});
+
+function wait(ms){
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+</script>
+</body>
+</html>
