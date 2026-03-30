@@ -30,62 +30,60 @@ body{
 .small{
   color:#9fc2cf;
 }
-
-button{
-  margin-top:20px;
-  padding:14px 24px;
-  background:#6ff6ff;
-  border:none;
-  cursor:pointer;
-}
 </style>
 </head>
 
 <body>
 
 <div class="panel">
-
   <div class="percent" id="percent">0%</div>
   <div class="small">해금 상태 확인 중...</div>
-
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <script>
-// === Firebase 설정 (기존 그대로 사용하면 됨) ===
-// 본인 config 쓰세요
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "teamgrua-2d9b9.firebaseapp.com",
+  projectId: "teamgrua-2d9b9"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 const TOTAL = 16;
 
-// 테스트용 (실제는 Firestore에서 가져오면 됨)
-let slots = JSON.parse(localStorage.getItem("gruaSlots")) || [];
+const baseRef = db.collection("game")
+  .doc("season1")
+  .collection("rounds")
+  .doc("R0001")
+  .collection("slots");
 
-// 없으면 초기화
-if(slots.length === 0){
-  slots = Array.from({length:16}, () => ({unlocked:false}));
-}
+async function load(){
+  const snap = await baseRef.get();
 
-// 퍼센트 계산
-function updateUI(){
-  const unlocked = slots.filter(s => s.unlocked).length;
+  let total = 0;
+  let unlocked = 0;
+
+  snap.forEach(doc=>{
+    total++;
+    if(doc.data().unlocked === true) unlocked++;
+  });
+
   const percent = Math.floor((unlocked / TOTAL) * 100);
-
   document.getElementById('percent').textContent = percent + "%";
 
-  // ✅ 핵심 조건 (전체 해금)
+  // ✅ 핵심: 전체 해금 시 이동
   if(unlocked === TOTAL){
-    goEnding();
+    setTimeout(()=>{
+      location.href = "ending.html";
+    },800);
   }
 }
 
-// 👉 연결만 추가
-function goEnding(){
-  setTimeout(() => {
-    location.href = "ending.html";
-  }, 800);
-}
-
-// 초기 실행
-updateUI();
-
+load();
 </script>
 
 </body>
