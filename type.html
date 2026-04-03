@@ -144,28 +144,49 @@ input{
 }
 
 button{
-  margin-top:18px;
+  appearance:none;
+  border:none;
+  border-radius:18px;
+  padding:16px 26px;
+  min-width:200px;
+
+  background:linear-gradient(90deg, rgba(111,246,255,.18), rgba(141,124,255,.22));
+  color:var(--text);
+
+  border:1px solid rgba(111,246,255,.65);
+  cursor:pointer;
+
+  font-weight:700;
+  letter-spacing:.04em;
+
+  box-shadow:
+    0 0 0 1px rgba(111,246,255,.12) inset,
+    0 0 14px rgba(111,246,255,.18),
+    0 0 32px rgba(141,124,255,.12);
+
+  backdrop-filter: blur(6px);
+  transition: all .25s ease;
 }
 
-.status{
-  margin-top:14px;
+/* hover */
+button:hover{
+  transform:translateY(-2px);
+
+  box-shadow:
+    0 0 0 1px rgba(111,246,255,.18) inset,
+    0 0 18px rgba(111,246,255,.28),
+    0 0 40px rgba(141,124,255,.18);
+
+  border-color:rgba(111,246,255,.9);
 }
-</style>
-</head>
-<body>
 
-<div class="center-screen">
-  <div class="panel">
-    <div class="title">CONTINUUM AUTHORITY // TYPE GATE</div>
-    <h1 class="big">당신의 궤도를 입력하십시오</h1>
-    <p class="muted">당신의 포지션 타입을 입력하면 해당 질문 구역으로 이동합니다.</p>
-
-    <input id="typeInput" placeholder="예: IFAP" maxlength="4" />
-    <button onclick="goType()">입장</button>
-
-    <div class="status" id="status"></div>
-  </div>
-</div>
+/* 클릭 */
+button:active{
+  transform:translateY(0);
+  box-shadow:
+    0 0 10px rgba(111,246,255,.25) inset,
+    0 0 12px rgba(111,246,255,.18);
+}
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
