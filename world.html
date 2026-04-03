@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WORLD</title>
+<style>
+:root{
+  --bg-1:#040712;
+  --bg-2:#071021;
+  --bg-3:#02040b;
+  --line:#6ff6ff;
+  --line-soft:rgba(111,246,255,.38);
+  --violet:#8d7cff;
+  --text:#dffcff;
+  --muted:#9fc2cf;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--text);
+  font-family:"Pretendard","Noto Sans KR",system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(105,246,255,.14), transparent 32%),
+    radial-gradient(circle at 80% 0%, rgba(141,124,255,.16), transparent 34%),
+    radial-gradient(circle at 50% 100%, rgba(73,96,255,.10), transparent 36%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 52%, var(--bg-3) 100%);
+  overflow-x:hidden;
+  position:relative;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background-image:
+    radial-gradient(2px 2px at 5% 12%, rgba(255,255,255,.88) 42%, transparent 45%),
+    radial-gradient(1px 1px at 9% 31%, rgba(255,255,255,.54) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 14% 54%, rgba(105,246,255,.62) 42%, transparent 45%),
+    radial-gradient(2px 2px at 18% 77%, rgba(255,255,255,.74) 42%, transparent 45%),
+    radial-gradient(1px 1px at 23% 20%, rgba(255,255,255,.44) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 27% 42%, rgba(141,124,255,.60) 42%, transparent 45%),
+    radial-gradient(2px 2px at 32% 63%, rgba(255,255,255,.72) 42%, transparent 45%),
+    radial-gradient(1px 1px at 36% 85%, rgba(255,255,255,.42) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 41% 14%, rgba(105,246,255,.68) 42%, transparent 45%),
+    radial-gradient(2px 2px at 46% 36%, rgba(255,255,255,.78) 42%, transparent 45%),
+    radial-gradient(1px 1px at 51% 57%, rgba(255,255,255,.46) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 56% 79%, rgba(141,124,255,.58) 42%, transparent 45%),
+    radial-gradient(2px 2px at 61% 24%, rgba(105,246,255,.64) 42%, transparent 45%),
+    radial-gradient(1px 1px at 66% 46%, rgba(255,255,255,.48) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 71% 68%, rgba(255,255,255,.58) 42%, transparent 45%),
+    radial-gradient(2px 2px at 76% 88%, rgba(105,246,255,.60) 42%, transparent 45%),
+    radial-gradient(1px 1px at 81% 19%, rgba(255,255,255,.42) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 85% 39%, rgba(255,255,255,.56) 42%, transparent 45%),
+    radial-gradient(2px 2px at 90% 61%, rgba(141,124,255,.60) 42%, transparent 45%),
+    radial-gradient(1px 1px at 94% 83%, rgba(255,255,255,.48) 42%, transparent 45%);
+  opacity:.98;
+  animation:starsFloat 18s linear infinite;
+}
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at center, rgba(111,246,255,.06), transparent 40%),
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:auto, 36px 36px, 36px 36px;
+  opacity:.22;
+  mask-image: radial-gradient(circle at center, rgba(0,0,0,1), rgba(0,0,0,.18));
+}
+@keyframes starsFloat{
+  from{transform:translateY(0)}
+  50%{transform:translateY(6px)}
+  to{transform:translateY(0)}
+}
+.center-screen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px 0;
+  position:relative;
+  z-index:2;
+}
+.panel{
+  width:min(92vw, 760px);
+  background:linear-gradient(180deg, rgba(8,18,38,.72), rgba(4,10,21,.76));
+  border:1px solid var(--line-soft);
+  border-radius:22px;
+  box-shadow:
+    0 0 0 1px rgba(111,246,255,.08) inset,
+    0 0 28px rgba(111,246,255,.08),
+    0 0 64px rgba(141,124,255,.08);
+  backdrop-filter:blur(14px);
+  padding:30px 26px;
+}
+.title{
+  font-size:14px;
+  letter-spacing:.32em;
+  text-transform:uppercase;
+  color:#bdfcff;
+  opacity:.78;
+  margin-bottom:18px;
+  text-align:center;
+}
+.percent{
+  font-size:clamp(36px, 8vw, 72px);
+  font-weight:800;
+  color:#c9ffff;
+  text-shadow:0 0 10px rgba(111,246,255,.42), 0 0 26px rgba(111,246,255,.22);
+  margin:0;
+  text-align:center;
+}
+.big{
+  font-size:clamp(24px, 4vw, 40px);
+  font-weight:700;
+  line-height:1.15;
+  margin:0 0 12px;
+  text-align:center;
+}
+.muted{
+  color:var(--muted);
+  line-height:1.9;
+  text-align:center;
+}
+.small{
+  font-size:13px;
+  color:var(--muted);
+  text-align:center;
+}
+.progress-shell{
+  margin:14px auto 10px;
+  width:min(560px, 100%);
+  height:14px;
+  border-radius:999px;
+  border:1px solid rgba(111,246,255,.3);
+  background:rgba(2,6,14,.72);
+  overflow:hidden;
+  box-shadow:inset 0 0 18px rgba(111,246,255,.06);
+}
+.progress-bar{
+  height:100%;
+  width:0%;
+  border-radius:999px;
+  background:linear-gradient(90deg, #6ff6ff, #8d7cff);
+  box-shadow:0 0 18px rgba(111,246,255,.38);
+  transition:width .35s ease;
+}
+.status{
+  min-height:24px;
+  margin-top:14px;
+  color:#c9eff6;
+  font-size:14px;
+  text-align:center;
+}
+.row{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+.hide{display:none}
+button{
+  appearance:none;
+  border:none;
+  border-radius:16px;
+  padding:14px 20px;
+  min-width:180px;
+  background:linear-gradient(90deg, rgba(111,246,255,.16), rgba(141,124,255,.18));
+  color:var(--text);
+  border:1px solid rgba(111,246,255,.5);
+  cursor:pointer;
+  font-weight:700;
+  letter-spacing:.02em;
+  box-shadow:0 0 18px rgba(111,246,255,.12);
+}
+button:hover{
+  transform:translateY(-1px);
+  box-shadow:0 0 28px rgba(111,246,255,.18);
+}
+textarea{
+  width:100%;
+  border-radius:16px;
+  border:1px solid rgba(111,246,255,.45);
+  background:rgba(5,11,23,.72);
+  color:var(--text);
+  padding:15px 16px;
+  outline:none;
+  font-size:16px;
+  box-shadow:0 0 0 1px rgba(111,246,255,.06) inset, 0 0 16px rgba(111,246,255,.08);
+  resize:vertical;
+  min-height:110px;
+}
+textarea::placeholder{color:rgba(223,252,255,.42)}
+textarea:focus{
+  border-color:rgba(111,246,255,.82);
+  box-shadow:
+    0 0 0 1px rgba(111,246,255,.14) inset,
+    0 0 6px #00eaff,
+    0 0 18px rgba(0,234,255,.42),
+    0 0 36px rgba(141,124,255,.16);
+}
+.card{
+  margin:28px auto 0;
+  width:min(560px,100%);
+  padding:22px 20px;
+  border:1px solid rgba(111,246,255,.48);
+  border-radius:18px;
+  background:linear-gradient(180deg, rgba(7,16,33,.78), rgba(4,10,21,.84));
+  box-shadow:0 0 0 1px rgba(111,246,255,.06) inset, 0 0 22px rgba(111,246,255,.10);
+  position:relative;
+}
+.card::before,.card::after{
+  content:"";
+  position:absolute;
+  width:18px;
+  height:18px;
+  border:2px solid rgba(111,246,255,.82);
+}
+.card::before{
+  top:-8px;
+  left:-8px;
+  border-right:none;
+  border-bottom:none;
+}
+.card::after{
+  right:-8px;
+  bottom:-8px;
+  border-left:none;
+  border-top:none;
+}
+.card-line{
+  font-size:15px;
+  line-height:1.8;
+  color:#dffcff;
+  text-align:left;
+  word-break:keep-all;
+}
+.card-line + .card-line{margin-top:6px}
+.card-id{
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid rgba(111,246,255,.18);
+  font-size:13px;
+  color:#9fc2cf;
+  text-align:left;
+}
+.divider{
+  width:min(560px,100%);
+  height:1px;
+  background:linear-gradient(90deg, transparent, rgba(111,246,255,.4), transparent);
+  margin:22px auto;
+}
+@media (max-width:640px){
+  .panel{padding:24px 18px;border-radius:18px}
+  .title{font-size:12px}
+  textarea{font-size:15px}
+}
+</style>
+</head>
+<body>
+<div class="center-screen">
+  <div class="panel">
+    <div class="title">CONTINUUM AUTHORITY // L-AFFECT PROJECT</div>
+
+    <p class="percent" id="unlockPercent">0%</p>
+    <div class="small" id="unlockMeta" style="margin-top:6px;">서사 해금률 확인 중...</div>
+
+    <div id="lockedBlock" style="margin-top:22px;">
+      <div class="progress-shell">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <p class="muted" id="lockedMessage" style="margin-top:18px;">
+        세계 복원 상태를 확인하고 있습니다.
+      </p>
+      <div class="status" id="statusText"></div>
+    </div>
+
+    <div id="unlockedBlock" class="hide" style="margin-top:18px;">
+      <h1 class="big">평의회 입회 자격이 승인되었습니다.</h1>
+      <p class="muted">
+        이제 당신은 L-AFFECT PROJECT의 마지막 평의만을 남겨두고 있습니다.<br>
+        당신에게 발생한 사랑의 언어를 기록해 주세요.
+      </p>
+
+      <div class="divider"></div>
+
+      <div class="card">
+        <div class="card-line">당신은 CONTINUUM AUTHORITY의 평의회 입회 자격을 갖추었습니다.</div>
+        <div class="card-line">이 세계에서 발생한 사랑은 유지되어야 한다고 생각합니까?</div>
+        <div class="card-line">당신에게 발생한 사랑의 언어를 입력하면 최종 기록이 보존됩니다.</div>
+        <div class="card-id">ID : CONTINUUM AUTHORITY / DIRECTIVE COUNCIL</div>
+      </div>
+
+      <div style="margin-top:22px;">
+        <textarea id="consentInput" placeholder="당신의 사랑의 언어를 입력하세요"></textarea>
+      </div>
+
+      <div class="row" style="margin-top:16px;">
+        <button id="confirmBtn" type="button">확인</button>
+      </div>
+
+      <div class="status" id="submitStatus"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBR7ogWqmI1osy45YU7YI_hFcIfjTlk7s4",
+  authDomain: "teamgrua-2d9b9.firebaseapp.com",
+  projectId: "teamgrua-2d9b9"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const baseRef = db.collection("game")
+  .doc("season1")
+  .collection("rounds")
+  .doc("R0001")
+  .collection("slots");
+
+async function load(){
+  const statusText = document.getElementById("statusText");
+
+  try{
+    statusText.textContent = "해금 상태를 불러오는 중입니다.";
+
+    const snap = await baseRef.get();
+
+    let total = 0;
+    let unlocked = 0;
+
+    snap.forEach(doc => {
+      total++;
+      const data = doc.data() || {};
+      if(data.unlocked === true) unlocked++;
+    });
+
+    const totalCount = total > 0 ? total : 16;
+    const percent = Math.floor((unlocked / 16) * 100);
+
+    document.getElementById("unlockPercent").textContent = percent + "%";
+    document.getElementById("unlockMeta").textContent = unlocked + " / 16 해금";
+    document.getElementById("progressBar").style.width = Math.min(percent, 100) + "%";
+
+    if(unlocked >= 16){
+      document.getElementById("lockedBlock").classList.add("hide");
+      document.getElementById("unlockedBlock").classList.remove("hide");
+      statusText.textContent = "";
+      return;
+    }
+
+    document.getElementById("lockedMessage").innerHTML =
+      "총 " + totalCount + "개 기록 중 " + unlocked + "개가 해금되었습니다.<br>모든 기록이 개방되면 최종 평의가 시작됩니다.";
+    statusText.textContent = "아직 모든 기록이 해금되지 않았습니다.";
+  }catch(error){
+    console.error(error);
+    statusText.textContent = "데이터를 불러오지 못했습니다. Firestore 설정을 확인해 주세요.";
+  }
+}
+
+document.getElementById("confirmBtn").addEventListener("click", function(){
+  const input = document.getElementById("consentInput");
+  const submitStatus = document.getElementById("submitStatus");
+  const value = input.value.trim();
+
+  if(!value){
+    submitStatus.textContent = "사랑의 언어를 입력해 주세요.";
+    input.focus();
+    return;
+  }
+
+  localStorage.setItem("gruaConsent", value);
+  submitStatus.textContent = "기록이 저장되었습니다. 엔딩 페이지로 이동합니다.";
+
+  setTimeout(function(){
+    location.href = "ending.html";
+  }, 700);
+});
+
+load();
+</script>
+</body>
+</html>
