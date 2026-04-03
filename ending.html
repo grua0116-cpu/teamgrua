@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ENDING</title>
+<style>
+:root{
+  --bg-1:#040712;
+  --bg-2:#071021;
+  --bg-3:#02040b;
+  --line:#6ff6ff;
+  --line-soft:rgba(111,246,255,.38);
+  --violet:#8d7cff;
+  --text:#dffcff;
+  --muted:#9fc2cf;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--text);
+  font-family:"Pretendard","Noto Sans KR",system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(105,246,255,.14), transparent 32%),
+    radial-gradient(circle at 80% 0%, rgba(141,124,255,.16), transparent 34%),
+    radial-gradient(circle at 50% 100%, rgba(73,96,255,.10), transparent 36%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 52%, var(--bg-3) 100%);
+  overflow:hidden;
+  position:relative;
+  opacity:0;
+  transition:opacity 1.1s ease;
+}
+body.loaded{opacity:1}
+body.fade-out{opacity:0}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background-image:
+    radial-gradient(2px 2px at 5% 12%, rgba(255,255,255,.88) 42%, transparent 45%),
+    radial-gradient(1px 1px at 9% 31%, rgba(255,255,255,.54) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 14% 54%, rgba(105,246,255,.62) 42%, transparent 45%),
+    radial-gradient(2px 2px at 18% 77%, rgba(255,255,255,.74) 42%, transparent 45%),
+    radial-gradient(1px 1px at 23% 20%, rgba(255,255,255,.44) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 27% 42%, rgba(141,124,255,.60) 42%, transparent 45%),
+    radial-gradient(2px 2px at 32% 63%, rgba(255,255,255,.72) 42%, transparent 45%),
+    radial-gradient(1px 1px at 36% 85%, rgba(255,255,255,.42) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 41% 14%, rgba(105,246,255,.68) 42%, transparent 45%),
+    radial-gradient(2px 2px at 46% 36%, rgba(255,255,255,.78) 42%, transparent 45%),
+    radial-gradient(1px 1px at 51% 57%, rgba(255,255,255,.46) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 56% 79%, rgba(141,124,255,.58) 42%, transparent 45%),
+    radial-gradient(2px 2px at 61% 24%, rgba(105,246,255,.64) 42%, transparent 45%),
+    radial-gradient(1px 1px at 66% 46%, rgba(255,255,255,.48) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 71% 68%, rgba(255,255,255,.58) 42%, transparent 45%),
+    radial-gradient(2px 2px at 76% 88%, rgba(105,246,255,.60) 42%, transparent 45%),
+    radial-gradient(1px 1px at 81% 19%, rgba(255,255,255,.42) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 85% 39%, rgba(255,255,255,.56) 42%, transparent 45%),
+    radial-gradient(2px 2px at 90% 61%, rgba(141,124,255,.60) 42%, transparent 45%),
+    radial-gradient(1px 1px at 94% 83%, rgba(255,255,255,.48) 42%, transparent 45%);
+  opacity:.98;
+  animation:starsFloat 18s linear infinite;
+}
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at center, rgba(111,246,255,.06), transparent 40%),
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:auto, 36px 36px, 36px 36px;
+  opacity:.22;
+  mask-image: radial-gradient(circle at center, rgba(0,0,0,1), rgba(0,0,0,.18));
+}
+@keyframes starsFloat{
+  from{transform:translateY(0)}
+  50%{transform:translateY(6px)}
+  to{transform:translateY(0)}
+}
+.scene{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px;
+  position:relative;
+  z-index:2;
+}
+.panel{
+  width:min(92vw, 860px);
+  background:linear-gradient(180deg, rgba(8,18,38,.72), rgba(4,10,21,.78));
+  border:1px solid var(--line-soft);
+  border-radius:24px;
+  box-shadow:
+    0 0 0 1px rgba(111,246,255,.08) inset,
+    0 0 28px rgba(111,246,255,.08),
+    0 0 64px rgba(141,124,255,.08);
+  backdrop-filter:blur(14px);
+  padding:30px 26px 28px;
+}
+.eyebrow{
+  font-size:12px;
+  letter-spacing:.34em;
+  text-transform:uppercase;
+  color:#bdfcff;
+  opacity:.78;
+  margin-bottom:18px;
+  text-align:center;
+  font-weight:800;
+}
+.headline{
+  margin:0;
+  text-align:center;
+  font-size:clamp(30px, 6vw, 58px);
+  line-height:1.08;
+  text-shadow:0 0 10px rgba(111,246,255,.22);
+}
+.sub{
+  margin:14px auto 0;
+  max-width:680px;
+  text-align:center;
+  color:var(--muted);
+  line-height:1.9;
+  font-size:16px;
+}
+.divider{
+  width:min(620px,100%);
+  height:1px;
+  margin:26px auto 24px;
+  background:linear-gradient(90deg, transparent, rgba(111,246,255,.42), transparent);
+}
+.id-card{
+  width:min(620px,100%);
+  margin:0 auto;
+  padding:22px 20px;
+  border:1px solid rgba(111,246,255,.50);
+  border-radius:20px;
+  background:linear-gradient(180deg, rgba(7,16,33,.80), rgba(4,10,21,.86));
+  box-shadow:
+    0 0 0 1px rgba(111,246,255,.06) inset,
+    0 0 24px rgba(111,246,255,.10);
+  position:relative;
+  overflow:hidden;
+}
+.id-card::before,
+.id-card::after{
+  content:"";
+  position:absolute;
+  width:20px;
+  height:20px;
+  border:2px solid rgba(111,246,255,.82);
+}
+.id-card::before{
+  top:-8px;
+  left:-8px;
+  border-right:none;
+  border-bottom:none;
+}
+.id-card::after{
+  right:-8px;
+  bottom:-8px;
+  border-left:none;
+  border-top:none;
+}
+.card-top{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+  margin-bottom:18px;
+}
+.card-title{
+  font-size:13px;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:#bdfcff;
+  opacity:.84;
+  font-weight:800;
+}
+.card-no{
+  font-size:13px;
+  color:#c9ffff;
+  font-weight:700;
+}
+.card-body{
+  display:grid;
+  gap:12px;
+}
+.row{
+  display:grid;
+  grid-template-columns:160px 1fr;
+  gap:12px;
+  align-items:start;
+  padding:10px 0;
+  border-top:1px solid rgba(111,246,255,.12);
+}
+.row:first-child{border-top:none;padding-top:0}
+.label{
+  font-size:12px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:#9fe3ef;
+  opacity:.82;
+}
+.value{
+  font-size:17px;
+  line-height:1.8;
+  color:#dffcff;
+  word-break:keep-all;
+}
+.consent{
+  white-space:pre-line;
+}
+.actions{
+  display:flex;
+  justify-content:center;
+  margin-top:24px;
+}
+button{
+  appearance:none;
+  border:none;
+  border-radius:16px;
+  padding:14px 26px;
+  min-width:200px;
+  background:linear-gradient(90deg, rgba(111,246,255,.16), rgba(141,124,255,.18));
+  color:var(--text);
+  border:1px solid rgba(111,246,255,.5);
+  cursor:pointer;
+  font-weight:700;
+  letter-spacing:.04em;
+  box-shadow:0 0 18px rgba(111,246,255,.12);
+}
+button:hover{
+  transform:translateY(-1px);
+  box-shadow:0 0 28px rgba(111,246,255,.18);
+}
+.status{
+  min-height:24px;
+  margin-top:16px;
+  text-align:center;
+  color:#c9eff6;
+  font-size:14px;
+}
+@media (max-width:640px){
+  .panel{padding:24px 16px 22px}
+  .row{grid-template-columns:1fr;gap:6px}
+  .value{font-size:15px}
+}
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="panel">
+    <div class="eyebrow">GRUA // Ending Sequence</div>
+    <h1 class="headline">평의회 입회가 완료되었습니다.</h1>
+    <p class="sub">
+      모든 기록의 해금이 확인되었습니다.<br>
+      당신은 이제 CONTINUUM AUTHORITY의 신규 평의원으로 등록됩니다.
+    </p>
+
+    <div class="divider"></div>
+
+    <section class="id-card">
+      <div class="card-top">
+        <div class="card-title">Council Identification</div>
+        <div class="card-no" id="cardNo">NO. 0116</div>
+      </div>
+
+      <div class="card-body">
+        <div class="row">
+          <div class="label">ID</div>
+          <div class="value">CONTINUUM AUTHORITY / DIRECTIVE COUNCIL</div>
+        </div>
+
+        <div class="row">
+          <div class="label">STATUS</div>
+          <div class="value">COUNCIL MEMBER</div>
+        </div>
+
+        <div class="row">
+          <div class="label">RECORD</div>
+          <div class="value consent" id="consentText">기록된 사랑의 언어가 없습니다.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button id="confirmBtn" type="button">확인</button>
+    </div>
+    <div class="status" id="statusText"></div>
+  </div>
+</div>
+
+<script>
+const cardNumbers = ["0116", "1219", "0428", "0825"];
+
+window.addEventListener("load", function(){
+  document.body.classList.add("loaded");
+
+  const picked = cardNumbers[Math.floor(Math.random() * cardNumbers.length)];
+  document.getElementById("cardNo").textContent = "NO. " + picked;
+
+  const saved = localStorage.getItem("gruaConsent");
+  if(saved && saved.trim()){
+    document.getElementById("consentText").textContent = saved.trim();
+  }
+
+  document.getElementById("confirmBtn").addEventListener("click", goTruth);
+});
+
+function goTruth(){
+  const status = document.getElementById("statusText");
+  status.textContent = "기록 보관소로 이동합니다.";
+  document.body.classList.add("fade-out");
+
+  setTimeout(function(){
+    location.href = "truth.html";
+  }, 900);
+}
+</script>
+</body>
+</html>
