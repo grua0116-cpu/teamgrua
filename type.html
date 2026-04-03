@@ -4,13 +4,168 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TYPE INPUT</title>
-</head>
+<style>
+:root{
+  --bg-1:#040712;
+  --bg-2:#071021;
+  --bg-3:#02040b;
+  --line:#6ff6ff;
+  --line-soft:rgba(111,246,255,.38);
+  --violet:#8d7cff;
+  --text:#dffcff;
+  --muted:#9fc2cf;
+  --panel:rgba(7,16,33,.56);
+  --panel-2:rgba(6,12,24,.72);
+}
 
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--text);
+  font-family: "Pretendard","Noto Sans KR",system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(105,246,255,.14), transparent 32%),
+    radial-gradient(circle at 80% 0%, rgba(141,124,255,.16), transparent 34%),
+    radial-gradient(circle at 50% 100%, rgba(73,96,255,.10), transparent 36%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 52%, var(--bg-3) 100%);
+  overflow-x:hidden;
+  position:relative;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background-image:
+    radial-gradient(2px 2px at 5% 12%, rgba(255,255,255,.88) 42%, transparent 45%),
+    radial-gradient(1px 1px at 9% 31%, rgba(255,255,255,.54) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 14% 54%, rgba(105,246,255,.62) 42%, transparent 45%),
+    radial-gradient(2px 2px at 18% 77%, rgba(255,255,255,.74) 42%, transparent 45%),
+    radial-gradient(1px 1px at 23% 20%, rgba(255,255,255,.44) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 27% 42%, rgba(141,124,255,.60) 42%, transparent 45%),
+    radial-gradient(2px 2px at 32% 63%, rgba(255,255,255,.72) 42%, transparent 45%),
+    radial-gradient(1px 1px at 36% 85%, rgba(255,255,255,.42) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 41% 14%, rgba(105,246,255,.68) 42%, transparent 45%),
+    radial-gradient(2px 2px at 46% 36%, rgba(255,255,255,.78) 42%, transparent 45%),
+    radial-gradient(1px 1px at 51% 57%, rgba(255,255,255,.46) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 56% 79%, rgba(141,124,255,.58) 42%, transparent 45%),
+    radial-gradient(2px 2px at 61% 24%, rgba(105,246,255,.64) 42%, transparent 45%),
+    radial-gradient(1px 1px at 66% 46%, rgba(255,255,255,.48) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 71% 68%, rgba(255,255,255,.58) 42%, transparent 45%),
+    radial-gradient(2px 2px at 76% 88%, rgba(105,246,255,.60) 42%, transparent 45%),
+    radial-gradient(1px 1px at 81% 19%, rgba(255,255,255,.42) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 85% 39%, rgba(255,255,255,.56) 42%, transparent 45%),
+    radial-gradient(2px 2px at 90% 61%, rgba(141,124,255,.60) 42%, transparent 45%),
+    radial-gradient(1px 1px at 94% 83%, rgba(255,255,255,.48) 42%, transparent 45%),
+    radial-gradient(1.5px 1.5px at 97% 27%, rgba(105,246,255,.62) 42%, transparent 45%),
+    radial-gradient(1px 1px at 11% 92%, rgba(255,255,255,.50) 42%, transparent 45%),
+    radial-gradient(1px 1px at 28% 8%, rgba(255,255,255,.50) 42%, transparent 45%),
+    radial-gradient(1px 1px at 44% 91%, rgba(255,255,255,.44) 42%, transparent 45%),
+    radial-gradient(1px 1px at 63% 6%, rgba(255,255,255,.42) 42%, transparent 45%),
+    radial-gradient(1px 1px at 74% 11%, rgba(255,255,255,.46) 42%, transparent 45%);
+  opacity:.98;
+  animation: starsFloat 18s linear infinite;
+}
+
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at center, rgba(111,246,255,.06), transparent 40%),
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:auto, 36px 36px, 36px 36px;
+  opacity:.22;
+  mask-image: radial-gradient(circle at center, rgba(0,0,0,1), rgba(0,0,0,.18));
+}
+
+@keyframes starsFloat{
+  from { transform: translateY(0px); }
+  50% { transform: translateY(6px); }
+  to { transform: translateY(0px); }
+}
+
+.center-screen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px 0;
+}
+
+.panel{
+  width:min(92vw, 760px);
+  background:linear-gradient(180deg, rgba(8,18,38,.72), rgba(4,10,21,.76));
+  border:1px solid var(--line-soft);
+  border-radius:22px;
+  box-shadow:
+    0 0 0 1px rgba(111,246,255,.08) inset,
+    0 0 28px rgba(111,246,255,.08),
+    0 0 64px rgba(141,124,255,.08);
+  backdrop-filter: blur(14px);
+  padding:30px 26px;
+  text-align:center;
+}
+
+.title{
+  font-size:14px;
+  letter-spacing:.32em;
+  text-transform:uppercase;
+  color:#bdfcff;
+  opacity:.78;
+  margin-bottom:18px;
+}
+
+.big{
+  font-size:clamp(24px, 4vw, 40px);
+  font-weight:700;
+  margin-bottom:12px;
+}
+
+.muted{
+  color:var(--muted);
+  line-height:1.8;
+}
+
+input{
+  width:100%;
+  max-width:360px;
+  border-radius:16px;
+  border:1px solid rgba(111,246,255,.45);
+  background:rgba(5,11,23,.72);
+  color:var(--text);
+  padding:15px 16px;
+  margin-top:24px;
+  text-align:center;
+}
+
+button{
+  margin-top:18px;
+}
+
+.status{
+  margin-top:14px;
+}
+</style>
+</head>
 <body>
 
-<input id="typeInput" placeholder="예: IFAP" />
-<button onclick="goType()">입장</button>
-<div id="status"></div>
+<div class="center-screen">
+  <div class="panel">
+    <div class="title">CONTINUUM AUTHORITY // TYPE GATE</div>
+    <h1 class="big">당신의 궤도를 입력하십시오</h1>
+    <p class="muted">당신의 포지션 타입을 입력하면 해당 질문 구역으로 이동합니다.</p>
+
+    <input id="typeInput" placeholder="예: IFAP" maxlength="4" />
+    <button onclick="goType()">입장</button>
+
+    <div class="status" id="status"></div>
+  </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -22,9 +177,7 @@ const firebaseConfig = {
   projectId: "teamgrua-2d9b9"
 };
 
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 const baseRef = db.collection("game")
@@ -33,51 +186,48 @@ const baseRef = db.collection("game")
   .doc("R0001")
   .collection("slots");
 
-// ✅ 추가된 함수
-async function isWorldUnlocked() {
+async function isWorldUnlocked(){
   const snap = await baseRef.get();
-
   let unlocked = 0;
-  snap.forEach(doc => {
-    const data = doc.data() || {};
-    if (data.unlocked === true) unlocked++;
+
+  snap.forEach(doc=>{
+    if(doc.data().unlocked) unlocked++;
   });
 
-  return unlocked === 16;
+  return unlocked >= 16;
 }
 
-// 🔥 기존 함수 유지 + 앞단 체크만 추가
-async function goType() {
-  const el = document.getElementById('typeInput');
-  const type = el.value.trim().toUpperCase();
+async function goType(){
+  const type = document.getElementById('typeInput').value.trim().toUpperCase();
+  const status = document.getElementById('status');
 
-  if (!type) {
-    document.getElementById('status').textContent = '타입을 입력하십시오.';
+  if(!type){
+    status.textContent = '타입을 입력하십시오.';
     return;
   }
 
   localStorage.setItem('gruaType', type);
+  status.textContent = '확인 중...';
 
-  document.getElementById('status').textContent = '확인 중입니다...';
+  try{
+    const open = await isWorldUnlocked();
 
-  try {
-    const worldOpen = await isWorldUnlocked();
-
-    if (worldOpen) {
+    if(open){
       location.href = 'world.html';
       return;
     }
 
-  } catch (e) {
+  }catch(e){
     console.error(e);
+    status.textContent = '데이터 확인 실패';
+    return;
   }
 
-  // 👉 기존 흐름 그대로 유지
   location.href = 'quiz.html?type=' + encodeURIComponent(type);
 }
 
-document.getElementById('typeInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') goType();
+document.getElementById('typeInput').addEventListener('keydown', e=>{
+  if(e.key === 'Enter') goType();
 });
 </script>
 
