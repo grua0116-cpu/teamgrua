@@ -1,82 +1,26 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GRUA Summer Archive</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GRUA</title>
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
 
-<style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
-html,body{
-    width:100%;
-    height:100%;
-    overflow:hidden;
-}
-
-body{
-    background:url("main.jpg") center center / cover no-repeat;
-    cursor:pointer;
-}
-
-.overlay{
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,.45);
-
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-
-    color:white;
-    text-align:center;
-}
-
-.logo{
-    font-size:48px;
-    letter-spacing:10px;
-    margin-bottom:20px;
-}
-
-.subtitle{
-    font-size:15px;
-    opacity:.8;
-    margin-bottom:50px;
-}
-
-.enter{
-    border:1px solid rgba(255,255,255,.5);
-    padding:15px 40px;
-    transition:.3s;
-}
-
-.enter:hover{
-    background:white;
-    color:black;
-}
-</style>
+    a {
+      display: block;
+      width: 100%;
+      height: 100vh;
+      background: url("main.jpg") center center / cover no-repeat;
+    }
+  </style>
 </head>
-
-<body onclick="location.href='board.html'">
-
-<div class="overlay">
-    <div class="logo">GRUA</div>
-
-    <div class="subtitle">
-        SUMMER SPECIAL ARCHIVE
-        <br><br>
-        복구된 기록에 접근하시겠습니까?
-    </div>
-
-    <div class="enter">
-        게시판 입장
-    </div>
-</div>
-
+<body>
+  <a href="board.html"></a>
 </body>
 </html>
