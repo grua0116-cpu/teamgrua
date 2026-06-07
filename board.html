@@ -4,138 +4,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GRUA 대나무숲</title>
-
   <style>
-    body {
-      margin: 0;
-      background: #0b0b0b;
-      color: #e6e6e6;
-      font-family: "Pretendard", "Noto Sans KR", sans-serif;
-    }
-
-    .wrap {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 36px 18px;
-    }
-
-    h1 {
-      font-size: 24px;
-      margin-bottom: 6px;
-    }
-
-    .desc {
-      color: #888;
-      font-size: 14px;
-      margin-bottom: 28px;
-    }
-
-    .write-box, .post {
-      border: 1px solid #333;
-      background: #111;
-      padding: 18px;
-      margin-bottom: 18px;
-    }
-
-    textarea, input {
-      width: 100%;
-      box-sizing: border-box;
-      background: #070707;
-      color: #eee;
-      border: 1px solid #333;
-      padding: 12px;
-      margin-bottom: 10px;
-      font-family: inherit;
-    }
-
-    textarea {
-      min-height: 120px;
-      resize: vertical;
-    }
-
-    button {
-      width: 100%;
-      background: #e6e6e6;
-      color: #111;
-      border: 0;
-      padding: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .meta {
-      font-size: 12px;
-      color: #777;
-      margin-bottom: 10px;
-    }
-
-    .content {
-      white-space: pre-wrap;
-      line-height: 1.7;
-      margin-bottom: 16px;
-    }
-
-    .comments {
-      border-top: 1px solid #222;
-      padding-top: 12px;
-      margin-top: 12px;
-    }
-
-    .comment {
-      font-size: 14px;
-      color: #ccc;
-      border-bottom: 1px solid #1d1d1d;
-      padding: 8px 0;
-      white-space: pre-wrap;
-    }
-
-    .comment-form {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .comment-form input {
-      margin-bottom: 0;
-    }
-
-    .comment-form button {
-      width: 90px;
-      padding: 10px;
-    }
-
-    .empty {
-      color: #777;
-      text-align: center;
-      padding: 40px 0;
-    }
+    body { margin:0; background:#0b0b0b; color:#e6e6e6; font-family:sans-serif; }
+    .wrap { max-width:720px; margin:0 auto; padding:36px 18px; }
+    h1 { font-size:24px; margin-bottom:6px; }
+    .desc,.meta { color:#888; font-size:14px; }
+    .post { border:1px solid #333; background:#111; padding:18px; margin-bottom:18px; }
+    .content { white-space:pre-wrap; line-height:1.7; margin-top:10px; }
+    .comments { border-top:1px solid #222; margin-top:16px; padding-top:12px; }
+    .comment { font-size:14px; color:#ccc; border-bottom:1px solid #1d1d1d; padding:8px 0; }
+    .empty { color:#777; text-align:center; padding:40px 0; }
   </style>
 </head>
-
 <body>
   <div class="wrap">
     <h1>GRUA 대나무숲</h1>
-    <div class="desc">지금 당신에게 무슨 일이 일어나고 있나요?</div>
-
-    <div class="write-box">
-      <textarea id="postContent" placeholder="오류가 있는 기억은 세상에 남겨질 수 없습니다."></textarea>
-      <button id="submitPost">나의 기억을 세상에 퍼트리기</button>
-    </div>
-
+    <div class="desc">지금 ■■■에게 무슨 일이 일어나고 있나요?</div>
+    <br />
     <div id="posts"></div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import {
-      getFirestore,
-      collection,
-      addDoc,
-      getDocs,
-      query,
-      orderBy,
-      limit,
-      serverTimestamp
+      getFirestore, collection, getDocs, query, orderBy, limit
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -150,40 +42,10 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 새 게시판 컬렉션
-    const BOARD_COLLECTION = "posts2026";
+    // 새 게시판 이름
+    const BOARD_COLLECTION = "posts2027";
 
-    const postContent = document.getElementById("postContent");
-    const submitPost = document.getElementById("submitPost");
     const postsEl = document.getElementById("posts");
-
-    submitPost.addEventListener("click", async () => {
-      const content = postContent.value.trim();
-
-      if (!content) {
-        alert("내용을 입력해주세요.");
-        return;
-      }
-
-      submitPost.disabled = true;
-      submitPost.textContent = "등록 중...";
-
-      try {
-        await addDoc(collection(db, BOARD_COLLECTION), {
-          content,
-          createdAt: serverTimestamp()
-        });
-
-        postContent.value = "";
-        await loadPosts();
-      } catch (error) {
-        alert("지금은 등록할 수 없습니다. 잠시 후 다시 시도해주세요.");
-        console.error(error);
-      }
-
-      submitPost.disabled = false;
-      submitPost.textContent = "나의 기억을 세상에 퍼트리기";
-    });
 
     async function loadPosts() {
       postsEl.innerHTML = "";
@@ -207,7 +69,7 @@
 
         const date = post.createdAt?.toDate
           ? post.createdAt.toDate().toLocaleString("ko-KR")
-          : "방금 전";
+          : "";
 
         const postDiv = document.createElement("div");
         postDiv.className = "post";
@@ -215,72 +77,33 @@
         postDiv.innerHTML = `
           <div class="meta">익명 · ${date}</div>
           <div class="content">${escapeHtml(post.content)}</div>
-
           <div class="comments" id="comments-${postId}">
             <div class="meta">댓글</div>
-          </div>
-
-          <div class="comment-form">
-            <input id="comment-input-${postId}" placeholder="익명 댓글" />
-            <button data-post-id="${postId}">등록</button>
           </div>
         `;
 
         postsEl.appendChild(postDiv);
-
         await loadComments(postId);
-
-        postDiv.querySelector("button").addEventListener("click", async (e) => {
-          const id = e.target.dataset.postId;
-          const input = document.getElementById(`comment-input-${id}`);
-          const text = input.value.trim();
-
-          if (!text) return;
-
-          e.target.disabled = true;
-          e.target.textContent = "...";
-
-          try {
-            await addDoc(collection(db, BOARD_COLLECTION, id, "comments"), {
-              content: text,
-              createdAt: serverTimestamp()
-            });
-
-            input.value = "";
-            await loadComments(id);
-          } catch (error) {
-            alert("댓글을 등록할 수 없습니다.");
-            console.error(error);
-          }
-
-          e.target.disabled = false;
-          e.target.textContent = "등록";
-        });
       }
     }
 
     async function loadComments(postId) {
       const commentsEl = document.getElementById(`comments-${postId}`);
-      if (!commentsEl) return;
 
-      const commentsRef = collection(db, BOARD_COLLECTION, postId, "comments");
-      const commentsQuery = query(
-        commentsRef,
+      const q = query(
+        collection(db, BOARD_COLLECTION, postId, "comments"),
         orderBy("createdAt", "asc"),
         limit(30)
       );
 
-      const snapshot = await getDocs(commentsQuery);
-
+      const snapshot = await getDocs(q);
       commentsEl.innerHTML = `<div class="meta">댓글 ${snapshot.size}</div>`;
 
-      snapshot.forEach((commentDoc) => {
-        const comment = commentDoc.data();
-
+      snapshot.forEach((docSnap) => {
+        const comment = docSnap.data();
         const div = document.createElement("div");
         div.className = "comment";
         div.textContent = `익명: ${comment.content}`;
-
         commentsEl.appendChild(div);
       });
     }
