@@ -103,13 +103,19 @@
       width: 90px;
       padding: 10px;
     }
+
+    .empty {
+      color: #777;
+      text-align: center;
+      padding: 40px 0;
+    }
   </style>
 </head>
 
 <body>
   <div class="wrap">
     <h1>GRUA 대나무숲</h1>
-    <div class="desc">지금 당신에게 무슨 일이 일어나고 있나요? </div>
+    <div class="desc">지금 당신에게 무슨 일이 일어나고 있나요?</div>
 
     <div class="write-box">
       <textarea id="postContent" placeholder="좋은 이야기는 나누어야 세상으로 퍼집니다."></textarea>
@@ -125,10 +131,11 @@
       getFirestore,
       collection,
       addDoc,
+      getDocs,
       query,
       orderBy,
-      serverTimestamp,
-      onSnapshot
+      limit,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -143,6 +150,9 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // 새 게시판 컬렉션
+    const BOARD_COLLECTION = "posts2026";
+
     const postContent = document.getElementById("postContent");
     const submitPost = document.getElementById("submitPost");
     const postsEl = document.getElementById("posts");
@@ -155,20 +165,43 @@
         return;
       }
 
-      await addDoc(collection(db, "posts"), {
-        content,
-        createdAt: serverTimestamp()
-      });
+      submitPost.disabled = true;
+      submitPost.textContent = "등록 중...";
 
-      postContent.value = "";
+      try {
+        await addDoc(collection(db, BOARD_COLLECTION), {
+          content,
+          createdAt: serverTimestamp()
+        });
+
+        postContent.value = "";
+        await loadPosts();
+      } catch (error) {
+        alert("지금은 등록할 수 없습니다. 잠시 후 다시 시도해주세요.");
+        console.error(error);
+      }
+
+      submitPost.disabled = false;
+      submitPost.textContent = "나의 기억을 세상에 퍼트리기";
     });
 
-    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
-
-    onSnapshot(q, (snapshot) => {
+    async function loadPosts() {
       postsEl.innerHTML = "";
 
-      snapshot.forEach((docSnap) => {
+      const q = query(
+        collection(db, BOARD_COLLECTION),
+        orderBy("createdAt", "desc"),
+        limit(50)
+      );
+
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        postsEl.innerHTML = `<div class="empty">아직 남겨진 기억이 없습니다.</div>`;
+        return;
+      }
+
+      for (const docSnap of snapshot.docs) {
         const post = docSnap.data();
         const postId = docSnap.id;
 
@@ -195,7 +228,7 @@
 
         postsEl.appendChild(postDiv);
 
-        loadComments(postId);
+        await loadComments(postId);
 
         postDiv.querySelector("button").addEventListener("click", async (e) => {
           const id = e.target.dataset.postId;
@@ -204,44 +237,64 @@
 
           if (!text) return;
 
-          await addDoc(collection(db, "posts", id, "comments"), {
-            content: text,
-            createdAt: serverTimestamp()
-          });
+          e.target.disabled = true;
+          e.target.textContent = "...";
 
-          input.value = "";
+          try {
+            await addDoc(collection(db, BOARD_COLLECTION, id, "comments"), {
+              content: text,
+              createdAt: serverTimestamp()
+            });
+
+            input.value = "";
+            await loadComments(id);
+          } catch (error) {
+            alert("댓글을 등록할 수 없습니다.");
+            console.error(error);
+          }
+
+          e.target.disabled = false;
+          e.target.textContent = "등록";
         });
-      });
-    });
+      }
+    }
 
-    function loadComments(postId) {
-      const commentsRef = collection(db, "posts", postId, "comments");
-      const commentsQuery = query(commentsRef, orderBy("createdAt", "asc"));
+    async function loadComments(postId) {
+      const commentsEl = document.getElementById(`comments-${postId}`);
+      if (!commentsEl) return;
 
-      onSnapshot(commentsQuery, (snapshot) => {
-        const commentsEl = document.getElementById(`comments-${postId}`);
-        if (!commentsEl) return;
+      const commentsRef = collection(db, BOARD_COLLECTION, postId, "comments");
+      const commentsQuery = query(
+        commentsRef,
+        orderBy("createdAt", "asc"),
+        limit(30)
+      );
 
-        commentsEl.innerHTML = `<div class="meta">댓글 ${snapshot.size}</div>`;
+      const snapshot = await getDocs(commentsQuery);
 
-        snapshot.forEach((commentDoc) => {
-          const comment = commentDoc.data();
-          const div = document.createElement("div");
-          div.className = "comment";
-          div.textContent = `익명: ${comment.content}`;
-          commentsEl.appendChild(div);
-        });
+      commentsEl.innerHTML = `<div class="meta">댓글 ${snapshot.size}</div>`;
+
+      snapshot.forEach((commentDoc) => {
+        const comment = commentDoc.data();
+
+        const div = document.createElement("div");
+        div.className = "comment";
+        div.textContent = `익명: ${comment.content}`;
+
+        commentsEl.appendChild(div);
       });
     }
 
     function escapeHtml(text) {
-      return text
+      return String(text)
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
     }
+
+    loadPosts();
   </script>
 </body>
 </html>
