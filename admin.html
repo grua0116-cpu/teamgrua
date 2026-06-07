@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GRUA Admin</title>
+
   <style>
     body { margin:0; background:#0b0b0b; color:#e6e6e6; font-family:sans-serif; }
     .wrap { max-width:720px; margin:0 auto; padding:36px 18px; }
@@ -20,20 +21,21 @@
     .comment-form input { margin-bottom:0; }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <h1>GRUA 관리자</h1>
 
     <div class="box">
       <div id="status" class="meta">관리자 로그인이 필요합니다.</div>
-      <button id="loginBtn">Google 로그인</button>
-      <button id="logoutBtn" class="hidden">로그아웃</button>
+      <button id="loginBtn" type="button">Google 로그인</button>
+      <button id="logoutBtn" type="button" class="hidden">로그아웃</button>
     </div>
 
     <div id="adminArea" class="hidden">
       <div class="box">
         <textarea id="postContent" placeholder="새 글 작성"></textarea>
-        <button id="submitPost" class="full">글 등록</button>
+        <button id="submitPost" type="button" class="full">글 등록</button>
       </div>
 
       <div id="posts"></div>
@@ -42,11 +44,24 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
     import {
-      getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut,
+      onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
     import {
-      getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      query,
+      orderBy,
+      limit,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -66,6 +81,10 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
+    provider.setCustomParameters({
+      prompt: "select_account"
+    });
+
     const loginBtn = document.getElementById("loginBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const status = document.getElementById("status");
@@ -76,11 +95,27 @@
 
     let isAdmin = false;
 
-    loginBtn.onclick = () => signInWithPopup(auth, provider);
-    logoutBtn.onclick = () => signOut(auth);
+    loginBtn.addEventListener("click", async () => {
+      try {
+        console.log("Google 로그인 버튼 클릭됨");
+        await signInWithPopup(auth, provider);
+      } catch (error) {
+        console.error(error);
+        alert("로그인 실패:\n" + error.code + "\n" + error.message);
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+      } catch (error) {
+        console.error(error);
+        alert("로그아웃 실패:\n" + error.message);
+      }
+    });
 
     onAuthStateChanged(auth, async (user) => {
-      isAdmin = user && user.email === ADMIN_EMAIL;
+      isAdmin = !!user && user.email === ADMIN_EMAIL;
 
       if (isAdmin) {
         status.textContent = `관리자 로그인 중: ${user.email}`;
@@ -88,6 +123,11 @@
         logoutBtn.classList.remove("hidden");
         adminArea.classList.remove("hidden");
         await loadPosts();
+      } else if (user && user.email !== ADMIN_EMAIL) {
+        status.textContent = `권한 없는 계정입니다: ${user.email}`;
+        loginBtn.classList.remove("hidden");
+        logoutBtn.classList.remove("hidden");
+        adminArea.classList.add("hidden");
       } else {
         status.textContent = "관리자 로그인이 필요합니다.";
         loginBtn.classList.remove("hidden");
@@ -96,18 +136,38 @@
       }
     });
 
-    submitPost.onclick = async () => {
+    submitPost.addEventListener("click", async () => {
+      if (!isAdmin) {
+        alert("관리자만 글을 쓸 수 있습니다.");
+        return;
+      }
+
       const content = postContent.value.trim();
-      if (!content) return alert("내용을 입력해주세요.");
 
-      await addDoc(collection(db, BOARD_COLLECTION), {
-        content,
-        createdAt: serverTimestamp()
-      });
+      if (!content) {
+        alert("내용을 입력해주세요.");
+        return;
+      }
 
-      postContent.value = "";
-      await loadPosts();
-    };
+      submitPost.disabled = true;
+      submitPost.textContent = "등록 중...";
+
+      try {
+        await addDoc(collection(db, BOARD_COLLECTION), {
+          content,
+          createdAt: serverTimestamp()
+        });
+
+        postContent.value = "";
+        await loadPosts();
+      } catch (error) {
+        console.error(error);
+        alert("글 등록 실패:\n" + error.code + "\n" + error.message);
+      }
+
+      submitPost.disabled = false;
+      submitPost.textContent = "글 등록";
+    });
 
     async function loadPosts() {
       postsEl.innerHTML = "";
@@ -120,44 +180,67 @@
 
       const snapshot = await getDocs(q);
 
+      if (snapshot.empty) {
+        postsEl.innerHTML = `<div class="meta">아직 글이 없습니다.</div>`;
+        return;
+      }
+
       for (const docSnap of snapshot.docs) {
         const post = docSnap.data();
         const postId = docSnap.id;
 
         const div = document.createElement("div");
         div.className = "post";
+
         div.innerHTML = `
           <div class="meta">익명</div>
           <div class="content">${escapeHtml(post.content)}</div>
+
           <div id="comments-${postId}"></div>
+
           <div class="comment-form">
             <input id="comment-input-${postId}" placeholder="댓글 작성" />
-            <button data-id="${postId}">댓글</button>
+            <button type="button" data-id="${postId}">댓글</button>
           </div>
         `;
 
         postsEl.appendChild(div);
         await loadComments(postId);
 
-        div.querySelector("button").onclick = async (e) => {
+        const commentBtn = div.querySelector("button[data-id]");
+
+        commentBtn.addEventListener("click", async (e) => {
+          if (!isAdmin) {
+            alert("관리자만 댓글을 쓸 수 있습니다.");
+            return;
+          }
+
           const id = e.target.dataset.id;
           const input = document.getElementById(`comment-input-${id}`);
           const text = input.value.trim();
+
           if (!text) return;
 
-          await addDoc(collection(db, BOARD_COLLECTION, id, "comments"), {
-            content: text,
-            createdAt: serverTimestamp()
-          });
+          try {
+            await addDoc(collection(db, BOARD_COLLECTION, id, "comments"), {
+              content: text,
+              createdAt: serverTimestamp()
+            });
 
-          input.value = "";
-          await loadComments(id);
-        };
+            input.value = "";
+            await loadComments(id);
+          } catch (error) {
+            console.error(error);
+            alert("댓글 등록 실패:\n" + error.code + "\n" + error.message);
+          }
+        });
       }
     }
 
     async function loadComments(postId) {
       const box = document.getElementById(`comments-${postId}`);
+      if (!box) return;
+
       const q = query(
         collection(db, BOARD_COLLECTION, postId, "comments"),
         orderBy("createdAt", "asc"),
@@ -165,13 +248,16 @@
       );
 
       const snapshot = await getDocs(q);
+
       box.innerHTML = `<div class="meta">댓글 ${snapshot.size}</div>`;
 
       snapshot.forEach((docSnap) => {
         const comment = docSnap.data();
+
         const div = document.createElement("div");
         div.className = "comment";
         div.textContent = `익명: ${comment.content}`;
+
         box.appendChild(div);
       });
     }
