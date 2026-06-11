@@ -3,47 +3,203 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GRUA</title>
+  <title>NULL DIVISION</title>
 
   <style>
-    * {
+    body {
       margin: 0;
-      padding: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, #060606 0%, #0b0b0b 55%, #040404 100%);
+      color: #e6e6e6;
+      font-family: "Pretendard", "Noto Sans KR", sans-serif;
+    }
+
+    .wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
       box-sizing: border-box;
     }
 
-    html, body {
+    .panel {
       width: 100%;
-      min-height: 100%;
-      background: #000;
+      max-width: 720px;
+      border: 1px solid #333;
+      background: #101010;
+      padding: 28px 22px;
+      box-sizing: border-box;
+      box-shadow: 0 0 40px rgba(0,0,0,0.6);
     }
 
-    body {
-      overflow-x: hidden;
+    .top {
+      font-size: 11px;
+      color: #777;
+      letter-spacing: 0.18em;
+      border-bottom: 1px solid #222;
+      padding-bottom: 14px;
+      margin-bottom: 24px;
     }
 
-    .main-link {
+    h1 {
+      font-size: 28px;
+      margin: 0 0 8px;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    .status {
+      color: #b85a5a;
+      font-size: 13px;
+      letter-spacing: 0.2em;
+      margin-bottom: 22px;
+    }
+
+    .bar {
+      background: #e6e6e6;
+      height: 12px;
+      margin: 18px 0;
+      opacity: 0.9;
+    }
+
+    .row {
       display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      min-height: 100vh;
-      background: #000;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid #222;
+      padding: 12px 0;
+      font-size: 13px;
     }
 
-    .main-image {
-      display: block;
-      max-width: 100%;
-      max-height: 100vh;
-      width: auto;
-      height: auto;
+    .key {
+      color: #777;
+      letter-spacing: 0.08em;
+    }
+
+    .value {
+      color: #e6e6e6;
+      text-align: right;
+    }
+
+    #countdown {
+      font-size: 36px;
+      letter-spacing: 0.08em;
+      text-align: center;
+      margin: 28px 0;
+    }
+
+    .warning {
+      color: #888;
+      font-size: 13px;
+      line-height: 1.8;
+      border-top: 1px solid #222;
+      padding-top: 18px;
+      margin-top: 20px;
+    }
+
+    .red {
+      color: #b85a5a;
+    }
+
+    .bottom {
+      color: #555;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      border-top: 1px solid #222;
+      padding-top: 14px;
+      margin-top: 24px;
     }
   </style>
 </head>
 
 <body>
-  <a class="main-link" href="board.html">
-    <img class="main-image" src="main.png" alt="GRUA" />
-  </a>
+  <div class="wrap">
+    <div class="panel">
+      <div class="top">[DOCUMENT CLASSIFICATION : RESTRICTED]</div>
+
+      <h1>NULL DIVISION GRUA </h1>
+      <div id="accessStatus" class="status">ACCESS DENIED</div>
+
+      <div class="bar"></div>
+
+      <div class="row">
+        <div class="key">CURRENT OPERATION</div>
+        <div class="value">ERASURE PROTOCOL</div>
+      </div>
+
+      <div class="row">
+        <div class="key">ACCESS STATUS</div>
+        <div id="lockStatus" class="value">LOCKED</div>
+      </div>
+
+      <div class="row">
+        <div class="key">OPEN DATE</div>
+        <div class="value">2026.06.13 00:00 KST</div>
+      </div>
+
+      <div id="countdown">--:--:--:--</div>
+
+      <div class="bar"></div>
+
+      <div id="message" class="warning">
+        <span class="red">WARNING</span><br>
+        NULL DIVISION, GRUA 승인 전까지 해당 좌표 접근이 제한됩니다.<br>
+        모든 구조 신호는 차단되었습니다.<br>
+        관측 행위는 기록됩니다.
+      </div>
+
+      <div class="bottom">AUTHORIZED PERSONNEL ONLY / CONTINUUM AUTHORITY</div>
+    </div>
+  </div>
+
+  <script>
+    const target = new Date("2026-06-13T00:00:00+09:00").getTime();
+
+    const countdown = document.getElementById("countdown");
+    const accessStatus = document.getElementById("accessStatus");
+    const lockStatus = document.getElementById("lockStatus");
+    const message = document.getElementById("message");
+
+    function updateCountdown() {
+      const now = Date.now();
+      const diff = target - now;
+
+      if (diff <= 0) {
+        countdown.textContent = "00:00:00:00";
+        accessStatus.textContent = "ACCESS GRANTED";
+        accessStatus.style.color = "#9be28f";
+        lockStatus.textContent = "UNLOCKED";
+
+        message.innerHTML = `
+          <span style="color:#9be28f;">NOTICE</span><br>
+          구조 신호가 복구되었습니다.<br>
+          연못이 열렸습니다.<br>
+          3초 후 말소작전 페이지로 이동합니다.
+        `;
+
+        setTimeout(() => {
+          location.href = "pond.html";
+        }, 3000);
+
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      countdown.textContent =
+        String(days).padStart(2, "0") + ":" +
+        String(hours).padStart(2, "0") + ":" +
+        String(minutes).padStart(2, "0") + ":" +
+        String(seconds).padStart(2, "0");
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  </script>
 </body>
 </html>
