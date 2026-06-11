@@ -139,7 +139,7 @@
         <div class="value">2026.06.13 00:00 KST</div>
       </div>
 
-      <div id="countdown">--:--:--:--</div>
+      <div id="countdown">00D 00H 00M 00S</div>
 
       <div class="bar"></div>
 
@@ -160,29 +160,16 @@
     const countdown = document.getElementById("countdown");
     const accessStatus = document.getElementById("accessStatus");
     const lockStatus = document.getElementById("lockStatus");
-    const message = document.getElementById("message");
 
     function updateCountdown() {
       const now = Date.now();
       const diff = target - now;
 
       if (diff <= 0) {
-        countdown.textContent = "00:00:00:00";
+        countdown.textContent = "00D 00H 00M 00S";
         accessStatus.textContent = "ACCESS GRANTED";
         accessStatus.style.color = "#9be28f";
         lockStatus.textContent = "UNLOCKED";
-
-        message.innerHTML = `
-          <span style="color:#9be28f;">NOTICE</span><br>
-          구조 신호가 복구되었습니다.<br>
-          연못이 열렸습니다.<br>
-          3초 후 말소작전 페이지로 이동합니다.
-        `;
-
-        setTimeout(() => {
-          location.href = "pond.html";
-        }, 3000);
-
         return;
       }
 
@@ -192,10 +179,10 @@
       const seconds = Math.floor((diff / 1000) % 60);
 
       countdown.textContent =
-        String(days).padStart(2, "0") + ":" +
-        String(hours).padStart(2, "0") + ":" +
-        String(minutes).padStart(2, "0") + ":" +
-        String(seconds).padStart(2, "0");
+        String(days).padStart(2, "0") + "D " +
+        String(hours).padStart(2, "0") + "H " +
+        String(minutes).padStart(2, "0") + "M " +
+        String(seconds).padStart(2, "0") + "S";
     }
 
     updateCountdown();
