@@ -280,7 +280,21 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getAuth,
   signInAnonymously,
-  onAuthStateChanged
+ onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
+
+  alert(user.uid);
+
+  try {
+    await ensureUser(user);
+    await refreshState();
+    await refreshComments();
+    startStatePolling();
+    startCommentsPolling();
+  } catch (error) {
+    console.error(error);
+  }
+});
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
