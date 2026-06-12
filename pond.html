@@ -299,12 +299,6 @@ import {
   increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDOsbIA_dNXxob6ui6i-4OPG-TPSvA_GJI",
   authDomain: "grua0116-3d4e4.firebaseapp.com",
@@ -313,7 +307,17 @@ const firebaseConfig = {
   messagingSenderId: "430341271205",
   appId: "1:430341271205:web:71de7b33f030646101674c"
 };
-  
+
+const ADMIN_UIDS = [
+  "MpLrmXujB7VKOKGAhWYG7IqAx9Z2"
+];
+
+const CALL_LIMIT = 30;
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
 const myNumberEl = document.getElementById("myNumber");
 const currentCallerEl = document.getElementById("currentCaller");
 const roleTextEl = document.getElementById("roleText");
