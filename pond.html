@@ -861,6 +861,8 @@ async function loadMore(){
 loadMoreBtn.addEventListener("click", loadMore);
 
 onAuthStateChanged(auth, async (user) => {
+
+  alert("MY UID: " + user.uid);
   if (!user) return;
 
   try {
